@@ -1,0 +1,121 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    {% set is_existing = (checklist.id|default(null) is not empty) %}
+    {% set can_edit_title = not is_existing or security.isGranted('edit_title',checklist) %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(checklist.deployment.project, true)}} &raquo;</span>
+            <span>{{_self.crumb_deployment(checklist.deployment, true, '#checklist')}} &raquo;</span>
+        </div>
+        {% if is_existing %}Edit{% else %}Add{% endif %} checklist task
+    </h1>
+
+    {% if errors|default(false) %}
+        <div class="ui error message">
+            Your input requires your further attention. Please inspect any messages below.
+        </div>
+    {% endif %}
+
+    {% set templates = checklist.deployment.getChecklistTemplates() %}
+    <form method="POST">
+        <div class="ui form">
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Title</label>
+                <input id="title_manual" placeholder="User friendly title (max 250 characters)" type="text" name="title" value="{{checklist.title|default(null)}}" {% if not can_edit_title %}readonly="readonly"{% endif %} {% if templates %}onchange="v = $(this).val(); $('#title_templated').dropdown('clear'); $(this).val(v);"{% endif %} />
+                {% if not can_edit_title %}<em>Only task creator and users with approval role can edit task titles</em>{% endif %}
+                {{ _self.fieldError(errors|default([]), 'title') }}
+                {% if templates and can_edit_title %}
+                    <div class="ui horizontal divider">
+                        Or select a template
+                    </div>
+                    <select id="title_templated" name="template" class="ui fluid dropdown" onchange="$('#title_manual').val($(this).val())">
+                        <option value="">- Select one -</option>
+                        {% for t in templates %}
+                            <option{% if t == template %} selected="selected"{% endif %}>{{t}}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </div>
+            <div class="ui basic segment stackable grid">
+                <div class="ui eight wide column required field">
+                    <label class="ui top attached large label">Start DateTime</label>
+                    {{ _self.dateField('start_datetime','start_datetime',(checklist.start_datetime|default(false) ? checklist.start_datetime|date('d/m/Y h:i A') : null),'Start DateTime', 'datetime') }}
+                    {{ _self.fieldError(errors|default([]), 'start_datetime') }}
+                </div>
+                <div class="ui eight wide column field">
+                    <label class="ui top attached large label">End DateTime</label>
+                    {{ _self.dateField('end_datetime','end_datetime',(checklist.end_datetime|default(false) ? checklist.end_datetime|date('d/m/Y h:i A') : null),'End DateTime', 'datetime') }}
+                    {{ _self.fieldError(errors|default([]), 'end_datetime') }}
+                </div>
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Person(s) In Charge</label>
+                <select name="pics[]" class="ui multiple dropdown" multiple="multiple">
+                    {% for userProject in checklist.deployment.project.userProjects %}
+                        {%  set user = userProject.user %}
+                        <option value="{{user.username}}" {% if checklist.pics.contains(user) %}selected="selected"{% endif %}>{{user.name}}</option>
+                    {% endfor %}
+                </select>
+                {{ _self.fieldError(errors|default([]), 'pics') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Status</label>
+                <div class="inline fields">
+                    {% for status in ['Not Started', 'In Progress', 'Completed', 'Cancelled'] %}
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input id="status-{{loop.index}}" type="radio" name="status" value="{{status}}" {% if checklist.status|default('Not Started') == status %}checked="checked"{% endif %}>
+                                <label for="status-{{loop.index}}">{{status}}</label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ _self.fieldError(errors|default([]), 'status') }}
+            </div>
+            {% if is_existing %}
+                <div class="ui required field basic segment">
+                    <label class="ui top attached large label">Update Comment</label>
+                    <input placeholder="Update comment (max 150 characters)" type="text" name="update" value="{{post.get('update')|default(null)}}" />
+                    {{ _self.fieldError(errors|default([]), 'update') }}
+                </div>
+            {% endif %}
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Add{% endif %} checklist task" />
+                <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                {% if is_existing and security.isGranted('delete',checklist) %}
+                    <input type="submit" class="ui red right floated button" name="_action" value="Delete"
+                           onclick="return confirm('Are you sure you want to delete?')" />
+                    <a href="checklist_form.twig"></a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <p>&nbsp;</p>
+    {{ _self.timestamps(checklist) }}
+
+    {% if checklist.updates|length > 0 %}
+        <h3>Previous updates</h3>
+        <table class="ui celled striped sortable table">
+            <thead>
+                <tr>
+                    <th class="ui collapsing">#</th>
+                    <th>Comments</th>
+                    <th class="ui collapsing">By</th>
+                    <th class="ui collapsing">Date/Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in checklist.updates %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ u.comment }}</td>
+                        <td class="ui collapsing" >{{ u.created_by.name }}</td>
+                        <td class="ui collapsing" data-sort-value="{{ u.created_date.getTimestamp() }}">{{ u.created_date|date('d/m/Y h:i A') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "plugin_base.html.twig" %}
+{% import "renobase.html.twig" as m %}
+
+{% block pluginView %}
+    <form method="POST">
+        <div class="ui form">
+            <div class="ui field grey basic segment">
+                <label class="ui top attached large label">Instruction</label>
+                <p>Go to your Taiga project &raquo; Admin &raquo; Integrations &raquo; WebHooks and add the following details:</p>
+
+                <table class="ui celled table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Renogen</td>
+                            <td><input type="text" readonly="readonly" value="{{nav.url('app_plugin_action',nav.entityParams(project) + {'plugin':'Taiga', 'action':'webhook'})}}" />
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Deployment Date vs Sprint End Date</label>
+                <p>Select how you want the deployment date in relative to sprint end date</p>
+                <select name="deployment_date_adjust" class="ui fluid dropdown">
+                    <option value="">-- Please select --</option>
+                    {% for adjust,display in deployment_date_adjustments %}
+                        <option value="{{adjust}}" {% if core.options.deployment_date_adjust == adjust %}selected="selected"{% endif %}>{{display}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Default deployment time</label>
+                {{ m.dateField('deployment_time','deployment_time',core.options.deployment_time|default('12:00 AM'),'Deployment Time', 'time') }}
+            </div>
+            <div class="ui field grey basic segment">
+                <label class="ui top attached large label">Extract item reference number from user story subject</label>
+                <p>Select the pattern to extract from</p>
+                <select name="extract_refnum_from_subject" class="ui fluid dropdown">
+                    <option value="">-- Please select --</option>
+                    {% for pattern,display in extract_refnum_patterns %}
+                        <option value="{{pattern}}" {% if core.options.extract_refnum_from_subject == pattern %}selected="selected"{% endif %}>{{display}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ui field grey basic segment">
+                <label class="ui top attached large label">Otherwise, use the Taiga user story id with the following prefix as the reference number</label>
+                <input type="text" name="auto_refnum_from_id_prefix" value="{{core.options.auto_refnum_from_id_prefix}}" />
+            </div>
+            <div class="ui field grey basic segment">
+                <label class="ui top attached large label">And left pad Taiga user story id to be this many digits</label>
+                <div class="inline fields">
+                    {% for n in range(1, 10, 1) %}
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input id="lpad-{{n}}" type="radio" name="auto_refnum_from_id_lpad" value="{{n}}" {% if n == core.options.auto_refnum_from_id_lpad %}checked="checked"{% endif %}>
+                                <label for="lpad-{{n}}">{{n}}</label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="ui field grey basic segment">
+                <label class="ui top attached large label">Allow item deletion?</label>
+                <div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" value="1" name="allow_delete_item" {% if core.options.allow_delete_item %}checked="checked"{% endif %} />
+                        <label>Deleting a user story in Taiga will delete corresponding deployment item in Renogen</label>
+                    </div>
+                </div>
+                <div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" value="1" name="delete_fresh_item_only" {% if core.options.delete_fresh_item_only %}checked="checked"{% endif %} />
+                        <label>... only if the user story is in 'Documentation' status and it has no activities nor attachments</label>
+                    </div>
+                </div>
+            </div>
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="Save" />
+            </div>
+        </div>
+    </form>
+
+{% endblock %}

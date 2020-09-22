@@ -1,0 +1,134 @@
+{% extends "renobase.html.twig" %}
+{% set is_project_admin = security.isGranted('ROLE_ADMIN') or security.isGranted('approval',project) %}
+
+{% block content %}
+    {% if project.archived %}
+        <div class="ui icon warning message">
+            <i class="archive icon"></i>
+            <div class="content">
+                <div class="header">
+                    This is an archived project.
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <h1 class="ui header">
+        <span>
+            <i class="ui {{project.icon}} icon" title="Project"></i>{{project.title}}
+        </span>
+        {% if is_project_admin %}
+            <div class="ui right floated buttons no-print">
+                <a class="ui button" href="{{nav.entityPath('app_project_edit',project)}}"><i class="ui pencil icon"></i>Edit</a>
+                <div class="ui floating dropdown icon button">
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                        <a class="ui item" href="{{nav.entityPath('app_template_list',project)}}"><i class="ui clipboard icon"></i>Activity Templates</a>
+                        <a class="ui item" href="{{nav.entityPath('app_plugin_index',project)}}"><i class="ui plug icon"></i>Plugins</a>
+                        <a class="ui item" href="{{nav.entityPath('app_project_users',project)}}"><i class="ui users icon"></i>Users</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+
+    {{ _self.describe(project.description) }}
+
+    {% if is_project_admin and project.templates.count() == 0 %}
+        <div class="ui error message">
+            Warning: No activity template has been defined for this project. <a href="{{nav.entityPath('app_template_create',project)}}">Click here to add a new activity template</a>.
+        </div>
+    {% endif %}
+
+    <h2>
+        Upcoming Deployments
+        {% if security.isGranted('approval',project) and not project.archived %}
+            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_deployment_create',project)}}">
+                <i class="ui plus icon"></i>Create Deployment
+            </a>
+        {% endif %}
+        <div style="clear:both"></div>
+    </h2>
+
+    <div class="ui basic segment">
+        {% if project.upcoming().count() > 0 %}
+            {{ _self.deploymentList(project.upcoming()) }}
+        {% else %}
+            <div class="ui warning message">This project has no upcoming deployments. {% if not project.archived %}A user with 'approval' role needs to create a new deployment.{% endif %}</div>
+        {% endif %}
+    </div>
+
+    {% if project.past(10).count() > 0 %}
+        <h2>
+            Past Deployments (Showing last 10)
+            <a class="ui button right floated" href="{{nav.entityPath('app_project_past',project)}}"><i class="ui clock icon"></i>Show all past deployments</a>
+            <div style="clear:both"></div>
+        </h2>
+        <div class="ui basic segment">
+            {{ _self.deploymentList(project.past(10)) }}
+        </div>
+    {% endif %}
+
+{% endblock %}
+
+{% macro deploymentList(deployments) %}
+    <div class="ui {%if deployments|length > 1 %}two{% else %}one{% endif %} stackable cards">
+        {% for deployment in deployments %}
+            <div class="ui purple card">
+                <div class="content">
+                    <a class="ui header" href="{{nav.entityPath('app_deployment_view',deployment)}}">
+                        <span class="ui right floated">
+                            {{ _self.displayDateTime(deployment.execute_date) }}
+                        </span>
+                        <i class="calendar check o icon"></i>
+                        <div class="content">
+                            {{ deployment.title }}
+                        </div>
+                    </a>
+                    {% if deployment.description %}
+                        <div class="ui description">
+                            {{deployment.description|nl2br}}
+                        </div>
+                    {% endif %}
+                    {% set item_count = deployment.items.count() %}
+                    {% if item_count > 0 %}
+                        <table class="ui very compact small sortable purple selectable striped table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in deployment.items %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{nav.entityPath('app_item_view',item)}}" class="ui item">
+                                                {{item.displayTitle}}
+                                            </a>
+                                        </td>
+                                        <td class="ui collapsing">
+                                            {{item.category}}
+                                        </td>
+                                        <td class="collapsing">
+                                            <i class="ui {{item.statusIcon}} icon"></i>{{item.status}}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="meta">
+                            <div class="ui basic segment">
+                                <i class="ui warning sign icon"></i>
+                                No deployment item has been added to this deployment yet
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}

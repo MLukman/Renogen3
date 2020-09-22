@@ -1,0 +1,2 @@
+{% set paramval = parameter.templateDatabaseToForm(template.parameters[param]|default(null)) %} 
+<textarea name="parameters[{{param}}]" rows="3">{{paramval|default(null)}}</textarea>

@@ -1,0 +1,8 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <div class="ui basic segment">
+        <h1 class="ui header">{{error.title|default('Error found!')}}</h1>
+        {{error.message}}
+    </div>
+{% endblock %}

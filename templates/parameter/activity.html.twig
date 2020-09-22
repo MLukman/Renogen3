@@ -1,0 +1,53 @@
+{% import "base.html.twig" as m %}
+{% import "renobase.html.twig" as r %}
+{% if parameter.type in ['freetext', 'regextext'] %}
+    <input id="parameters-{{param}}" type="text" name="parameters[{{param}}]" placeholder="{{parameter.activityDescription}}" value="{{paramval|default(template.parameters[param]|default(null))}}" />
+    {{ m.fieldError(errors|default([]), 'parameters.' ~ param) }}
+{% elseif parameter.type == 'multilinetext' %}
+    <textarea id="parameters-{{param}}" name="parameters[{{param}}]" placeholder="{{parameter.activityDescription}}" rows="3">{{paramval|default(template.parameters[param]|default(null))}}</textarea>
+    {{ m.fieldError(errors|default([]), 'parameters.' ~ param) }}
+{% elseif parameter.type == 'dropdown' %}
+    {% if template.parameters[param]|length == 1 and parameter.activityRequired %}
+        {% set v = (template.parameters[param]|keys)[0] %}
+        <div>{{template.parameters[param][v]}}</div>
+        <input type="hidden" name="parameters[{{param}}]" value="{{v}}" />
+    {% else %}
+        <select id="parameters-{{param}}" name="parameters[{{param}}]" class="ui search dropdown">
+            <option value="">-- Please select --</option>
+            {% for v,t in template.parameters[param] %}
+                <option value="{{v}}" {% if v == paramval %}selected="selected"{% endif %}>{{t}}</option>
+            {% endfor %}
+        </select>
+    {% endif %}
+    {{ m.fieldError(errors|default([]), 'parameters.' ~ param) }}
+{% elseif parameter.type == 'multiselect' %}
+    <div class="grouped fields">
+        <input type="hidden" name="parameters[{{param}}]" value="" />
+        {% for v,t in template.parameters[param] %}
+            <div class="field">
+                <div class="ui checkbox">
+                    <input type="checkbox" value="{{v}}" name="parameters[{{param}}][]" {% if v in paramval|default([]) %}checked="checked"{% endif %} />
+                    <label>{{t}}</label>
+                </div>
+            </div>
+        {% endfor %}
+        {{ m.fieldError(errors|default([]), 'parameters.' ~ param) }}
+    </div>
+{% elseif parameter.type == 'multifreetext' %}
+    {% if template.parameters[param]|length > 0 %}
+        <div class="ui form">
+            {% for k,lbl in template.parameters[param] %}
+                {% set label = (lbl|last == '*' ? lbl|slice(0,-1) : lbl) %}
+                <div class="{% if lbl|last == '*' %}required {% endif %}field">
+                    <label for="parameters-{{param}}-{{k}}">{{label}}</label>
+                    <input id="parameters-{{param}}-{{k}}" type="text" name="parameters[{{param}}][{{k}}]" value="{{paramval[k]|default(null)}}" />
+                    {{ m.fieldError(errors|default([]), 'parameters.' ~ param ~ '.' ~ k) }}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p><em>-- Not required --</em></p>
+    {% endif %}
+{% elseif parameter.type in ['config', 'multilineconfig'] %}
+    {{r.prettyDisplay(parameter.displayTemplateParameter(template, param))}}
+{% endif %}

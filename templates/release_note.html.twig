@@ -1,0 +1,46 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <h1 class="ui dividing header">
+        <small>{{deployment.project.title}} Deployment Release Note &raquo;</small><br />
+        <span>
+            {{deployment.displayTitle}}
+        </span>
+    </h1>
+
+    {% if deployment.description %}
+        <h3>{{deployment.description}}</h3>
+    {% endif %}
+
+    <div class="ui basic segment" style="font-family: monospace">
+        {% for category,catitems in items %}
+            {% if catitems %}
+                <h2 class="ui dividing header">{{category}}</h2>
+                <div class="ui basic segment">
+                    <ol class="ui relaxed large list">
+                        {% for item in catitems %}
+                            <li>
+                                {% if item.approved_date is empty %}
+                                    <em>[Not approved yet]</em>
+                                {% endif %}
+                                <strong>{{item.displayTitle()}}</strong>
+                                ({{item.modules|join(' + ')}})
+                                {% if item.description %}
+                                    <div>
+                                        <small>
+                                            <pre>{{item.description}}</pre>
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="ui vertical footer segment">
+        <p><em>Auto-generated on {{'now'|date('d/m/Y h:i A')}}</em></p>
+    </div>
+{% endblock %}

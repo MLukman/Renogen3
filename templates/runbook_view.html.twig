@@ -1,0 +1,87 @@
+{% extends "renobase.html.twig" %}
+
+{% block head %}
+    <script>
+        function changeStatus(id, status, required) {
+            $('#change_status_form').attr('action', id);
+            $('#change_status_field').val(status);
+            $('#change_status_next').text(status);
+            if (required) {
+                $('#changeStatusRemarkField').show();
+                $('#changeStatusRemarkRequired').val(1);
+            } else {
+                $('#changeStatusRemarkField').hide();
+                $('#changeStatusRemarkRequired').val(0);
+            }
+            $('#change_status_confirmation').modal('show');
+            validateRemark();
+            return false;
+        }
+
+        function validateRemark() {
+            if ($('#changeStatusRemarkRequired').val() == 1 && $('#changeStatusRemarkTextArea').val().trim() == '') {
+                $('#change_status_button').addClass('disabled');
+            } else {
+                $('#change_status_button').removeClass('disabled');
+            }
+        }
+
+        $(function () {
+            $('#changeStatusRemarkTextArea').on('input propertychange', validateRemark);
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1 class="ui dividing header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(deployment.project, true)}} &raquo;</span>
+            <span>{{_self.crumb_deployment(deployment, true)}} &raquo;</span>
+        </div>
+        <span>
+            <i class="ui checkmark box o icon"></i>Run Book
+        </span>
+    </h1>
+
+    <em>Listing approved deployment items only</em>
+
+    {% set runbooks = deployment.generateRunbooks(ds) %}
+    <div class="ui basic segment">
+        {% set stages = { '-1':'Pre Deployment', '0': 'During Deployment', '1': 'Post Deployment' } %}
+        {% set colors = { '-1':'red', '0': 'blue', '1': 'orange' } %}
+        {% for stage,groups in runbooks %}
+            <h2 class="ui {{colors[stage]}} header">{{stages[stage]}}</h2>
+            {% for group in groups %}
+                <div class="ui segment">
+                    <div class="ui left ribbon {{colors[stage]}} label">
+                        <h3>{{loop.index}} &raquo; {{group.getTitle()}}</h3>
+                    </div>
+                    <p>{{group.getInstruction()}}</p>
+                    {% set data = group.getData() %}
+                    {% include group.getTemplate() %}
+                </div>
+            {% else %}
+                <div class="ui message">No activity for this stage</div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div id="change_status_confirmation" class="ui modal">
+        <i class="close icon"></i>
+        <div class="header">
+            Change Status to <span id="change_status_next">next</span>
+        </div>
+        <form id="change_status_form" class="ui form basic segment" method="POST" action="" onsubmit="showOverlay('Updating ...');">
+            <div id="changeStatusRemarkField" class="ui field content">
+                <label>Remark</label>
+                <textarea id="changeStatusRemarkTextArea" placeholder="Please enter a remark" name="remark"></textarea>
+            </div>
+            <div class="actions">
+                <input id="change_status_button" class="ui ok primary button" type="submit" value="Change Status" />
+                <div class="ui cancel button">Cancel</div>
+                <input id="changeStatusRemarkRequired" type="hidden" name="remark_required" value="" />
+                <input id="change_status_field" type="hidden" name="new_status" value="" />
+            </div>
+        </form>
+    </div>
+{% endblock %}

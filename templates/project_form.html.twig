@@ -1,0 +1,84 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    {% set is_existing = (project.id|default(null) is not empty) %}
+    <h1 class="ui header">
+        {% if is_existing %}
+            Edit project
+        {% else %}
+            Create project
+        {% endif %}
+    </h1>
+
+    {% if errors|default(false) %}
+        <div class="ui error message">
+            Your input requires your further attention. Please inspect any messages below.
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="ui form">
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Name</label>
+                <input placeholder="Project name (max 30 alphanumeric, dash and underscore characters only)" type="text" name="name" value="{{project.name|default(null)}}" {% if is_existing %}disabled="disabled"{% endif %} />
+                {{ _self.fieldError(errors|default([]), 'name') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Title</label>
+                <input placeholder="User friendly project title (max 100 characters)" type="text" name="title" value="{{project.title|default(null)}}" />
+                {{ _self.fieldError(errors|default([]), 'title') }}
+            </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Icon</label>
+                <div class="ui input">
+                    <h1 style="padding:0 0.5em; margin:0"><i id="project_icon_preview" class="ui {{project.icon|default('cube')}} icon"></i> </h1>
+                    <input id="project_icon_input" placeholder="Icon ID" type="text" name="icon" value="{{project.icon|default('cube')}}" onkeyup="$('#project_icon_preview').removeClass().addClass('ui').addClass($('#project_icon_input').val()).addClass('icon');" />
+                </div>
+                {{ _self.fieldError(errors|default([]), 'icon') }}
+                <div>Refer <a href="https://fomantic-ui.com/elements/icon.html" target="_blank">this website</a> for the list of icon IDs</div>
+            </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Description</label>
+                <textarea name="description" rows="3">{{project.description|default(null)}}</textarea>
+                {{ _self.fieldError(errors|default([]), 'description') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Modules</label>
+                <textarea name="modules" placeholder="List of modules (e.g. web, backend, mobile etc)">{{project.modules|default([])|join("\n")}}</textarea>
+                {{ _self.fieldError(errors|default([]), 'modules') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Deployment Item Categories</label>
+                <textarea name="categories" placeholder="List of deployment item categories">{{project.categories|default([])|join("\n")}}</textarea>
+                {{ _self.fieldError(errors|default([]), 'categories') }}
+            </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Checklist Templates</label>
+                <textarea name="checklist_templates" placeholder="Deployment Checklist Templates">{{project.checklist_templates|default([])|join("\n")}}</textarea>
+                {{ _self.fieldError(errors|default([]), 'checklist_templates') }}
+            </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Private Project</label>
+                <div class="ui checkbox">
+                    <input type="checkbox" value="1" name="private" {% if project.private %}checked="checked"{% endif %} />
+                    <label>Make this project private to hide it from non members</label>
+                </div>
+            </div>
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Create{% endif %} project" />
+                <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                {% if is_existing and security.isGranted('ROLE_ADMIN') %}
+                    <input type="submit" class="ui red right floated button" name="_action" value="Delete"
+                           onclick="return prompt('Are you sure you want to delete? Enter project title to delete') == '{{project.title}}'" />
+                    {% if project.archived %}
+                        <input type="submit" class="ui orange right floated button" name="_action" value="Unarchive"
+                               onclick="return confirm('Unarchive this project to put it back into the projects list?')" />
+                    {% else %}
+                        <input type="submit" class="ui orange right floated button" name="_action" value="Archive"
+                               onclick="return confirm('Archiving this project will hide it from the projects list. Confirm?')" />
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </form>
+{% endblock %}

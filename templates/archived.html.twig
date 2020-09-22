@@ -1,0 +1,53 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <h1 class="ui header">
+        <span>
+            <i class="ui archive icon"></i>Archived Projects
+        </span>
+    </h1>
+    <p>&nbsp;</p>
+    <div class="ui three stackable cards secondary segment">
+        {% for project in projects %}
+            {% set has_access = security.isGranted(['view','execute','entry','review','approval'],project) %}
+            {% if has_access or not project.private %}
+                <a class="ui card" {% if has_access %}href="{{nav.entityPath('app_project_view', project)}}"{% endif %}>
+                    <div class="ui content">
+                        <div class="ui {% if has_access %}purple{% else %}disabled{% endif %} header">
+                            <h2>
+                                <i class="ui {{project.icon}} icon" title="Project"></i> 
+                                {{project.title}}
+                                {% if project.private %}
+                                    <div class="ui right corner label">
+                                        <i class="ui lock icon" title="Private project"></i>
+                                    </div>
+                                {% elseif not has_access %}
+                                    <div class="ui right corner label">
+                                        <i class="ui eye slash icon" title="No access"></i>
+                                    </div>
+                                {% endif %}
+                            </h2>
+                        </div>
+                        {% if project.description %}
+                            <div class="ui description">
+                                {{project.description}}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="extra content">
+                        <div class="ui meta">
+                            {% if has_access %}
+                                {{project.upcoming().count}} upcoming deployment{% if project.upcoming().count > 1 %}s{% endif %}
+                            {% else %}
+                                You have no access to this project
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            {% endif %}
+        {% endfor %}
+        {% if projects|length == 0 %}
+            <h2 class="ui text centered header">No archived project yet</h2>
+        {% endif %}
+    </div>
+{% endblock %}

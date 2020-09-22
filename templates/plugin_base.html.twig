@@ -1,0 +1,28 @@
+{% extends "renobase.html.twig" %}
+{% import "renobase.html.twig" as m %}
+
+{% block content %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{m.crumb_project(project, true)}} &raquo;</span>
+            {% if plugin is defined %}
+                <span>
+                    <i class="ui plug icon"></i><a href="{{nav.entityPath('app_plugin_index',project)}}">Plugins</a> &raquo;
+                </span>
+            {% endif %}
+        </div>
+        {% if plugin is defined %}
+            <span><i class="ui {{plugin.icon}} icon"></i>{{plugin.name}}</span>
+            {% else %}
+            <span><i class="ui plug icon"></i>Plugins</span>
+        {% endif %}
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+    {% if plugin is defined %}
+        <div class="ui message">{{plugin.title}}</div>
+    {%endif %}
+
+    {% block pluginView %}
+
+    {% endblock %}
+{% endblock %}

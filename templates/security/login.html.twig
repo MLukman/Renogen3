@@ -1,0 +1,62 @@
+{% extends "base.html.twig" %}
+{% import _self as r %}
+
+{% block topbar %}
+{% endblock %}
+
+{% block head %}
+    <style>
+        body {
+            background-color: #c0c0c0;
+        }
+    </style>
+{% endblock %}
+
+{% block container %}
+    <div class="ui center aligned basic grid segment" style="margin: auto 0; padding: 1em; height: 100%">
+        <div class="ui purple inverted piled segment" style="margin: auto 0; width: 32em">
+            <a style="display: block; padding: 1em 0;" href="{{ path('app_home') }}">
+                <img src="{{ nav.basePath }}{{ controller.appLogo }}" />
+            </a>
+            <form action="{{ path('app_login') }}" method="post">
+                <div class="ui form">
+                    {% if message|default(null) %}
+                        {% if message.negative %}
+                            <div class="ui negative inverted message"><i class="ui exclamation triangle icon"></i> {{message.text}}</div>
+                        {% else %}
+                            <div class="ui positive message"><i class="ui info icon"></i> {{message.text}}</div>
+                        {% endif %}
+                    {% else %}
+                        Renogen is a release management approval & tracking platform
+                    {% endif %}
+                    <div class="ui big basic segment">
+                        <div class="required field">
+                            <div class="ui left icon input">
+                                <input type="text" name="username" placeholder="Username" value="{{ last_username|default(null) }}" {% if not last_username %}autofocus{% endif %} />
+                                <i class="ui user icon"></i>
+                            </div>
+                        </div>
+                        <div class="required field">
+                            <div class="ui left icon input">
+                                <input type="password" name="password" placeholder="Password" value="" {% if last_username %}autofocus{% endif %} />
+                                <i class="ui key icon"></i>
+                            </div>
+                        </div>
+                        <div class="field center aligned">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
+                            <input type="hidden" name="last_page" value="{{ last_page }}" />
+                            <button class="ui big black button" type="submit"><i class="ui unlock icon"></i> Login</button>
+                            {% if self_register and not last_username %}
+                                <div class="ui horizontal divider">
+                                    Or
+                                </div>
+                                <a class="ui big silver button" href="{{ path('app_register',[],true) }}"><i class="ui sign in alternate icon"></i> Register</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </form>
+            {{ bottom_message }}
+        </div>
+    </div>
+{% endblock %}

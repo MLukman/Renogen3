@@ -1,0 +1,51 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(project, true)}} &raquo;</span>
+        </div>
+        <span><i class="ui clipboard icon"></i>Activity Templates</span>
+        <a class="ui right floated primary button" href="{{nav.entityPath('app_template_create',project)}}">
+            <i class="ui plus icon"></i>Create activity template
+        </a>
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+
+    <p>Activity templates are templates that will be used to create activities under deployment items</p>
+
+    {% if project.templates.count() > 0 %}
+        <div class="ui segment">
+            <div class="ui very relaxed divided list">
+                {% for template in project.templates %}
+                    <div class="ui item">
+                        <i class="large copy middle aligned icon"></i>
+                        <div class="content">
+                            <a href="{{nav.entityPath('app_template_edit',template)}}" class="header">
+                                <h3>
+
+                                    {% if template.disabled %}
+                                        <span class="ui label">#{{template.priority}} (disabled)</span>
+                                        <span style="text-decoration: line-through">{{template.title}}</span>
+                                    {% else %}
+                                        <span class="ui label">#{{template.priority}}</span>
+                                        {{template.title}}
+                                    {% endif %}
+                                </h3>
+                            </a>
+                            <div class="ui description">
+                                <div>Category: {{template.templateClass(ds).classTitle}}</div>
+                                <div>Used by {{template.activities.count}} {{ template.activities.count > 1 ? 'activities':'activity' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="ui error message">
+            No activity template has been defined for this project
+        </div>
+    {% endif %}
+
+{% endblock %}

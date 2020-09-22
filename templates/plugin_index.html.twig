@@ -1,0 +1,17 @@
+{% extends "plugin_base.html.twig" %}
+
+{% block pluginView %}
+    <h2>Available Plugins</h2>
+    <div class="ui stackable cards divided list">
+        {% for p in pluginClasses %}
+            <a class="ui red card" href="{{nav.entityPath('app_plugin_configure', project, {'plugin':p.name})}}">
+                <div class="content">
+                    <div class="ui header">
+                        <h3><i class="ui {{p.icon}} icon"></i> {{p.name}}</h3>
+                    </div>
+                    <div class="description">{{p.title}}</div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}

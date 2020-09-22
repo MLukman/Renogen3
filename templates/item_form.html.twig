@@ -1,0 +1,118 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    {% set is_existing = (item.id|default(null) is not empty) %}
+    {% set critical_permission = (is_existing and (item.created_by == ds.currentUserEntity() or security.isGranted('approval',item.deployment.project))) %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(item.deployment.project, true)}} &raquo;</span>
+            <span>{{_self.crumb_deployment(item.deployment, true)}} &raquo;</span>
+        </div>
+        {% if is_existing %}Edit{% else %}Add{% endif %} deployment item
+    </h1>
+
+    {% if errors|default(false) %}
+        <div class="ui error message">
+            Your input requires your further attention. Please inspect any messages below.
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="ui form">
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Reference Number</label>
+                <input placeholder="Reference number (e.g. CR#, SR# etc)" type="text" name="refnum" value="{{item.refnum|default(null)}}" />
+                {{ _self.fieldError(errors|default([]), 'refnum') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Title</label>
+                <input placeholder="User friendly item title (max 250 characters)" type="text" name="title" value="{{item.title|default(null)}}" />
+                {{ _self.fieldError(errors|default([]), 'title') }}
+            </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Description</label>
+                <textarea name="description" rows="3">{{item.description|default(null)}}</textarea>
+                {{ _self.fieldError(errors|default([]), 'description') }}
+            </div>
+            <div class="ui basic segment stackable grid">
+                <div class="ui ten wide column field">
+                    <label class="ui top attached large label">External URL</label>
+                    <input placeholder="External URL for this deployment (if any)" type="text" name="external_url" value="{{item.external_url|default(null)}}" />
+                    {{ _self.fieldError(errors|default([]), 'external_url') }}
+                </div>
+                <div class="ui six wide column field">
+                    <label class="ui top attached large label">External URL Label</label>
+                    <input placeholder="Label for external URL (default to 'External URL' if empty)" type="text" name="external_url_label" value="{{item.external_url_label|default(null)}}" />
+                    {{ _self.fieldError(errors|default([]), 'external_url_label') }}
+                </div>
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Category</label>
+                <div class="grouped fields">
+                    {% for category in item.deployment.project.categories %}
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input type="radio" name="category" value="{{category}}" {% if category == item.category %}checked="checked"{% endif %} />
+                                <label>{{category}}</label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ _self.fieldError(errors|default([]), 'category') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Modules</label>
+                <div class="grouped fields">
+                    <input type="hidden" name="modules" value="" />
+                    {% for v in item.deployment.project.modules %}
+                        <div class="field">
+                            <div class="ui checkbox">
+                                <input type="checkbox" value="{{v}}" name="modules[]" {% if v in item.modules|default([]) %}checked="checked"{% endif %} />
+                                <label>{{v}}</label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ _self.fieldError(errors|default([]), 'modules') }}
+            </div>
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Add{% endif %} deployment item" />
+                <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                {% if is_existing and security.isGranted('delete',item) %}
+                    <input type="submit" class="ui red right floated button" name="_action" value="Delete"
+                           onclick="return confirm('All activities and attachments will be deleted as well.\nAre you sure you want to delete?')" />
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    {% if is_existing and security.isGranted('move',item) %}
+        <h2 class="ui header">Move to another deployment</h2>
+        <p>It is possible for a deployment item to be moved to another upcoming deployment.</p>
+
+        <form method="POST">
+            <div class="ui form">
+                <div class="ui required field basic segment">
+                    <label class="ui top attached large label">Deployment</label>
+                    <select name="deployment" class="ui dropdown">
+                        {% for deployment in item.deployment.project.upcoming() %}
+                            {% if deployment != item.deployment %}
+                                <option value="{{deployment.id}}">{{deployment.displayTitle()}}</option>
+                            {% endif %}
+                        {% endfor %}
+                        {% for p in ds.getProjectsForUserAndRole(ds.currentUserEntity(), 'approval', item.deployment.project) %}
+                            {% for deployment in p.upcoming() %}
+                                <option value="{{deployment.id}}">[{{p.title}}] {{deployment.displayTitle()}}</option>
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                    {{ _self.fieldError(errors|default([]), 'deployment') }}
+                </div>
+                <div class="ui field">
+                    <input type="submit" class="ui submit red button" name="_action" value="Move"
+                           onclick="return confirm('Are you sure you want to move this item to another deployment?')" />
+                </div>
+            </div>
+        </form>
+    {% endif %}
+{% endblock %}

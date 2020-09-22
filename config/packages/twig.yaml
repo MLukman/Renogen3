@@ -1,2 +1,9 @@
 twig:
     default_path: '%kernel.project_dir%/templates'
+    paths:
+        '%kernel.project_dir%/src/Plugin': plugin
+    globals:
+        nav: '@App\Service\NavigationFactory'
+        ds: '@App\Service\DataStore'
+        security: '@Symfony\Component\Security\Core\Security'
+        

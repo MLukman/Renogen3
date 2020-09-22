@@ -1,0 +1,84 @@
+{% import "renobase.html.twig" as m %}
+{% if template.parameters[param]|length > 0 %}
+    <div class="ui form">
+        {% for p in template.parameters[param] %}
+            {% set pid = 'parameters-' ~ param ~ '-' ~ p.id %}
+            {% set paramkey = 'parameters.' ~ param ~ '.' ~ p.id %}
+            <div class="{% if p.required %}required {% endif %}field">
+                <label for="{{pid}}">{{p.title}}</label>
+                {% if p.desc %}<div>{{p.desc}}</div>{% endif %}
+                {% if p.type == 'dropdown' %}
+                    <select id="{{pid}}" name="parameters[{{param}}][{{p.id}}]" class="ui search dropdown">
+                        <option value="">-- Please select --</option>
+                        {% for v in p.details|split('\n') %}
+                            {% set val = v|trim %}
+                            <option value="{{val}}" {% if val == paramval[p.id]|default(null) %}selected="selected"{% endif %}>{{val}}</option>
+                        {% endfor %}
+                    </select>
+                {% elseif p.type == 'multiselect' %}
+                    <div class="grouped fields">
+                        <input type="hidden" name="parameters[{{param}}][{{p.id}}]" value="" />
+                        {% for i,v in p.details|split('\n') %}
+                            {% set val = v|trim %}
+                            <div class="field">
+                                <div class="ui checkbox">
+                                    <input type="checkbox" value="{{val}}" name="parameters[{{param}}][{{p.id}}][]" {% if val in paramval[p.id]|default([]) %}checked="checked"{% endif %} />
+                                    <label>{{val}}</label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% elseif p.type == 'file' %}
+                    <div class="ui basic secondary segment">
+                        <input id="{{pid}}" type="file" name="parameters[{{param}}][{{p.id}}]" {% if p.details %}accept="{{ p.details|split('\n')|join(',') }}"{% endif %} />
+                        <em>Uploaded file with size larger than {{ upload_max_filesize }} will be ignored</em>
+                        {% if paramval[p.id]|default(null) %}
+                            <div>
+                                Existing file: <strong>{{paramval[p.id].filename}}</strong> of type <strong>{{paramval[p.id].mime_type}}</strong> with size <strong>{{paramval[p.id].filesize}}</strong> bytes
+                            </div>
+                            {% if errors|default(null) and errors[paramkey] is not defined %}
+                                {% set errors = errors + {(paramkey) : 'If you chose another file before, the file was not saved due to errors on other inputs, and you need to re-upload the file again'} %}
+                            {% endif %}
+                            {% if not p.required %}
+                                <div class="ui checkbox">
+                                    <label>Tick to remove the file</label> 
+                                    <input class="ui checkbox" type="checkbox" name="parameters[{{param}}][{{p.id}}_delete]" value="1" />
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            {% if errors|default(null) and errors[paramkey] is not defined %}
+                                {% set errors = errors + {(paramkey) : 'If you chose a file before, the file was not saved due to errors on other inputs, and you need to re-upload the file again'} %}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% elseif p.type == 'password' %}
+                    <input id="{{pid}}" type="password" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]|default(p.details|split('\n')|first)}}" />
+                {% elseif p.type == 'multiline' %}
+                    <textarea id="{{pid}}" name="parameters[{{param}}][{{p.id}}]">{{paramval[p.id]|default(p.details)}}</textarea>
+                {% elseif p.type == 'script' %}
+                    <textarea id="{{pid}}" name="parameters[{{param}}][{{p.id}}]" style="font-family: monospace">{{paramval[p.id]|default(p.details)}}</textarea>
+                {% elseif p.type == 'url' %}
+                    <input id="{{pid}}" type="text" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]|default(p.details|split('\n')|first)}}" placeholder="http://"  />
+                {% elseif p.type == 'formatted' %}
+                    <input id="{{pid}}" type="text" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]}}" onkeyup="if (new RegExp('^{{p.details|escape('js')}}$').test(this.value)) {
+                                $(this).parent('.field').removeClass('error');
+                            } else {
+                                $(this).parent('.field').addClass('error');
+                            }" />
+                {% elseif p.type == 'jsondropdown' %}
+                    <select id="{{pid}}" name="parameters[{{param}}][{{p.id}}]" class="ui search dropdown">
+                        <option value="">-- Please select --</option>
+                        {% for k,v in p.details %}
+                            <option value="{{k}}" {% if k == paramval[p.id]|default(null) %}selected="selected"{% endif %}>{{k}}</option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input id="{{pid}}" type="text" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]|default(p.details|split('\n')|first)}}" />
+                {% endif %}
+                {{ m.fieldError(errors|default([]), paramkey) }}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p><em>-- Not required --</em></p>
+{% endif %}

@@ -1,0 +1,67 @@
+{% extends "plugin_base.html.twig" %}
+
+{% block pluginView %}
+    <form method="POST">
+        <div class="ui form">
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Bot Token</label>
+                <input placeholder="Bot Token" type="text" name="bot_token" value="{{bot_token|default(core.options.bot_token|default(null))}}" />
+                {{ _self.fieldError(errors|default([]), 'bot_token') }}
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Group</label>
+                <p>Please select a group from below. If the group not visible, post something there and refresh this page.</p>
+                <div class="ui basic segment grouped fields">
+                    {% for id,group in groups|default([]) %}
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input id="group{{id}}" type="radio" name="group_id" value="{{id}}" {% if id == core.options.group_id|default(0) %}checked="checked"{% endif %}>
+                                <input type="hidden" name="group_name[{{id}}]" value="{{group}}" />
+                                <label for="group{{id}}">{{group}}</label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ _self.fieldError(errors|default([]), 'group_id') }}
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Deployment Created</label>
+                <p>Available variables: <code>{project} {title} {url} {datetime} {bywho}</code></p>
+                <input type="text" name="template_deployment_created" value="{{core.options.template_deployment_created}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Deployment Date Changed</label>
+                <p>Available variables: <code>{project} {title} {url} {old} {new} {bywho}</code></p>
+                <input type="text" name="template_deployment_date_changed" value="{{core.options.template_deployment_date_changed}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Deployment Deleted</label>
+                <p>Available variables: <code>{project} {title} {datetime} {bywho}</code></p>
+                <input type="text" name="template_deployment_deleted" value="{{core.options.template_deployment_deleted}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Item Created</label>
+                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {url} {bywho}</code></p>
+                <input type="text" name="template_item_created" value="{{core.options.template_item_created}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Item Status Changed</label>
+                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {url} {old} {new} {bywho}</code></p>
+                <input type="text" name="template_item_status_changed" value="{{core.options.template_item_status_changed}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Item Moved Between Deployments</label>
+                <p>Available variables: <code>{project} {title} {url} {old_title} {old_datetime} {new_title} {new_datetime} {bywho}</code></p>
+                <input type="text" name="template_item_moved" value="{{core.options.template_item_moved}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Item Deleted</label>
+                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {bywho}</code></p>
+                <input type="text" name="template_item_deleted" value="{{core.options.template_item_deleted}}" />
+            </div>
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="Save" />
+            </div>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <div class="ui stackable grid">
+        <div class="{% if need_actions %}eleven wide computer sixteen wide tablet{% else %}sixteen wide{% endif %} column">
+            {% if projects_with_access|length > 0 %}
+                <h2>
+                    <span>Please select a project below <i class="ui level down icon"></i></span>
+                </h2>
+                <table class="ui large padded striped sortable purple fluid selectable table">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th class="ui collapsing">Next deployment</th>
+                            <th class="ui collapsing">Previous deployment</th>
+                            <th class="ui collapsing">Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects_with_access %}
+                            <tr>
+                                <td data-sort-value="{{ project.title }}">
+                                    <a href="{{nav.entityPath('app_project_view', project)}}" title="{{project.description}}">
+                                        <h2 class="nowrap">
+                                            <i class="ui {{project.icon}} icon" title="Project"></i> 
+                                            {{project.title}}
+                                            {% if project.private %}
+                                                <i class="ui small lock icon" title="Private project"></i>
+                                            {% endif %}
+                                        </h2>
+                                    </a>
+                                </td>
+                                {%  if project.upcoming()|length > 0 %}
+                                    {% set upcoming = project.upcoming()[0] %}
+                                    <td data-sort-value="{{ upcoming.execute_date.getTimestamp() }}">
+                                        <a href="{{nav.entityPath('app_deployment_view',upcoming)}}" title="{{ upcoming.title }}"><strong>{{ _self.displayDateTime(upcoming.execute_date) }}</strong></a>
+                                    </td>
+                                {% else %}
+                                    <td data-sort-value="0" class="ui center aligned">
+                                        {% if security.isGranted('approval',project) and not project.archived %}
+                                            <a href="{{nav.entityPath('app_deployment_create',project)}}" class="ui button no-print nowrap">
+                                                <i class="ui plus icon"></i>Create new
+                                            </a>
+                                        {% else %}
+                                            <span class="ui basic label">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                                {%  if project.past()|length > 0 %}
+                                    {% set past = project.past()[0] %}
+                                    <td data-sort-value="{{ past.execute_date.getTimestamp() }}">
+                                        <a href="{{nav.entityPath('app_deployment_view',past)}}" title="{{ past.title }}"><strong>{{ _self.displayDateTime(past.execute_date) }}</strong></a>
+                                    </td>
+                                {% else %}
+                                    <td data-sort-value="0" class="ui center aligned">
+                                        <span class="ui basic label">N/A</span>
+                                    </td>
+                                {% endif %}
+                                {% set role_icon = {'view':'thermometer empty','execute':'thermometer quarter','entry':'thermometer half','review':'thermometer three quarters','approval':'thermometer full'} %}
+                                {% set role_value = {'view':0,'execute':1,'entry':2,'review':3,'approval':4} %}
+                                {% set role = project.getUserAccess(ds.currentUserEntity())|default('view') %}
+                                <td class="ui collapsing" data-sort-value="{{ role_value[role] }}">
+                                    <i class="ui {{role_icon[role]}} icon"></i> {{ role }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            {% if projects_no_access|length > 0 %}
+                <div class="hide-on-mobile">
+                    <div class="ui divider"></div>
+                    <p>
+                        <strong>You do not have access to the following projects but you can request access from the users with approval role as listed for each project, or from an administrator</strong>
+                    </p>
+                    <div class="ui three stackable cards">
+                        {% for project in projects_no_access %}
+                            <div class="ui card">
+                                <div class="ui content">
+                                    <div class="ui purple header">
+                                        <h3>
+                                            <i class="ui {{project.icon}} icon"></i> 
+                                            {{project.title}}
+                                        </h3>
+                                    </div>
+                                    {% if project.description %}
+                                        <div class="ui description">
+                                            {{project.description}}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="extra content">
+                                    <div class="ui meta">
+                                        {% for u in project.usersWithRole('approval') %}
+                                            <span class="nowrap"><i class="ui id badge outline icon"></i> {{ u.shortname }}</span>
+                                        {% else %}
+                                            <div>Please request access from admin</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% if need_actions %}
+            <div class="five wide computer sixteen wide tablet column">
+                <h3>Need actions</h3>
+                <div class="ui raised cards yellow">
+                    {% for d in need_actions %}
+                        <div class="ui fluid card" style="background-color: #ffffcc">
+                            <div class="ui content">
+                                <h4>
+                                    <span><i class="ui {{d.deployment.project.icon}} icon" title="Project"></i> {{ d.deployment.project.title }} &raquo;</span>
+                                    <span class="nowrap"><i class="ui calendar check o icon" title="Deployment"></i> <a href="{{ nav.entityPath('app_deployment_view', d.deployment) }}">{{ _self.displayDateTime(d.deployment.execute_date) }}</a></span>
+                                </h4>
+                                <div class="ui celled list">
+                                    {% if d.items|length > 10 %}
+                                        <div class="item">Showing 10 of {{ d.items|length }} items only</div>
+                                    {% endif %}
+                                    {% for item in d.items %}
+                                        {% if loop.index0 < 10 %}
+                                            <a class="item" href="{{ nav.entityPath('app_item_view', item) }}">
+                                                <i class="flag icon" title="{{ item.status }}"></i>
+                                                <div class="content">
+                                                    <div class="header">{{ item.title }}</div>
+                                                    <div class="description">{{ item.status }}</div>
+                                                    <div class="description">
+                                                        <i class="add to cart icon" title="Activities"></i>{{ item.activities|length }} &nbsp;
+                                                        <i class="attach icon" title="Attachments"></i>{{ item.attachments|length }} &nbsp;
+                                                        <i class="comments icon" title="Comments"></i>{{ item.comments|length }}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if d.checklists|length > 10 %}
+                                        <div class="item">Showing 10 of {{ d.checklists|length }} tasks only</div>
+                                    {% endif %}
+                                    {%  for checklist in d.checklists %}
+                                        {% if loop.index0 < 10 %}
+                                            <a class="item" href="{{ nav.entityPath('app_checklist_edit', checklist) }}#checklist">
+                                                <i class="tasks icon" title="Checklist Task"></i>
+                                                <div class="content">
+                                                    <div class="header">{{ checklist.title }}</div>
+                                                    <div class="description">{{ checklist.status }}</div>
+                                                    <div class="description">{{ checklist.start_datetime|date('d-m-Y h:i A') }}</div>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if d.activities|length > 10 %}
+                                        <div class="item">Showing 10 of {{ d.activities|length }} activities only</div>
+                                    {% endif %}
+                                    {%  for activity in d.activities %}
+                                        {% if loop.index0 < 10 %}
+                                            <a class="item" href="{{ nav.entityPath('app_runbook_view', d.deployment) }}">
+                                                <i class="cloud upload icon" title="{{ activity.status }}"></i>
+                                                <div class="content">
+                                                    <div class="header">{{ activity.template.title }}</div>
+                                                    <div class="description">{{ activity.runitems|length }} pending</div>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

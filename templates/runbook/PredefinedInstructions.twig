@@ -1,0 +1,62 @@
+{% import "renobase.html.twig" as m %}
+{% set is_template = data[0].runitem.template.templateClass(ds).instructionsContainVariables(data[0].runitem) %}
+{% if not is_template %}
+    <div style="max-width:100%; overflow: auto">
+        {{data[0].params.Instructions|raw}}
+    </div>
+{% endif %}
+{% set has_details = false %}
+{% for row in data %}
+    {% if row.params.Details is defined %}
+        {% set has_details = true %}
+    {% endif %}
+{% endfor %}
+<table class="ui striped very compact table">
+    <thead>
+        <tr>
+            <th>#</th>
+                {% if data[0].runitem.template.parameters['nodes']|length > 0 %}
+                <th>{{data[0].runitem.template.parameters['nodes_label']}}</th>
+                {% endif %}
+                {% if is_template %}
+                <th>Instructions</th>
+                {% endif %}
+                {% if has_details %}
+                <th>Details</th>
+                {% endif %}
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in data %}
+            <tr>
+                <td class="top aligned collapsing">
+                    <a name="{{row.runitem.id}}" class="anchor">&nbsp;</a>{{loop.index}}
+                </td>
+                {% if row.runitem.template.parameters['nodes']|length > 0 %}
+                    <td class="ui collapsing top aligned">
+                        {{ m.prettyDisplay(row.params[row.runitem.template.parameters['nodes_label']]) }}
+                    </td>
+                {% endif %}
+                {% if is_template %}
+                    <td class="top aligned">
+                        <div style="max-width:100%; overflow: auto">
+                            {{ m.prettyDisplay(row.params.Instructions) }}
+                        </div>
+                    </td>
+                {% endif %}
+                {% if has_details %}
+                    <td class="top aligned">
+                        {% if row.params.Details is defined and row.params.Details|length > 0 %}
+                            {{ m.prettyDisplay(row.params.Details) }}
+                        {% endif %}
+                    </td>
+                {% endif %}
+                <td class="top aligned collapsing">
+                    {{ m.runItemStatusControl(row.runitem) }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+

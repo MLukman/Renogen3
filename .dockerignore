@@ -1,0 +1,8 @@
+.git
+Dockerfile
+
+/.env.local
+/.env.local.php
+/.env.*.local
+/var/
+/vendor/

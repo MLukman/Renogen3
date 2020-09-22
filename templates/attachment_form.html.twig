@@ -1,0 +1,52 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    {% set is_existing = (attachment.id|default(null) is not empty) %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(attachment.item.deployment.project, true)}} &raquo;</span>
+            <span>{{_self.crumb_deployment(attachment.item.deployment, true)}} &raquo;</span>
+            <span>{{_self.crumb_item(attachment.item, true)}} &raquo;</span>
+        </div>
+        <span>
+            <i class="ui attach icon"></i>{% if is_existing %}Edit{% else %}Add{% endif %} attachment
+        </span>
+    </h1>
+
+    {% if errors|default(false) %}
+        <div class="ui error message">
+            Your input requires your further attention. Please inspect any messages below.
+        </div>
+    {% endif %}
+    <!-- debug errors: {{errors|default(null)|json_encode}} -->
+
+    <form method="POST" enctype="multipart/form-data">
+        <div class="ui form">
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Upload File</label>
+                <input type="file" name="file" />
+                {% if is_existing %}
+                    <p>Existing file: <strong>{{attachment.filename}}</strong> of type <strong>{{attachment.filestore.mime_type}}</strong> with size <strong>{{_self.bytesToSize(attachment.filestore.filesize)}}</strong></p>
+                {% endif %}
+                {{ _self.fieldError(errors|default([]), 'file') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Description</label>
+                <input placeholder="Brief description of the file" type="text" name="description" value="{{attachment.description|default(null)}}" />
+                {{ _self.fieldError(errors|default([]), 'description') }}
+            </div>
+            <div class="ui field">
+                <div class="ui yellow message"><strong>Warning:</strong> the file you attach here will not appear in the run book, so please do not attach any file that is required during deployment. Please create an activity that has file upload instead.</div>
+                <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Add{% endif %} attachment" />
+                <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                {% if is_existing and security.isGranted('delete',attachment) %}
+                    <input type="submit" class="ui red right floated button" name="_action" value="Delete"
+                           onclick="return confirm('Are you sure you want to delete?')" />
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <p>&nbsp;</p>
+    {{ _self.timestamps(attachment) }}
+{% endblock %}

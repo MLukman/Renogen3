@@ -1,0 +1,116 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <h1 class="ui header">
+        <small><i class="ui setting icon"></i>Admin &raquo;</small><br />
+        <span><i class="ui users icon"></i>Users</span>
+        <a class="ui right floated primary button" href="{{nav.path('app_admin_users_create')}}">
+            <i class="ui plus icon"></i>Add new user
+        </a>
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+
+    {% set active_users = users|filter(u => not u.blocked) %}
+    {% set blocked_users = users|filter(u => u.blocked) %}
+    <div class="ui top attached tabular secondary pointing menu">
+        <div class="active item" data-tab="active">
+            <h2 class="ui header">
+                <span>
+                    <i class="ui user icon"></i> Active
+                    <span class="ui circular large label">{{active_users|length}}</span>
+                </span>
+            </h2>
+        </div>
+        <div class="item" data-tab="blocked">
+            <h2 class="ui header">
+                <span>
+                    <i class="ui user times icon"></i> Blocked
+                    <span class="ui circular large label">{{blocked_users|length}}</span>
+                </span>
+            </h2>
+        </div>
+    </div>
+
+    <div class="ui tab basic segment active" data-tab="active">
+        {{ _self.userlist(active_users) }}
+    </div>
+    <div class="ui tab basic segment" data-tab="blocked">
+        {{ _self.userlist(blocked_users) }}
+    </div>
+{% endblock %}
+
+{% macro userlist(users) %}
+    <table class="ui celled striped sortable table">
+        <thead>
+            <tr>
+                <th class="ui collapsing">Username</th>
+                <th>Short Name</th>
+                <th class="ui collapsing">Email</th>
+                <th class="ui collapsing">Login by</th>
+                <th class="ui collapsing">Admin</th>
+                <th class="ui collapsing">Project<br/>Count</th>
+                <th>Project Access</th>
+                <th class="ui collapsing">Registered</th>
+                <th class="ui collapsing">Last Login</th>
+                <th class="ui collapsing">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr class="ui top aligned">
+                    <td>{{user.username}}</td>
+                    <td>{{user.shortname}}</td>
+                    <td>{{user.email}}</td>
+                    <td class="ui center aligned">
+                        {% if user.blocked %}
+                            <div class="ui red label">Blocked</div>
+                        {% else %}
+                            <div class="ui label">{{user.auth}}</div>
+                        {% endif %}
+                    </td>
+                    <td class="ui center aligned">{{'ROLE_ADMIN' in user.roles ? 'Y':'N'}}</td>
+                    <td class="ui center aligned" data-sort-value="{{user.userProjects|length}}">
+                        {{user.userProjects|length}}
+                    </td>
+                    <td>
+                        <div class="ui middle aligned divided tiny list">
+                            {% for userProject in user.userProjects.toArray()|psort('project.title') %}
+                                <div class="item">
+                                    <div class="right floated content">
+                                        {{userProject.role}}
+                                    </div>
+                                    <div class="content">
+                                        {{userProject.project.title}}
+                                    </div>
+                                </div>
+                            {% else %}
+                                N/A
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="ui collapsing" data-sort-value="{{ user.created_date.getTimestamp() }}">
+                        {{ user.created_date|date('d/m/Y') }}
+                    </td>
+                    {% if user.last_login %}
+                        <td class="ui collapsing" data-sort-value="{{ user.last_login.getTimestamp() }}">
+                            {{ user.last_login|date('d/m/Y h:i A') }}
+                        </td>
+                    {% else %}
+                        <td class="ui collapsing" data-sort-value="0">
+                            Unknown
+                        </td>
+                    {% endif %}
+                    <td class="ui collapsing">
+                        <a class="ui button" href="{{nav.path('app_admin_users_edit', {'username': user.username})}}">
+                            <i class="ui pencil icon"></i> Edit
+                        </a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="10" class="ui center aligned">Nothing to list</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>    
+{% endmacro %}

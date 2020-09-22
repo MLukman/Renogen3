@@ -1,0 +1,78 @@
+{% extends "renobase.html.twig" %}
+
+{% block head %}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %}
+
+{% block content %}
+    <h1 class="ui header">
+        <span>
+            <i class="ui user icon"></i>
+            Registration
+        </span>
+    </h1>
+
+    {% if errors|default(false) %}
+        <div class="ui error message">
+            Your input requires your further attention. Please inspect any messages below.
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="ui form">
+            {%  if not user.auth %}
+                <div class="ui required field basic segment">
+                    <label class="ui top attached large label">Authentication Method</label>
+                    <p>Please choose from the following authentication methods:</p>
+                    <div class="inline fields">
+                        {% for auth in auths %}
+                            <div class="field">
+                                <div class="ui radio checkbox">
+                                    <input id="auth-{{auth.name}}" type="radio" name="auth" value="{{auth.name}}" />
+                                    <label for="auth-{{auth.name}}">{{auth.title}}</label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {{ _self.fieldError(errors|default([]), 'auth') }}
+                </div>
+                <div class="ui field">
+                    <input type="submit" class="ui submit primary button" name="_action" value="Next Step" />
+                </div>
+            {% else %}
+                <input type="hidden" name="auth" value="{{auth.name}}" />
+                {% if auth.registration_explanation %}
+                    <div class="ui basic field segment">
+                        <label class="ui top attached large label">Instruction</label>
+                        <p>{{ auth.registration_explanation }}</p>
+                    </div>
+                {% endif %}
+                <div class="ui required field basic segment">
+                    <label class="ui top attached large label">User Name</label>
+                    <input placeholder="User name (max 25 alphanumeric, underscores, dashes and dots only, and must start with an alphanumerical character)" type="text" name="username" value="{{user.username|default(null)}}" />
+                    {{ _self.fieldError(errors|default([]), 'username') }}
+                </div>
+                <div class="ui field required basic segment">
+                    <label class="ui top attached large label">Short Name</label>
+                    <input placeholder="Short name (max 100 characters)" type="text" name="shortname" value="{{user.shortname|default(null)}}" />
+                    {{ _self.fieldError(errors|default([]), 'shortname') }}
+                </div>
+                <div class="ui required field basic segment">
+                    <label class="ui top attached large label">Email</label>
+                    <input placeholder="Email address (max 50 characters)" type="text" name="email" value="{{user.email|default(null)}}" />
+                    {{ _self.fieldError(errors|default([]), 'email') }}
+                </div>
+                {% if recaptcha['sitekey'] %}
+                    <div class="ui required field basic segment">
+                        <label class="ui top attached large label">Human Verification</label>
+                        <div class="g-recaptcha" data-sitekey="{{ recaptcha['sitekey'] }}"></div>
+                        {{ _self.fieldError(errors|default([]), 'recaptcha') }}
+                    </div>
+                {% endif %}
+                <div class="ui field">
+                    <input type="submit" class="ui submit primary button" name="_action" value="Proceed to register" />
+                </div>
+            </div>
+        {% endif %}
+    </form>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% set paramval = parameter.templateDatabaseToForm(template.parameters[param]|default(null)) %} 
+{% if parameter.type in ['config','freetext'] %}
+    <input placeholder="{{parameter.templateDescription}}" type="text" name="parameters[{{param}}]" value="{{template.parameters[param]|default(null)}}" />
+{% elseif parameter.type in ['dropdown', 'multiselect'] %}
+    <p>{{parameter.templateDescription}}</p>
+    <div class="two fields">
+        <div class="ui field">
+            <label>Values</label>
+            <textarea name="parameters[{{param}}][values]" rows="3">{{paramval.values|default(null)}}</textarea>
+        </div>
+        <div class="ui field">
+            <label>Texts</label>
+            <textarea name="parameters[{{param}}][texts]" rows="3">{{paramval.texts|default(null)}}</textarea>
+        </div>
+    </div>
+{% elseif parameter.type in ['multilineconfig', 'multilinetext'] %}
+    <textarea placeholder="{{parameter.templateDescription}}" name="parameters[{{param}}]">{{template.parameters[param]|default(null)}}</textarea>
+{% elseif parameter.type == 'multifreetext' %}
+    <p>{{parameter.templateDescription}}</p>
+    <div class="two fields">
+        <div class="ui field">
+            <label>Keys</label>
+            <textarea name="parameters[{{param}}][keys]" rows="3">{{paramval.keys|default(null)}}</textarea>
+        </div>
+        <div class="ui field">
+            <label>Labels (end with * to set as required)</label>
+            <textarea name="parameters[{{param}}][labels]" rows="3">{{paramval.labels|default(null)}}</textarea>
+        </div>
+    </div>
+{% else %}
+    <p>No configuration required</p>
+{% endif %}

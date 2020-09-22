@@ -1,0 +1,61 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(project, true)}} &raquo;</span>
+        </div>
+        <span><i class="ui users icon"></i>Users</span>
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+
+    <form method="POST">
+        <div class="ui form">
+            <table class="ui celled structured sortable table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Short Name</th>
+                        <th colspan="6">Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users|filter(user => user.username in project.userProjects|keys) %}
+                        <tr class="ui positive">
+                            {{ _self.user_row(project, user) }}
+                        </tr>
+                    {% endfor %}
+                    {% for user in users|filter(user => user.username not in project.userProjects|keys) %}
+                        <tr>
+                            {{ _self.user_row(project, user) }}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="Save Changes" />
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{%  macro user_row(project, user) %}
+    {% set urole = project.getUserAccess(user.username) %}
+    <td>
+        {{user.username}}
+        {% if user.blocked %}
+            <div class="ui right floated red label">Blocked</div>
+        {% endif %}
+    </td>
+    <td>
+        {{user.shortname}}
+    </td>
+    {% for lbl,role in {'None':null,'View':'view','Entry':'entry','Review':'review','Approval':'approval','Execute':'execute'} %}
+        <td class="ui collapsing">
+            <div class="ui toggle checkbox">
+                <input type="radio" name="role[{{user.username}}]]" value="{{role}}" {% if role == urole %}checked="checked"{% endif %} />
+                <label>{{lbl}}</label>
+            </div>
+        </td>
+    {% endfor %}
+{% endmacro %}

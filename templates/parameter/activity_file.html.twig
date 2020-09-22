@@ -1,0 +1,19 @@
+{% import "renobase.html.twig" as m %}
+<div class="ui basic secondary segment">
+    <input id="parameters-{{param}}" type="file" name="parameters[{{param}}]" />
+    <em>Uploaded file with size larger than {{ upload_max_filesize }} will be ignored</em>
+    {% if paramval|default(null) %}
+        <p>Existing file: <strong>{{paramval.filename}}</strong> of type <strong>{{paramval.mime_type}}</strong> with size <strong>{{m.bytesToSize(paramval.filesize)}}</strong></p>
+        {% if errors|default(null) and errors['parameters.' ~ param] is not defined %}
+            {% set errors = errors + {('parameters.' ~ param) : 'If you chose another file before, the file was not saved due to errors on other inputs, and you need to re-upload the file again'} %}
+        {% endif %}
+        {% if not parameter.activityRequired %}
+            <input type="checkbox" name="parameters[{{param}}_delete]" value="1" />
+        {% endif %}
+    {% else %}
+        {% if errors|default(null) and errors['parameters.' ~ param] is not defined %}
+            {% set errors = errors + {('parameters.' ~ param) : 'If you chose a file before, the file was not saved due to errors on other inputs, and you need to re-upload the file again'} %}
+        {% endif %}
+    {% endif %}
+</div>
+{{ m.fieldError(errors|default([]), 'parameters.' ~ param) }}

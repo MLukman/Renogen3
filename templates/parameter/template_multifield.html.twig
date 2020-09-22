@@ -1,0 +1,55 @@
+{% import "renobase.html.twig" as m %}
+{% set paramval = parameter.templateDatabaseToForm(template.parameters[param]|default(null)) %} 
+<p>{{parameter.templateDescription}}</p>
+<table class="ui celled striped compact table">
+    <thead>
+        <tr>
+            <th>Label in Runbook view</th>
+            <th>Label in Activity view</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Configuration</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for i in range(0, paramval|length + 2) %}
+            <tr class="ui top aligned">
+                <td>
+                    <input type="text" name="parameters[{{param}}][{{i}}][id]" value="{{paramval[i].id|default(null)}}" />
+                    {{ m.fieldError(errors|default([]), 'parameters.'~param~'.'~i~'.id') }}
+                </td>
+                <td>
+                    <input type="text" name="parameters[{{param}}][{{i}}][title]" value="{{paramval[i].title|default(null)}}" />
+                    {{ m.fieldError(errors|default([]), 'parameters.'~param~'.'~i~'.title') }}
+                </td>
+                <td>
+                    <select name="parameters[{{param}}][{{i}}][type]" class="ui fluid dropdown">
+                        <option value="">- Select field type -</option>
+                        {% for type in parameter.allowed_types %}
+                            <option value="{{type}}" {% if type == paramval[i].type|default(parameter.default_type) %}selected="selected"{% endif %}>{{type}}</option>
+                        {% endfor %}
+                    </select>
+                    {{ m.fieldError(errors|default([]), 'parameters.'~param~'.'~i~'.type') }}
+                </td>
+                <td>
+                    <input type="text" name="parameters[{{param}}][{{i}}][desc]" value="{{paramval[i].desc|default(null)}}" placeholder="Short description for this field" />
+                </td>
+                <td>
+                    <textarea name="parameters[{{param}}][{{i}}][details]" rows="3" placeholder="List of values for type &quot;dropdown&quot; / &quot;multiselect&quot;, regex pattern for type &quot;formatted&quot;, list of file extensions (e.g. &quot;.sql&quot;) for type &quot;file&quot;, or the default value for other text-based types">{{paramval[i].details|default(null)}}</textarea>
+                </td>
+                <td class="ui center aligned collapsing">
+                    <input class="ui checkbox" type="checkbox" name="parameters[{{param}}][{{i}}][required]" value="1" {% if paramval[i].required|default(null) %}checked="checked"{% endif %} />
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<em>Notes: 
+    <ul>
+        <li>To add more entries, save first to get more empty entry rows</li>
+        <li>To delete an entry, clear all its fields and save</li>
+        <li>You can use the value of "Label in Runbook view" enclosed within curly braces {} inside the instructions and it will be substituted with the corresponding value that is entered for an activity that uses this template</li>
+        <li>You can also use special variable {@ID} inside the instructions and it will be substituted with the system-generated ID of the corresponding activity</li>
+    </ul>
+</em>

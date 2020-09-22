@@ -1,0 +1,364 @@
+{% extends "renobase.html.twig" %}
+
+{% block head %}
+    <script>
+        function changeStatus(status, required) {
+            $('#change_status_field').val(status);
+            $('#change_status_next').text(status);
+            if (required) {
+                $('#changeStatusRemarkField').addClass('required');
+                $('#changeStatusRemarkRequired').val(1);
+            } else {
+                $('#changeStatusRemarkField').removeClass('required');
+                $('#changeStatusRemarkRequired').val(0);
+            }
+            $('#change_status_confirmation').modal('show');
+            validateRemark();
+        }
+
+        function validateRemark() {
+            if ($('#changeStatusRemarkRequired').val() == 1 && $('#changeStatusRemarkTextArea').val().trim() == '') {
+                $('#change_status_button').addClass('disabled');
+            } else {
+                $('#change_status_button').removeClass('disabled');
+            }
+        }
+
+        function activitiesOpenClose(open) {
+            $('.activities.accordion').accordion(open ? 'open' : 'close', 0);
+        }
+
+        $(function () {
+            $('#changeStatusRemarkTextArea').on('input propertychange', validateRemark);
+            $('.menu .item').tab();
+        });
+
+        $(function () {
+            setTimeout(function () {
+                activitiesOpenClose(false);
+            }, 3000);
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(item.deployment.project, true)}} &raquo;</span>
+            <span>{{_self.crumb_deployment(item.deployment, true)}} &raquo;</span>
+        </div>
+        <span>
+            <i class="ui flag icon" title="Deployment Item"></i>{{item.displayTitle}}
+            {% if item.external_url %}
+                <a class="ui circular black label no-print" href="{{ item.external_url }}" target="_blank">
+                    <i class="ui linkify icon"></i>{{ item.external_url_label|default('External URL') }}
+                </a>
+            {% endif %}
+        </span>
+        {% if editable %}
+            <a class="ui right floated button no-print" href="{{nav.entityPath('app_item_edit',item)}}"><i class="ui pencil icon"></i>Edit</a>
+        {% endif %}
+    </h1>
+
+    <div class="ui labels">
+        {{ _self.itemCategoryLabel(item) }}
+        {{ _self.itemModulesLabel(item) }}
+    </div>
+
+    <div style="clear:both"></div>
+    <div class="ui divider"></div>
+
+    {{ _self.describe(item.description) }}
+
+    <div class="ui mobile stackable grid">
+        <div class="four wide column">
+            <h2 class="ui top attached block header">
+                Status: <span class="nowrap"><i class="ui {{ item.statusIcon() }} icon"></i>{{ item.status }}</span>
+            </h2>
+            <div class="ui attached secondary segment">
+                <div class="ui top attached tabular menu">
+                    <div class="active item" data-tab="status-progress">Progress</div>
+                    <div class="item" data-tab="status-log">Log</div>
+                </div>
+
+                <div class="ui bottom attached tab segment active" data-tab="status-progress">
+                    <div class="ui stackable small vertical fluid steps">
+                        {% set transitions = item.getAllowedTransitions(ds.currentUserEntity()) %}
+                        {% for s in item.deployment.project.item_statuses|keys %}
+                            {% set prog = item.compareCurrentStatusTo(s) %}
+                            {% set status_info = item.deployment.project.item_statuses[s] %}
+                            <div class="{% if prog < 0 or item.status == 'Completed' %}completed{% endif %} {% if prog == 0 %}active{% endif %} step">
+                                <i class="ui {{status_info.stepicon}} icon"></i>
+                                <div class="content">
+                                    <div class="title" {% if prog < 0 %}style="text-decoration: line-through"{% endif %}>{{s}}</div>
+                                    <div class="description">
+                                        {% for ts,tc in transitions[s]|default([]) %}
+                                            <div class="ui {{tc.type}} mini button" onclick="changeStatus({{tc.status|json_encode|e('html_attr')}}, {{tc.remark ? 1:0}})">
+                                                {{ts}}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+                <div class="ui bottom attached segment tab" data-tab="status-log">
+                    <table class="ui very compact small sortable table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>By</th>
+                            </tr>
+                        </thead>					
+                        <tbody>
+                            {% for log in item.status_logs %}
+                                <tr>
+                                    <td>
+                                        <i class="calendar icon"></i>{{log.created_date|date('Y-m-d')}}
+                                        <span class="nowrap"><i class="clock icon"></i>{{log.created_date|date('H:i')}}</span>
+                                    </td>
+                                    <td>{{log.status}}</td>
+                                    <td>{{log.created_by.name}}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="eight wide column">
+            <h2 class="ui header">
+                <span>
+                    <i class="ui add to cart icon"></i> Activities
+                </span>
+                {% if editable %}
+                    <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_activity_create',item)}}">
+                        <i class="ui plus icon"></i>Add
+                    </a>
+                {% endif %}
+                <div style="clear:both"></div>
+            </h2>
+
+            <table class="ui celled striped table" style="table-layout: fixed">
+                {% if item.activities|length > 0 %}
+                    <thead>
+                        <tr>
+                            <th class="ui collapsing">#</th>
+                            <th>
+                                <a style="float:right" href="#" title="Open all" onclick="activitiesOpenClose(true);
+                                        return false"><i class="ui folder open icon"></i></a>
+                                <a style="float:right" href="#" title="Close all" onclick="activitiesOpenClose(false);
+                                        return false"><i class="ui folder icon"></i></a>
+                                Description
+                            </th>
+                            <th style="width:8em">Status</th>
+                        </tr>
+                    </thead>
+                {% endif %}
+                <tbody>
+                    {% for activity in item.activities %}
+                        {% set description = activity.template.templateClass(ds).describeActivityAsArray(activity) %}
+                        <tr style="position:relative">
+                            <td class="ui top aligned collapsing">{{loop.index}}</td>
+                            <td class="ui top aligned" style="position:relative; overflow: auto; max-width: inherit;">
+                                <div class="ui fluid activities accordion">
+                                    <div class="title active" style="padding:0">
+                                        <h4>
+                                            <i class="dropdown icon"></i>
+                                            {% if activity.stage < 0 %}
+                                                <em>Pre Deployment &raquo;</em><br />
+                                            {% elseif activity.stage > 0 %}
+                                                <em>Post Deployment &raquo;</em><br />
+                                            {% endif %}
+                                            {{activity.displayTitle()}}
+                                        </h4>
+                                    </div>
+                                    <div class="content active">
+                                        {{ _self.arrayTable(description) }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="ui top aligned collapsing no-print">
+                                <div>
+                                    {% if editable and (not activity.runitem or activity.runitem.status != 'Completed') %}
+                                        <a class="ui right floated icon button" title="Edit" href="{{nav.entityPath('app_activity_edit',activity)}}">
+                                            <i class="ui pencil icon"></i>
+                                        </a>
+                                    {% endif %}
+                                    {{activity.runitem.status|default('New')}}
+                                    <div style="clear:both"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td class="center aligned">No activity has been defined</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h2 class="ui header">
+                <span>
+                    <i class="ui attach icon"></i> Attachments
+                </span>
+                {% if editable %}
+                    <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_attachment_create',item)}}">
+                        <i class="ui plus icon"></i>Add
+                    </a>
+                {% endif %}
+                <div style="clear:both"></div>
+            </h2>
+
+            <table class="ui celled striped table">
+                {% if item.attachments|length > 0 %}
+                    <thead>
+                        <tr>
+                            <th class="ui collapsing">#</th>
+                            <th>File Name &amp; Type</th>
+                            <th>Description</th>
+                            <th class="ui collapsing">File Size</th>
+                                {% if editable %}
+                                <th class="ui collapsing no-print">Action</th>
+                                {% endif %}
+                        </tr>
+                    </thead>
+                {% endif %}
+                <tbody>
+                    {% for attachment in item.attachments %}
+                        <tr>
+                            <td class="ui collapsing">{{loop.index}}</td>
+                            <td>
+                                <a title="Download" href="{{nav.entityPath('app_attachment_download',attachment)}}">
+                                    <strong>{{attachment.filename}}</strong>
+                                </a>
+                                <div>
+                                    <small>{{attachment.filestore.mime_type}}</small>
+                                </div>
+                            </td>
+                            <td>{{attachment.description}}</td>
+                            <td class="ui collapsing">{{_self.bytesToSize(attachment.filestore.filesize)}}</td>
+                            {% if editable %}
+                                <td class="ui collapsing no-print">
+                                    <a class="ui icon button" title="Edit" href="{{nav.entityPath('app_attachment_edit',attachment)}}">
+                                        <i class="ui pencil icon"></i>
+                                    </a>
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td class="center aligned">No attachment has been uploaded</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="four wide column">
+            <div class="ui secondary segment">
+                <h3 class="ui dividing header">
+                    <i class="ui comments outline icon"></i> Comments
+                </h3>
+
+                <div class="ui comments">
+                    {% for comment in item.comments %}
+                        <div class="comment">
+                            <div class="content">
+                                {% if comment.created_by == ds.currentUserEntity() and comment.event is empty %}
+                                    {% if comment.deleted_date %}
+                                        <a class="ui right floated compact very tiny icon button" 
+                                           href="{{nav.entityPath('app_item_comment_undelete',comment)}}" title="Undo delete"><i class="ui undo icon"></i>
+                                        </a>
+                                    {% else %}
+                                        <a class="ui right floated compact very tiny icon button" 
+                                           href="{{nav.entityPath('app_item_comment_delete',comment)}}" title="Delete"><i class="ui x icon"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                                <a class="author">{{comment.created_by.getShortName()}}</a>
+                                <div class="metadata">
+                                    <span class="date">{{comment.created_date|date('d/m/Y h:ia')}}</span>
+                                </div>
+                                {% if comment.event %}
+                                    <div class="text">
+                                        <span class="ui right pointing label">{{comment.event}}</span> {{comment.text|nl2br}}
+                                    </div>
+                                {% elseif comment.deleted_date %}
+                                    <div class="metadata">
+                                        <em>&raquo; Deleted on {{comment.deleted_date|date('d/m/Y h:ia')}}</em>
+                                    </div>
+                                {% else %}
+                                    <div class="text">
+                                        {{comment.text|nl2br}}
+                                    </div>
+                                {% endif %}	
+                            </div>
+                        </div>
+                    {% else %}
+                        <em>No comments yet</em>
+                    {% endfor %}
+                    {% if commentable %}
+                        <form class="ui center aligned form basic segment no-print" method="POST" action="{{nav.entityPath('app_item_comment_add',item)}}">
+                            <h4 class="ui horizontal divider header">
+                                Add comment
+                            </h4>
+                            <div class="field">
+                                <textarea name="text" rows="3"></textarea>
+                            </div>
+                            <input class="ui secondary button" type="submit" name="_action" value="Post" />
+                        </form>
+                    {% endif %}
+                </div>			
+            </div>
+        </div>
+
+    </div>
+    <br />
+    {{ _self.timestamps(item) }}
+
+    <div id="change_status_confirmation" class="ui modal">
+        <i class="close icon"></i>
+        <div class="header">
+            Change Status to <span id="change_status_next">next</span>
+        </div>
+        <form class="ui form basic segment" method="POST" action="{{nav.entityPath('app_item_change_status',item)}}" onsubmit="showOverlay('Updating ...');">
+            <div id="changeStatusRemarkField" class="ui field content">
+                <label>Remark</label>
+                <textarea id="changeStatusRemarkTextArea" placeholder="Please enter a remark" name="remark"></textarea>
+            </div>
+            <div class="actions">
+                <input id="change_status_button" class="ui ok primary button" type="submit" value="Change Status" />
+                <div class="ui cancel button">Cancel</div>
+                <input id="changeStatusRemarkRequired" type="hidden" name="remark_required" value="" />
+                <input id="change_status_field" type="hidden" name="new_status" value="" />
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% macro changeStatus(v, i) %}
+    <div class="ui left labeled button" tabindex="0" style="margin:5px">
+        <a class="ui basic right pointing label">
+            {% if i.class is defined %}Change{% else %}Revert{% endif %}
+        </a>
+        <div class="ui {{i.class|default(null)}} button" onclick="changeStatus({{v|json_encode|e('html_attr')}})">
+            <i class="{{i.icon}} icon"></i> {{v}}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro changeStatusBox(next_status) %}
+    {% import _self as mm %}
+    {% if next_status|length > 0 %}
+        <div class="ui info message">
+            {% for v,i in next_status %}
+                {{mm.changeStatus(v, i)}}<br />
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endmacro %}

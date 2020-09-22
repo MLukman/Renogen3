@@ -1,0 +1,47 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <h1 class="ui header">
+        <small><i class="ui setting icon"></i>Admin &raquo;</small><br />
+        <span><i class="ui lock icon"></i>Authentication</span>
+        <a class="ui right floated primary button" href="{{nav.path('app_admin_auth_create')}}">
+            <i class="ui plus icon"></i>Add new authentication
+        </a>
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+
+    <table class="ui celled striped sortable table">
+        <thead>
+            <tr>
+                <th class="ui collapsing">Name</th>
+                <th>Title</th>
+                <th class="ui collapsing">Class</th>
+                <th>Parameters</th>
+                <th class="ui collapsing">Self-Register?</th>
+                <th class="ui collapsing">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for auth in drivers %}
+                <tr class="ui top aligned">
+                    <td class="ui collapsing">{{auth.name}}</td>
+                    <td>{{auth.title}}</td>
+                    <td class="ui collapsing">{{auth.class}}</td>
+                    <td>
+                        {% if auth.parameters %}
+                            {{_self.arrayTable(auth.parameters, false)}}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="ui collapsing">{{auth.allow_self_registration ? 'Y' : 'N'}}</td>
+                    <td class="ui collapsing">
+                        <a class="ui button" href="{{nav.path('app_admin_auth_edit', {'driver': auth.name})}}">
+                            <i class="ui pencil icon"></i> Edit
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

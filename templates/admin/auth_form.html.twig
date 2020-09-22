@@ -1,0 +1,96 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    {% set is_existing = (auth.created_date|default(null) is not empty) %}
+    <h1 class="ui header">
+        <small>
+            <i class="ui setting icon"></i>Admin &raquo;
+            <i class="ui lock icon"></i>Authentication&raquo;
+        </small><br />
+        <span>
+            <i class="ui user icon"></i>
+            {% if is_existing %}
+                Edit {{auth.name}}
+            {% else %}
+                Add new
+            {% endif %}
+        </span>
+    </h1>
+
+    {% if errors|default(false) %}
+        <div class="ui error message">
+            Your input requires your further attention. Please inspect any messages below.
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="ui form">
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Driver Class</label>
+                <div class="inline fields">
+                    {% for class in classes %}
+                        {#% if class != 'App\\Auth\\Driver\\Password' or auth.class == 'App\\Auth\\Driver\\Password' %#}
+                        <div class="field">
+                            <div class="ui radio checkbox">
+                                <input id="auth-{{loop.index}}" type="radio" name="class" value="{{class}}" {% if class == auth.class|default(null) %}checked="checked"{% endif %} {% if auth.class %}disabled="disabled"{% endif %}>
+                                <label for="auth-{{loop.index}}">{{class}}</label>
+                            </div>
+                        </div>
+                        {#% endif %#}
+                    {% endfor %}
+                    {% if auth.class %}
+                        <input type="hidden" name="class" value="{{auth.class}}" />
+                    {% endif %}
+                </div>
+                {{ _self.fieldError(errors|default([]), 'class') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Name</label>
+                <input placeholder="Name" type="text" name="name" value="{{auth.name|default(null)}}" {% if is_existing %}disabled="disabled"{% endif %} />
+                {{ _self.fieldError(errors|default([]), 'name') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Title</label>
+                <input placeholder="User-friendly title to refer to the authentication source" type="text" name="title" value="{{auth.title|default(auth.class)}}" />
+                {{ _self.fieldError(errors|default([]), 'title') }}
+            </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Allow self registration?</label>
+                <p>Whether to allow new users to self-register themselves. Accesses to projects still need to be configured by administrator or approval users.</p>
+                <div class="ui toggle checkbox">
+                    <input type="hidden" name="allow_self_registration" value="0" />
+                    <input type="checkbox" name="allow_self_registration" value="1" {% if auth.allow_self_registration %}checked="checked"{% endif %} />
+                </div>
+            </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Registration Explanation</label>
+                <p>Optional explanation during registration regarding any special requirements on the username, email etc.</p>
+                <textarea name="registration_explanation" rows="3">{{auth.registration_explanation|default(null)}}</textarea>
+            </div>
+            {% if auth.class %}
+                {% if paramConfigs %}
+                    <div class="ui required field basic segment">
+                        <label class="ui top attached large label">Parameters</label>
+                        <div class="ui form">
+                            {% for p in paramConfigs %}
+                                <div class="ui field">
+                                    <label for="param-{{p[0]}}">{{p[1]}}</label>
+                                    <input id="param-{{p[0]}}" placeholder="{{p[2]}}" type="text" name="parameters[{{p[0]}}]" value="{{auth.parameters[p[0]]|default(p[3]|default(null))}}" />
+                                    {{ _self.fieldError(errors.parameters|default([]), p[0]) }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% elseif auth.class %}Add{% else %}Next{% endif %}" />
+                <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                {% if is_existing and auth.name != 'password' %}
+                    <input type="submit" class="ui red right floated button" name="_action" value="Delete"
+                           onclick="return prompt('Are you sure you want to delete this authentication?\nUsers using this authentication method will not be able to login anymore until you add another one with the same name.\n\nEnter the \'{{auth.name}}\' to confirm:') == '{{auth.name}}'" />
+                {% endif %}
+            </div>
+        </div>
+    </form>
+{% endblock %}

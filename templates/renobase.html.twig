@@ -1,0 +1,220 @@
+{% extends "base.html.twig" %}
+{% import _self as r %}
+
+{% block menubar %}
+    {% if crumbs|length > 0 %}
+        {% for crumb in crumbs %}
+            {% set extraclasses = [] %}
+            {% if crumb.hide_on_mobile %}{% set extraclasses = extraclasses|merge(['hide-on-mobile']) %}{%  endif %}
+            {% if loop.last %}{% set extraclasses = extraclasses|merge(['active']) %}{%  endif %}
+            {{ _self.topmenu_item(crumb.text, crumb.url, crumb.icon, extraclasses|join(' ')) }}
+        {% endfor %}
+    {% endif %}
+{% endblock %}
+
+{% block usermenu %}
+    {% if project is defined %}
+        <span class="item">Project role: <strong>{{project.getUserAccess(ds.currentUserEntity().username)}}</strong>
+        </span>
+    {% endif %}
+{% endblock %}
+
+{% macro timestamps(entity) %}
+    {% if entity.created_date %}
+        <div class="ui label">
+            Created
+            <span class="detail"><i class="ui clock icon"></i>{{entity.created_date|date('d/m/Y h:ia')}}</span>
+            <span class="detail"><i class="ui user icon"></i>{{entity.created_by.name()|default('Anonymous')}}</span>
+        </div>
+    {% endif %}
+    {% if entity.updated_date %}
+        <div class="ui label">
+            Updated 
+            <span class="detail"><i class="ui clock icon"></i>{{entity.updated_date|date('d/m/Y h:ia')}}</span>
+            <span class="detail"><i class="ui user icon"></i>{{entity.updated_by.name|default('Anonymous')}}</span>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro itemStatusLabel(item, detailed, label_type) %}
+    {% set log = item.getStatusLog(item.status) %}
+    {% if item.status == 'Approved' %}
+        <div class="ui green {{label_type|default('tag')}} label">
+            <i class="ui {{item.statusIcon}} icon"></i>
+            {{item.status}}
+            {% if detailed %}
+                <span class="detail">
+                    <i class="ui clock icon"></i>{{log.created_date|date('d/m/Y h:ia')}}
+                </span>
+                <span class="detail">
+                    <i class="ui user icon"></i>{{log.created_by.name|default('Anonymous')}}
+                </span>
+            {% endif %}
+        </div>
+    {% elseif item.status == 'Rejected' %}
+        <div class="ui red {{label_type|default('tag')}} label">
+            <i class="ui {{item.statusIcon}} icon"></i>
+            {{item.status}}
+            {% if detailed %}
+                <span class="detail">
+                    <i class="ui clock icon"></i>{{log.created_date|date('d/m/Y h:ia')}}
+                </span>
+                <span class="detail">
+                    <i class="ui user icon"></i>{{log.created_by.name|default('Anonymous')}}
+                </span>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="ui red {{label_type|default('tag')}} label">
+            <i class="ui {{item.statusIcon}} icon"></i>
+            {{item.status}}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro fieldError(errors, fieldname, pointing) %}
+    {% if errors[fieldname] is defined %}
+        {% if errors[fieldname] is iterable %}
+            {% for error in errors[fieldname] %}
+                <div class="ui negative red label {{pointing}} pointing">{{error}}</div>
+            {% endfor %}
+        {% else %}
+            <div class="ui negative red label {{pointing}} pointing">{{errors[fieldname]}}</div>
+        {% endif %}
+    {% endif %}
+{% endmacro %}
+
+{% macro itemDetailsLabel(item) %}
+    <span class="ui label">
+        <i class="ui tag icon"></i>{{item.category}}
+        <span class="detail">
+            <i class="ui plug icon"></i>
+            {{ item.modules|join(' + ') }}
+        </span>
+    </span>
+{% endmacro %}
+
+{% macro itemCategoryLabel(item) %}
+    <span class="ui tag label">
+        <i class="ui tag icon"></i>{{item.category}}
+    </span>
+{% endmacro %}
+
+{% macro itemModulesLabel(item) %}
+    <span class="ui grey tag label">
+        <i class="ui plug icon"></i>
+        {{ item.modules|join(' + ') }}
+    </span>
+{% endmacro %}
+
+{% macro arrayTable(arr,level) %}
+    {% if arr is iterable %}
+        <table class="ui compact {% if level|default(0) > 0 %}small{% endif %} tablet stackable table">
+            {% for key,val in arr %}
+                <tr>
+                    {% if not (key matches '/^[0-9]+$/') %}
+                        <td class="top aligned collapsing" style="overflow:auto">
+                            {% if level is not defined or level == 0 %}
+                                <strong>{{key}}</strong>
+                            {% else %}
+                                {{key}}
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                    <td class="ui top aligned" style="overflow:auto">
+                        {{_self.prettyDisplay(val,level|default(0)+1)}}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        {{_self.prettyDisplay(arr)}}
+    {% endif %}
+{% endmacro %}
+
+{% macro prettyDisplay(val,level) %}
+    {% if val is empty %}
+        <em>-- Not Specified --</em>
+    {% elseif val is instanceof('\\App\\Entity\\FileLink') %}
+        {{val.getHtmlLink(nav)|raw}}
+    {% elseif val is iterable %}
+        {{_self.arrayTable(val,level|default(0)+1)}}
+    {% elseif val|first == '<' %}
+        {{val|raw}}
+    {% else %}
+        {{val|nl2br}}
+    {% endif %}
+{% endmacro %}
+
+{% macro runItemStatusControl(runitem) %}
+    {% if runitem.status == 'New' and security.isGranted(['execute','approval'],runitem.deployment.project) %}
+        <div class="ui buttons">
+            <div class="ui positive button" onclick="return changeStatus({{runitem.id|raw|json_encode}}, {{constant('App\\Entity\\Project::ITEM_STATUS_COMPLETED')|json_encode}})">
+                <i class="ui checkmark icon"></i>Completed
+            </div>
+            <div class="or"></div>
+            <div class="ui negative button" onclick="return changeStatus({{runitem.id|raw|json_encode}}, {{constant('App\\Entity\\Project::ITEM_STATUS_FAILED')|json_encode}}, true)">
+                <i class="ui x icon"></i>Failed
+            </div>
+        </div>
+    {% else %}
+        <span class="ui horizontal label {% if runitem.status == constant('App\\Entity\\Project::ITEM_STATUS_FAILED') %}red{% elseif runitem.status == constant('App\\Entity\\Project::ITEM_STATUS_COMPLETED') %}green{% endif %}">{{runitem.status}}</span>
+        <small>
+            by {{runitem.updated_by.name}}
+            <br />{{runitem.updated_date|date('d/m/Y h:ia')}}
+        </small>
+    {% endif %}
+{% endmacro %}
+
+{% macro crumb_project(project, link) %}
+    <i class="ui {{project.icon}} icon" title="Project"></i>
+    {% if link %}
+        <a href="{{nav.entityPath('app_project_view',project)}}">{{project.title}}</a>
+    {% else %}
+        {{project.title}}
+    {% endif %}
+{% endmacro %}
+
+{% macro crumb_deployment(deployment, link, anchor) %}
+    <i class="ui calendar check o icon" title="Deployment"></i>
+    {% if link %}
+        <a href="{{nav.entityPath('app_deployment_view',deployment)}}{{anchor}}">{{deployment.displayTitle}}</a>
+    {% else %}
+        {{deployment.displayTitle}}
+    {% endif %}
+{% endmacro %}
+
+{% macro crumb_item(item, link) %}
+    <i class="ui flag icon" title="Deployment Item"></i>
+    {% if link %}
+        <a href="{{nav.entityPath('app_item_view',item)}}">{{item.displayTitle}}</a>
+    {% else %}
+        {{item.displayTitle}}
+    {% endif %}
+{% endmacro %}
+
+{% macro describe(description) %}
+    {% if description %}
+        <div class="ui secondary segment">
+            {{ description|nl2br }}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro bytesToSize(bytes) %}{% apply spaceless %}
+    {% set kilobyte = 1024 %}
+    {% set megabyte = kilobyte * 1024 %}
+    {% set gigabyte = megabyte * 1024 %}
+    {% set terabyte = gigabyte * 1024 %}
+    {% if bytes < kilobyte %}
+        {{ bytes ~ ' B' }}
+    {% elseif bytes < megabyte %}
+        {{ (bytes / kilobyte)|number_format(2, '.') ~ ' KB' }}
+    {% elseif bytes < gigabyte %}
+        {{ (bytes / megabyte)|number_format(2, '.') ~ ' MB' }}
+    {% elseif bytes < terabyte %}
+        {{ (bytes / gigabyte)|number_format(2, '.') ~ ' GB' }}
+    {% else %}
+        {{ (bytes / terabyte)|number_format(2, '.') ~ ' TB' }}
+    {% endif %}
+    {% endapply %}{% endmacro %}

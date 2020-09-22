@@ -1,0 +1,23 @@
+{% extends "renobase.html.twig" %}
+{% import "project_view.html.twig" as pv %}
+
+{% block content %}
+    <h1 class="ui header">
+        <span>
+            <i class="ui {{project.icon}} icon" title="Project"></i>{{project.title}}
+        </span>
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+
+    <h2>
+        Past Deployments
+    </h2>
+
+    {% if project.past().count() > 0 %}
+        <div class="ui basic segment">
+            {{ pv.deploymentList(project.past()) }}
+        </div>
+    {% endif %}
+
+{% endblock %}
+
