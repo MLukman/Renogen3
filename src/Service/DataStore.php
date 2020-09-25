@@ -424,10 +424,8 @@ class DataStore
         };
         $cascader($entity);
         foreach ($todelete as $d) {
-            //$this->em->remove($d);
-            print get_class($d).$d->id;
+            $this->em->remove($d);
         }
-        exit;
     }
 
     public function processFileUpload(UploadedFile $file,

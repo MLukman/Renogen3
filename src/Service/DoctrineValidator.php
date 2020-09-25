@@ -56,6 +56,17 @@ class DoctrineValidator
                     }
                 }
             }
+
+            // validation: callback
+            if (!empty($entity->$field) && isset($rules['callbacks']) && is_array($rules['callbacks'])) {
+                foreach ($rules['callbacks'] as $callback) {
+                    try {
+                        $callback($entity);
+                    } catch (\RuntimeException $ex) {
+                        $errors[$field][] = $ex->getMessage();
+                    }
+                }
+            }
         }
 
         // for each field remove $errors if no error

@@ -55,7 +55,20 @@
         {% if project.upcoming().count() > 0 %}
             {{ _self.deploymentList(project.upcoming()) }}
         {% else %}
-            <div class="ui warning message">This project has no upcoming deployments. {% if not project.archived %}A user with 'approval' role needs to create a new deployment.{% endif %}</div>
+            <div class="ui warning message">
+                This project has no upcoming deployments. 
+                {% if not project.archived %}
+                    A user with 'approval' role needs to create a new deployment.
+                    {% set approvers = project.usersWithRole('approval') %}
+                    {% if approvers|length > 0 %}
+                        <div>
+                            {% for u in approvers %}
+                                <span class="nowrap"><i class="ui id badge outline icon"></i> {{ u.shortname }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
         {% endif %}
     </div>
 

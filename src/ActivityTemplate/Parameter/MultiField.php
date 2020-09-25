@@ -202,7 +202,11 @@ class MultiField extends Parameter
                 } elseif ($p['type'] == 'url') {
                     $options[$d] = '<a href="'.htmlentities($data[$p['id']]).'" target="_blank">'.htmlentities($data[$p['id']]).'</a>';
                 } elseif ($p['type'] == 'script') {
-                    $options[$d] = '<div class="ui form"><textarea readonly="readonly" style="font-family: monospace">'.htmlentities($data[$p['id']]).'</textarea></div>';
+                    $options[$d] = '<div class="ui form">';
+                    $options[$d] .= '<div class="ui right corner labeled fluid input"><div class="ui right corner label"><i class="code icon"></i></div>';
+                    $options[$d] .= '<textarea readonly="readonly" style="font-family: monospace">'.htmlentities($data[$p['id']]).'</textarea>';
+                    $options[$d] .= '</div>';
+                    $options[$d] .= '</div>';
                 } else {
                     $options[$d] = $data[$p['id']];
                 }

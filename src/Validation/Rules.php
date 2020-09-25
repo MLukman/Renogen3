@@ -94,6 +94,15 @@ class Rules implements \ArrayAccess
         return $this;
     }
 
+    public function callback(callback $callback)
+    {
+        if (!isset($this->rules['callbacks'])) {
+            $this->rules['callbacks'] = [];
+        }
+        $this->rules['callbacks'][] = $callback;
+        return $this;
+    }
+
     public function offsetExists($offset): bool
     {
         return isset($this->rules[$offset]);

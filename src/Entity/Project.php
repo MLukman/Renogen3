@@ -282,9 +282,13 @@ class Project extends Entity
 
     public function usersWithRole($role)
     {
-        return array_map(function($a) {
-            return $a->user;
-        }, $this->userProjects->matching(Criteria::create()->where(Criteria::expr()->eq('role', 'approval')))->toArray());
+        return array_filter(
+            array_map(function($a) {
+                return $a->user;
+            }, $this->userProjects->matching(Criteria::create()->where(Criteria::expr()->eq('role', $role)))->toArray()),
+            function($u) {
+            return $u->blocked != 1;
+        });
     }
 
     /**

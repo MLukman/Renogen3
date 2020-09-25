@@ -183,11 +183,10 @@ class Deployment extends Entity
             0 => array(),
             1 => array(),
         );
-        $templates = $ds->getActivityTemplateClass();
         foreach (array_keys($rungroups) as $stage) {
             ksort($activities[$stage]);
             foreach ($activities[$stage] as $acts) {
-                $rungroups[$stage] = array_merge($rungroups[$stage], $templates[$acts[0]->template->class]
+                $rungroups[$stage] = array_merge($rungroups[$stage], $ds->getActivityTemplateClass($acts[0]->template->class)
                         ->convertActivitiesToRunbookGroups($acts));
             }
         }

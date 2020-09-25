@@ -24,21 +24,6 @@ RUN echo 'TLS_REQCERT never' >> /etc/ldap/ldap.conf \
     && echo 'openssl.cafile=/usr/local/etc/cacert.pem' >> /usr/local/etc/php/conf.d/openssl_cacert.ini \
     && sed -i 's_DocumentRoot /var/www/html_DocumentRoot /var/www/html/public_' /etc/apache2/sites-enabled/000-default.conf
 
-# If behind reverse proxy using path (e.g. /renogen), put the path here (without the preceding slash, e.g renogen). 
-# Also ensure the reverse proxy retains the path when proxying to this container.
-ENV BASE_URL=''
-
-# Database info
-ENV DB_HOST=localhost
-ENV DB_PORT=3306
-ENV DB_NAME=renogen
-ENV DB_USER=renogen
-ENV DB_PASSWORD=reno123gen
-
-# RECAPTCHA SITE & SECRET KEYS
-ENV GOOGLE_RECAPTCHA_SITE_KEY=''
-ENV GOOGLE_RECAPTCHA_SECRET=''
-
 HEALTHCHECK CMD sleep 10 && curl -sSf http://localhost/healthcheck.php || exit 1
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
@@ -70,7 +55,24 @@ RUN sed -i 's#APP_ENV=dev#APP_ENV=prod#' .env \
 	&& composer dump-autoload --classmap-authoritative \
 	&& chmod +x init_renogen.sh
 
+# Database info
+ENV DB_HOST=localhost
+ENV DB_PORT=3306
+ENV DB_NAME=renogen
+ENV DB_USER=renogen
+ENV DB_PASSWORD=reno123gen
+# Or one string connection string using format mysql://user:password@host:port/name
+ENV DATABASE_URL=
+
+# RECAPTCHA SITE & SECRET KEYS
+ENV GOOGLE_RECAPTCHA_SITE_KEY=''
+ENV GOOGLE_RECAPTCHA_SECRET=''
+
 # Timezone using Region/City format
 ENV TZ=Asia/Kuala_Lumpur
 
-CMD bash -c './init_renogen.sh && apache2-foreground'
+# If behind reverse proxy using path (e.g. /renogen), put the path here (without the preceding slash, e.g renogen). 
+# Also ensure the reverse proxy retains the path when proxying to this container.
+ENV BASE_PATH=''
+
+CMD bash -c '. ./init_renogen.sh && apache2-foreground'

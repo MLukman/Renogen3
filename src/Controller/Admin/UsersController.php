@@ -72,7 +72,7 @@ class UsersController extends RenoController
                         $this->ds->commit($user);
                         $this->addFlash('info', $res);
                     }
-                    return $this->nav->redirectRoute('app_admin_users');
+                    return $this->nav->redirectForEntity('app_admin_users_edit', $user);
             }
 
             if (!$post->has('roles')) {
@@ -103,7 +103,8 @@ class UsersController extends RenoController
                     }
                 }
                 $this->ds->commit();
-                return $this->nav->redirectRoute('app_admin_users');
+                $this->addFlash("info", "User '$user->username' has been saved");
+                return $this->nav->redirectForEntity('app_admin_users_edit', $user);
             } else {
                 $errors = $user->errors;
             }

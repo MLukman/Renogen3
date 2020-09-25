@@ -114,7 +114,14 @@ abstract class Entity implements SecuredAccessInterface
         return $allowed;
     }
 
+    /**
+     * Return the validation rules that to be used when validating this entity
+     */
     abstract static public function getValidationRules(): ?array;
 
+    /**
+     * Return the Project this entity belongs to
+     * @return Project The belonging Project
+     */
     abstract public function getProject(): ?Project;
 }

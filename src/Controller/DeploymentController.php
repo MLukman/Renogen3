@@ -16,7 +16,7 @@ class DeploymentController extends RenoController
         'external_url_label');
 
     /**
-     * @Route("/{project}/+", name="app_deployment_create")
+     * @Route("/{project}/+", name="app_deployment_create", priority=10)
      */
     public function create(Request $request, $project)
     {

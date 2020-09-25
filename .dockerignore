@@ -6,3 +6,4 @@ Dockerfile
 /.env.*.local
 /var/
 /vendor/
+/migrations/*.php
