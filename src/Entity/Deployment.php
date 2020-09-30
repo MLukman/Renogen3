@@ -91,6 +91,7 @@ class Deployment extends Entity
         'external_url' => array('trim' => 1, 'maxlen' => 2000, 'url' => 1),
         'external_url_label' => array('trim' => 1, 'truncate' => 30),
     );
+    protected $_caches = [];
 
     public function __construct(Project $project)
     {
@@ -115,11 +116,7 @@ class Deployment extends Entity
         if (!$ddate) {
             $ddate = $this->execute_date;
         }
-        if ($ddate->format('Hi') == '0000') {
-            return $ddate->format($pretty ? 'd/m/Y' : 'Ymd');
-        } else {
-            return $ddate->format($pretty ? 'd/m/Y h:i A' : 'YmdHi');
-        }
+        return static::generateDatetimeString($ddate, $pretty);
     }
 
     public function isActive($buffer_day = 0)
@@ -158,8 +155,11 @@ class Deployment extends Entity
      */
     public function getItemsWithStatus($status)
     {
-        return $this->items->matching(Criteria::create()->where(
+        if (!isset($this->_caches["items.$status"])) {
+            $this->_caches["items.$status"] = $this->items->matching(Criteria::create()->where(
                     new Comparison('status', '=', $status)));
+        }
+        return $this->_caches["items.$status"];
     }
 
     public function generateRunbooks(DataStore $ds)

@@ -88,13 +88,28 @@ class Rules implements \ArrayAccess
         return $this;
     }
 
+    /**
+     * Must be valid IP address
+     * @return \self
+     */
     public function ip(): self
     {
         $this->rules['ip'] = 1;
         return $this;
     }
 
-    public function callback(callback $callback)
+    /**
+     * Applies to DateTime only. Must be future date >= now + $hours.
+     * @param int $hours Force date must be at least this many hours after now.
+     * @return $this
+     */
+    public function future(int $hours = 0)
+    {
+        $this->rules['future'] = $hours;
+        return $this;
+    }
+
+    public function callback(\Closure $callback)
     {
         if (!isset($this->rules['callbacks'])) {
             $this->rules['callbacks'] = [];

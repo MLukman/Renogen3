@@ -33,6 +33,7 @@ class PluginTriggerer implements EventSubscriberInterface
     {
         return [
             Events::postPersist,
+            Events::preUpdate,
             Events::postUpdate,
             Events::postRemove,
         ];
@@ -40,59 +41,48 @@ class PluginTriggerer implements EventSubscriberInterface
 
     public function postPersist(LifecycleEventArgs $args)
     {
-        if (!($entity = $args->getObject())) {
+        if (!($entity = $args->getObject()) || !($entity->getProject())) {
             return;
         }
-        if ($entity instanceof Item) {
-            foreach ($entity->deployment->project->plugins as $plugin) {
-                $plugin->instance($this->ds, $this->nav)->onItemStatusUpdated($entity);
-            }
-        } elseif ($entity instanceof Deployment) {
-            foreach ($entity->project->plugins as $plugin) {
-                $plugin->instance($this->ds, $this->nav)->onDeploymentCreated($entity);
+
+        foreach ($entity->getProject()->plugins as $plugin) {
+            $plugin->instance($this->ds, $this->nav)->onEntityCreated($entity);
+        }
+    }
+
+    public function preUpdate(LifecycleEventArgs $args)
+    {
+        if (!($entity = $args->getObject()) || !($entity->getProject())) {
+            return;
+        }
+        $changed = [];
+        foreach ($args->getEntityManager()->getUnitOfWork()->getEntityChangeSet($entity) as $field => $before_after) {
+            if ($before_after[0] != $before_after[1]) {
+                $changed[$field] = $before_after[0];
             }
         }
+        $entity->old_values = $changed;
     }
 
     public function postUpdate(LifecycleEventArgs $args)
     {
-        if (!($entity = $args->getObject())) {
+        if (!($entity = $args->getObject()) || !($entity->getProject())) {
             return;
         }
-        if ($entity instanceof Item) {
-            if ($entity->old_values['deployment']->id != $entity->deployment->id) {
-                foreach ($entity->deployment->project->plugins as $plugin) {
-                    $plugin->instance($this->ds, $this->nav)->onItemMoved($entity, $entity->old_values['deployment']);
-                }
-            }
-            if (isset($entity->old_values['status']) && $entity->status != $entity->old_values['status']) {
-                foreach ($entity->deployment->project->plugins as $plugin) {
-                    $plugin->instance($this->ds, $this->nav)->onItemStatusUpdated($entity, $entity->old_values['status']);
-                }
-            }
-        } elseif ($entity instanceof Deployment) {
-            if (isset($entity->old_values['execute_date']) &&
-                $entity->datetimeString(false, $entity->execute_date) != $entity->datetimeString(false, $entity->old_values['execute_date'])) {
-                foreach ($entity->project->plugins as $plugin) {
-                    $plugin->instance($this->ds, $this->nav)->onDeploymentDateChanged($entity, $entity->old_values['execute_date']);
-                }
-            }
+
+        foreach ($entity->getProject()->plugins as $plugin) {
+            $plugin->instance($this->ds, $this->nav)->onEntityUpdated($entity, $entity->old_values);
         }
     }
 
     public function postRemove(LifecycleEventArgs $args)
     {
-        if (!($entity = $args->getObject())) {
+        if (!($entity = $args->getObject()) || !($entity->getProject())) {
             return;
         }
-        if ($entity instanceof Item) {
-            foreach ($entity->deployment->project->plugins as $plugin) {
-                $plugin->instance($this->ds, $this->nav)->onItemDeleted($entity);
-            }
-        } elseif ($entity instanceof Deployment) {
-            foreach ($entity->project->plugins as $plugin) {
-                $plugin->instance($this->ds, $this->nav)->onDeploymentDeleted($entity);
-            }
+
+        foreach ($entity->getProject()->plugins as $plugin) {
+            $plugin->instance($this->ds, $this->nav)->onEntityDeleted($entity);
         }
     }
 }

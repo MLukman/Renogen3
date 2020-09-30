@@ -100,11 +100,6 @@
                                 <option value="{{deployment.id}}">{{deployment.displayTitle()}}</option>
                             {% endif %}
                         {% endfor %}
-                        {% for p in ds.getProjectsForUserAndRole(ds.currentUserEntity(), 'approval', item.deployment.project) %}
-                            {% for deployment in p.upcoming() %}
-                                <option value="{{deployment.id}}">[{{p.title}}] {{deployment.displayTitle()}}</option>
-                            {% endfor %}
-                        {% endfor %}
                     </select>
                     {{ _self.fieldError(errors|default([]), 'deployment') }}
                 </div>

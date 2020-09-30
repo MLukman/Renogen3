@@ -3,9 +3,13 @@
 namespace App\Controller;
 
 use App\Base\RenoController;
+use App\Entity\Activity;
+use App\Entity\Deployment;
+use App\Entity\Item;
+use App\Entity\Template;
 use App\Exception\NoResultException;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -54,7 +58,7 @@ class TemplateController extends RenoController
                 $template->id = null;
                 $template->project = $project_obj;
             } else {
-                $template = new \App\Entity\Template($project_obj);
+                $template = new Template($project_obj);
             }
             return $this->edit_or_create($request, $template, $request->request);
         } catch (NoResultException $ex) {
@@ -78,8 +82,7 @@ class TemplateController extends RenoController
         }
     }
 
-    protected function edit_or_create(Request $request,
-                                      \App\Entity\Template $template,
+    protected function edit_or_create(Request $request, Template $template,
                                       ParameterBag $post)
     {
         $context = array();
@@ -135,7 +138,7 @@ class TemplateController extends RenoController
                         'data' => array(),
                         'errors' => array(),
                     );
-                    $context['sample']['activity'] = new \App\Entity\Activity(new \App\Entity\Item(new \App\Entity\Deployment($template->project)));
+                    $context['sample']['activity'] = new Activity(new Item(new Deployment($template->project)));
                     $context['sample']['activity']->template = $template;
                     $parameters = $post->get('parameters', array());
                     foreach ($template->templateClass()->getParameters() as $param => $parameter) {

@@ -10,13 +10,11 @@
         <title>{{title|default(controller.title|default('Renogen'))}}</title>
 
         <link rel="stylesheet" type="text/css" href="{{nav.basePath}}/ui/semantic2/semantic.css" />
-        <link rel="stylesheet" type="text/css" href="{{nav.basePath}}/ui/semantic2/library/calendar.css" />
 
         <script src="{{nav.basePath}}/ui/jquery/jquery-2.1.3.min.js"></script>
         <script src="{{nav.basePath}}/ui/jquery/jquery.address.js"></script>
         <script src="{{nav.basePath}}/ui/semantic2/semantic.js"></script>
         <script src="{{nav.basePath}}/ui/semantic2/library/jquery.tablesort.js"></script>
-        <script src="{{nav.basePath}}/ui/semantic2/library/calendar.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
         <script>
             function dateParser(text) {
@@ -113,7 +111,7 @@
                     }
                 };
                 if (minDate !== null) {
-                    cfg.minDate = new Date(Math.min(minDate, new Date()));
+                    cfg.minDate = minDate;
                 }
                 return cfg;
             }
@@ -231,6 +229,12 @@
 
             @media only screen and (max-width: 767px) {
                 .hide-on-mobile {
+                    display: none !important;
+                }
+            }
+
+            @media only screen and (min-width: 767px) {
+                .show-on-mobile-only {
                     display: none !important;
                 }
             }
@@ -355,7 +359,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro dateField(id, name, value, placeholder, mode) %}
+{% macro dateField(id, name, value, placeholder, mode, minDate) %}
     <div class="ui calendar" id="{{id}}">
         <div class="ui input left icon action">
             <i class="calendar icon"></i>

@@ -20,7 +20,7 @@ abstract class Entity implements SecuredAccessInterface
     use SecuredAccessTrait;
     /**
      * @ORM\ManyToOne(targetEntity="User")
-     * @ORM\JoinColumn(name="created_by", referencedColumnName="username", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="created_by", referencedColumnName="username", onDelete="SET NULL")
      * @var User
      */
     public $created_by;
@@ -32,7 +32,7 @@ abstract class Entity implements SecuredAccessInterface
 
     /**
      * @ORM\ManyToOne(targetEntity="User")
-     * @ORM\JoinColumn(name="updated_by", referencedColumnName="username", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="updated_by", referencedColumnName="username", onDelete="SET NULL")
      * @var User
      */
     public $updated_by;
@@ -112,6 +112,16 @@ abstract class Entity implements SecuredAccessInterface
         }
 
         return $allowed;
+    }
+
+    static public function generateDatetimeString(\DateTime $ddate,
+                                                  $pretty = false)
+    {
+        if ($ddate->format('Hi') == '0000') {
+            return $ddate->format($pretty ? 'd/m/Y' : 'Ymd');
+        } else {
+            return $ddate->format($pretty ? 'd/m/Y h:i A' : 'YmdHi');
+        }
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Plugin;
 
+use App\Base\Entity;
 use App\Entity\Deployment;
 use App\Entity\Item;
 use App\Entity\Plugin;
@@ -52,18 +53,11 @@ abstract class PluginCore
 
     abstract static function getTitle();
 
-    abstract public function onDeploymentCreated(Deployment $deployment);
+    abstract public function onEntityCreated(Entity $entity);
 
-    abstract public function onDeploymentDateChanged(Deployment $deployment,
-                                                     \DateTime $old_date);
+    abstract public function onEntityUpdated(Entity $entity, array $old_values);
 
-    abstract public function onDeploymentDeleted(Deployment $deployment);
-
-    abstract public function onItemStatusUpdated(Item $item, $old_status = null);
-
-    abstract public function onItemMoved(Item $item, Deployment $old_deployment);
-
-    abstract public function onItemDeleted(Item $item);
+    abstract public function onEntityDeleted(Entity $entity);
 
     abstract static public function availableActions(): array;
 

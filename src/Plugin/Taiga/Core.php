@@ -2,6 +2,7 @@
 
 namespace App\Plugin\Taiga;
 
+use App\Base\Entity;
 use App\Entity\Deployment;
 use App\Entity\Item;
 use App\Entity\Project;
@@ -9,8 +10,8 @@ use App\Entity\User;
 use App\Plugin\PluginAction;
 use App\Plugin\PluginCore;
 use App\Service\DataStore;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class Core extends PluginCore
 {
@@ -50,35 +51,19 @@ class Core extends PluginCore
         return 'Integration with Taiga';
     }
 
-    public function onDeploymentCreated(Deployment $deployment)
+    public function onEntityCreated(Entity $entity)
     {
 
     }
 
-    public function onDeploymentDateChanged(Deployment $deployment,
-                                            \DateTime $old_date)
+    public function onEntityDeleted(Entity $entity)
     {
 
     }
 
-    public function onDeploymentDeleted(Deployment $deployment)
+    public function onEntityUpdated(Entity $entity, array $old_values)
     {
 
-    }
-
-    public function onItemStatusUpdated(Item $item, $old_status = null)
-    {
-        
-    }
-
-    public function onItemMoved(Item $item, Deployment $old_deployment)
-    {
-        
-    }
-
-    public function onItemDeleted(Item $item)
-    {
-        
     }
 
     public function handleConfigure(PluginAction $action)

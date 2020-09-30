@@ -11,7 +11,9 @@ use Doctrine\Common\Collections\ExpressionBuilder;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="items") @ORM\HasLifecycleCallbacks
+ * @ORM\Entity
+ * @ORM\Table(name="items", indexes={@ORM\Index(name="status_idx", columns={"deployment_id","status"})})
+ * @ORM\HasLifecycleCallbacks
  */
 class Item extends Entity
 {

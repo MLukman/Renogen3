@@ -50,8 +50,7 @@ class ChecklistController extends RenoController
         }
     }
 
-    protected function edit_or_create(ChecklistEntity $checklist,
-                                      ParameterBag $post)
+    protected function edit_or_create(ChecklistEntity $checklist, ParameterBag $post)
     {
         $context = array(
             'post' => $post,

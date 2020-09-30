@@ -161,6 +161,15 @@ class DoctrineValidator
             if (isset($rules['ip']) && $rules['ip'] && !filter_var($value, FILTER_VALIDATE_IP)) {
                 $errors[] = "Must be a valid IP address";
             }
+
+            // validation: future
+            if (isset($rules['future']) && $rules['future'] >= 0 && $value instanceof \DateTime) {
+                $hours = $rules['future'];
+                if ($value < date_create("+$hours hour")) {
+                    $errors[] = "Must be a future date".($hours > 0 ? " (>= now + $hours hours)"
+                            : '');
+                }
+            }
         }
 
         return $errors;

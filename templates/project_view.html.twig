@@ -56,21 +56,78 @@
             {{ _self.deploymentList(project.upcoming()) }}
         {% else %}
             <div class="ui warning message">
-                This project has no upcoming deployments. 
+                <p>This project has no upcoming deployments.</p> 
                 {% if not project.archived %}
-                    A user with 'approval' role needs to create a new deployment.
-                    {% set approvers = project.usersWithRole('approval') %}
-                    {% if approvers|length > 0 %}
-                        <div>
+                    <p>A user with 'approval' role needs to create a new deployment:
+                        {% set approvers = project.usersWithRole('approval') %}
+                        {% if approvers|length > 0 %}
                             {% for u in approvers %}
                                 <span class="nowrap"><i class="ui id badge outline icon"></i> {{ u.shortname }}</span>
                             {% endfor %}
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </p>
+                    <p>Or a user with 'entry' role can create a deployment request.</p>
                 {% endif %}
             </div>
         {% endif %}
     </div>
+
+    {% if security.isGranted(['entry','approval'],project) and not project.archived %}
+        <h2>
+            Deployment Requests
+            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_deployment_request_create',project)}}">
+                <i class="ui plus icon"></i>Create Deployment Request
+            </a>
+            <div style="clear:both"></div>
+        </h2>
+        <div class="ui basic segment">
+            <table class="ui sortable orange selectable striped table">
+                <thead>
+                    <tr>
+                        <th class="ui collapsing">Datetime</th>
+                        <th>Title</th>
+                        <th class="ui collapsing">Requested By</th>
+                        <th class="ui collapsing">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for drequest in project.filterUpcomingDateOnly(project.deployment_requests, 'execute_date') %}
+                        <tr>
+                            <td class="ui collapsing" data-sort-value="{{ drequest.execute_date.getTimestamp() }}">{{ drequest.dateTimeString(true) }}</td>
+                            <td>{{ drequest.title }}</td>
+                            <td class="ui collapsing">{{ drequest.created_by.name }}</td>
+                            <td class="ui collapsing">
+                                {% if drequest.status == 'Approved' %}
+                                    <a href="{{nav.entityPath('app_deployment_view',drequest.deployment)}}">Approved</a>
+                                {% else %}
+                                    {{ drequest.status }}
+                                    <div>
+                                        {% if drequest.created_by == ds.currentUserEntity() %}
+                                            <a class="ui icon button" title="Edit" href="{{nav.entityPath('app_deployment_request_edit',drequest)}}">
+                                                <i class="ui pencil icon"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if security.isGranted('approval',project) %}
+                                            <a class="ui icon button" title="Approve" href="{{nav.entityPath('app_deployment_request_approve',drequest)}}" onclick="return confirm('Approve this request and create a new deployment?')">
+                                                <i class="ui checkmark icon"></i>
+                                            </a>
+                                            {% if drequest.status != 'Rejected' %}
+                                                <a class="ui icon button" title="Reject" href="{{nav.entityPath('app_deployment_request_reject',drequest)}}" onclick="return confirm('Reject this request?')">
+                                                    <i class="ui x icon"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="3">No future deployment request yet</td></tr>
+                    {% endfor %} 
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
 
     {% if project.past(10).count() > 0 %}
         <h2>
@@ -106,6 +163,7 @@
                     {% endif %}
                     {% set item_count = deployment.items.count() %}
                     {% if item_count > 0 %}
+                        {{ _self.deploymentProgressBars(deployment, true) }}
                         <table class="ui very compact small sortable purple selectable striped table">
                             <thead>
                                 <tr>
@@ -125,7 +183,7 @@
                                         <td class="ui collapsing">
                                             {{item.category}}
                                         </td>
-                                        <td class="collapsing">
+                                        <td class="collapsing" data-sort-value="{{ item.deployment.project.item_statuses[item.status].sequence|default(0) }}">
                                             <i class="ui {{item.statusIcon}} icon"></i>{{item.status}}
                                         </td>
                                     </tr>
@@ -140,6 +198,16 @@
                             </div>
                         </div>
                     {% endif %}
+                    <script>
+                        $(function () {
+                            $('.deployment-progress').progress({
+                                autoSuccess: false,
+                                text: {
+                                    percent: '{value}'
+                                }
+                            });
+                        });
+                    </script>
                 </div>
             </div>
         {% endfor %}

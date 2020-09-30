@@ -8,8 +8,10 @@ use App\Entity\ActivityFile;
 use App\Entity\Attachment;
 use App\Entity\Checklist;
 use App\Entity\Deployment;
+use App\Entity\DeploymentRequest;
 use App\Entity\Item;
 use App\Entity\ItemComment;
+use App\Entity\Plugin;
 use App\Entity\Project;
 use App\Entity\RunItem;
 use App\Entity\RunItemFile;
@@ -76,6 +78,10 @@ class NavigationFactory
         } elseif ($entity instanceof Deployment) {
             return $this->entityParams($entity->project) + array(
                 'deployment' => $entity->datetimeString(),
+            );
+        } elseif ($entity instanceof DeploymentRequest) {
+            return $this->entityParams($entity->project) + array(
+                'deployment_request' => $entity->id,
             );
         } elseif ($entity instanceof Item) {
             return $this->entityParams($entity->deployment) + array(

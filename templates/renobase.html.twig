@@ -65,7 +65,7 @@
             {% endif %}
         </div>
     {% else %}
-        <div class="ui red {{label_type|default('tag')}} label">
+        <div class="ui {{ item.deployment.project.item_statuses[item.status].color|default('red') }} {{label_type|default('tag')}} label">
             <i class="ui {{item.statusIcon}} icon"></i>
             {{item.status}}
         </div>
@@ -199,6 +199,36 @@
             {{ description|nl2br }}
         </div>
     {% endif %}
+{% endmacro %}
+
+{% macro deploymentProgressBars(deployment, is_small) %}
+    {% set statusinfos = { labels:[], colors:[], counts:[] } %}
+    {% set sc = deployment.getItemsWithStatus('Rejected')|length + deployment.getItemsWithStatus('Failed')|length %}
+    {% if sc > 0 %}
+        {% set statusinfos = statusinfos|merge({ labels: statusinfos.labels|merge([ 'Rejected/Failed' ]), colors: statusinfos.colors|merge([ 'red' ]), counts: statusinfos.counts|merge([ sc ]) }) %}
+    {% endif %}
+    {% set statuses = deployment.project.item_statuses|keys %}
+    {% for s in statuses %}
+        {% set sc = deployment.getItemsWithStatus(s)|length %}
+        {% if sc > 0 %}
+            {% set statusinfos = statusinfos|merge({ labels: statusinfos.labels|merge([ s ]), colors: statusinfos.colors|merge([ deployment.project.item_statuses[s].color ]), counts: statusinfos.counts|merge([ sc ]) }) %}
+        {% endif %}
+    {% endfor %}
+    <div class="ui {% if is_small %}small{% endif %} multiple progress hide-on-mobile" id="deployment-progress-{{ deployment.id }}" style="margin:0" data-total="{{ deployment.items|length }}" data-value="{{ statusinfos.counts|join(',') }}">
+        {% for color in statusinfos.colors %}
+            <div class="{{ color }} bar" title="{{ statusinfos.labels[loop.index0] }}: {{ statusinfos.counts[loop.index0] }}">
+                <div class="progress"></div>
+            </div>
+        {% endfor %}
+    </div>
+    <script>
+        $(function () {
+        $('#deployment-progress-{{ deployment.id }}').progress({
+        autoSuccess: false,
+                text: { {% if is_small %} percent: '{value}' {% else %} percent: '{bar} : {value}', bars:{{ statusinfos.labels|json_encode|raw }} {% endif %} }
+        });
+        });
+    </script>
 {% endmacro %}
 
 {% macro bytesToSize(bytes) %}{% apply spaceless %}

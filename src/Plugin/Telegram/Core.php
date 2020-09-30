@@ -87,7 +87,44 @@ class Core extends PluginCore
         return htmlentities($text, ENT_COMPAT | ENT_HTML401, null, false);
     }
 
-    public function onDeploymentCreated(Deployment $deployment)
+    public function onEntityCreated(\App\Base\Entity $entity)
+    {
+        if ($entity instanceof Deployment) {
+            $this->onDeploymentCreated($entity);
+        }
+        if ($entity instanceof Item) {
+            $this->onItemStatusUpdated($entity);
+        }
+    }
+
+    public function onEntityDeleted(\App\Base\Entity $entity)
+    {
+        if ($entity instanceof Deployment) {
+            $this->onDeploymentDeleted($entity);
+        }
+        if ($entity instanceof Item) {
+            $this->onItemDeleted($entity);
+        }
+    }
+
+    public function onEntityUpdated(\App\Base\Entity $entity, array $old_values)
+    {
+        if ($entity instanceof Deployment) {
+            if (isset($old_values['execute_date'])) {
+                $this->onDeploymentDateChanged($entity, $old_values['execute_date']);
+            }
+        }
+        if ($entity instanceof Item) {
+            if (isset($old_values['status'])) {
+                $this->onItemStatusUpdated($entity, $old_values['status']);
+            }
+            if (isset($old_values['deployment'])) {
+                $this->onItemMoved($entity, $old_values['deployment']);
+            }
+        }
+    }
+
+    protected function onDeploymentCreated(Deployment $deployment)
     {
         $message = $this->options['template_deployment_created'];
         $message = str_replace('{project}', $this->escape($deployment->project->title), $message);
@@ -99,8 +136,8 @@ class Core extends PluginCore
         $this->sendMessage($message);
     }
 
-    public function onDeploymentDateChanged(Deployment $deployment,
-                                            \DateTime $old_date)
+    protected function onDeploymentDateChanged(Deployment $deployment,
+                                               \DateTime $old_date)
     {
         $message = $this->options['template_deployment_date_changed'];
         $message = str_replace('{project}', $this->escape($deployment->project->title), $message);
@@ -113,7 +150,7 @@ class Core extends PluginCore
         $this->sendMessage($message);
     }
 
-    public function onDeploymentDeleted(Deployment $deployment)
+    protected function onDeploymentDeleted(Deployment $deployment)
     {
         $message = $this->options['template_deployment_deleted'];
         $message = str_replace('{project}', $this->escape($deployment->project->title), $message);
@@ -124,7 +161,7 @@ class Core extends PluginCore
         $this->sendMessage($message);
     }
 
-    public function onItemStatusUpdated(Item $item, $old_status = null)
+    protected function onItemStatusUpdated(Item $item, $old_status = null)
     {
         if ($old_status) {
             $message = $this->options['template_item_status_changed'];
@@ -146,7 +183,7 @@ class Core extends PluginCore
         $this->sendMessage($message);
     }
 
-    public function onItemMoved(Item $item, Deployment $old_deployment)
+    protected function onItemMoved(Item $item, Deployment $old_deployment)
     {
         $message = $this->options['template_item_moved'];
         $message = str_replace('{project}', $this->escape($item->deployment->project->title), $message);
@@ -163,7 +200,7 @@ class Core extends PluginCore
         $this->sendMessage($message);
     }
 
-    public function onItemDeleted(Item $item)
+    protected function onItemDeleted(Item $item)
     {
         $message = $this->options['template_item_deleted'];
         $message = str_replace('{project}', $this->escape($item->deployment->project->title), $message);
@@ -241,11 +278,6 @@ class Core extends PluginCore
                 break;
         }
         $action->render('configure.html.twig', $post);
-    }
-
-    public function handleActionA(Request $request, Project $project, $action)
-    {
-
     }
 
     public function handleAction(PluginAction $action)

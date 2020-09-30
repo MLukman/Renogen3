@@ -23,7 +23,7 @@ abstract class Actionable extends Entity
 
     /**
      * @ORM\ManyToOne(targetEntity="Template", inversedBy="activities")
-     * @ORM\JoinColumn(name="template_id", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="template_id", referencedColumnName="id", onDelete="RESTRICT")
      * @var Template
      */
     public $template;

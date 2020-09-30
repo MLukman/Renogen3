@@ -10,6 +10,7 @@ use App\Entity\Activity;
 use App\Entity\Attachment;
 use App\Entity\AuthDriver;
 use App\Entity\Deployment;
+use App\Entity\DeploymentRequest;
 use App\Entity\FileLink;
 use App\Entity\FileStore;
 use App\Entity\Item;
@@ -20,7 +21,6 @@ use App\Exception\NoResultException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -213,6 +213,25 @@ class DataStore
     /**
      *
      * @param type $project
+     * @param type $deployment_request
+     * @return DeploymentRequest
+     * @throws NoResultException
+     */
+    public function fetchDeploymentRequest($project, $deployment_request)
+    {
+        if ($deployment_request instanceof DeploymentRequest) {
+            return $deployment_request;
+        }
+        $project_obj = $this->fetchProject($project);
+        if (($deployment = $project_obj->deployment_requests->get($deployment_request))) {
+            return $deployment;
+        }
+        throw new NoResultException("There is not such deployment request matching '$deployment_request'");
+    }
+
+    /**
+     *
+     * @param type $project
      * @param type $deployment
      * @param type $item
      * @return Item
@@ -339,14 +358,12 @@ class DataStore
     /**
      *
      * @param Entity $entity
-     * @param type $fields
-     * @param ParameterBag $data
      * @return boolean
      */
     public function commit(Entity &$entity = null)
     {
         if ($entity) {
-            $this->em->persist($entity);
+            $this->manage($entity);
             $this->em->flush($entity);
         } else {
             $this->em->flush();
@@ -371,7 +388,7 @@ class DataStore
      * @return boolean
      */
     public function prepareValidateEntity(Entity &$entity, Array $fields,
-                                          InputBag $data): bool
+                                          ParameterBag $data): bool
     {
         foreach ($fields as $field) {
             if (!$data->has($field)) {

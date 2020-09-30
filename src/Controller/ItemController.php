@@ -4,13 +4,12 @@ namespace App\Controller;
 
 use App\Base\RenoController;
 use App\Entity\Activity;
-use App\Entity\Item as ItemEntity;
+use App\Entity\Item;
 use App\Entity\ItemComment;
 use App\Entity\Project;
 use App\Entity\RunItem;
 use App\Entity\RunItemFile;
 use App\Exception\NoResultException;
-use DateTime;
 use Doctrine\Common\Collections\Criteria;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,7 +30,7 @@ class ItemController extends RenoController
             $this->checkAccess(array('entry', 'approval'), $deployment_obj);
             $this->addEntityCrumb($deployment_obj);
             $this->addCreateCrumb('Add deployment item', $this->nav->entityPath('app_item_create', $deployment_obj));
-            return $this->edit_or_create(new ItemEntity($deployment_obj), $request->request);
+            return $this->edit_or_create(new Item($deployment_obj), $request->request);
         } catch (NoResultException $ex) {
             return $this->errorPage('Object not found', $ex->getMessage());
         }
@@ -156,7 +155,7 @@ class ItemController extends RenoController
         return $this->nav->redirectForEntity('app_item_view', $item_obj);
     }
 
-    protected function edit_or_create(ItemEntity $item, ParameterBag $post)
+    protected function edit_or_create(Item $item, ParameterBag $post)
     {
         $context = array();
         $ds = $this->ds;
@@ -237,7 +236,7 @@ class ItemController extends RenoController
     public function comment_delete(Request $request, $project, $deployment,
                                    $item, $comment)
     {
-        return $this->comment_setDeletedDate($project, $deployment, $item, $comment, new DateTime());
+        return $this->comment_setDeletedDate($project, $deployment, $item, $comment, new\DateTime());
     }
 
     /**
@@ -250,7 +249,7 @@ class ItemController extends RenoController
     }
 
     protected function comment_setDeletedDate($project, $deployment, $item,
-                                              $comment, DateTime $date = null)
+                                              $comment, \DateTime $date = null)
     {
         try {
             $item_obj = $this->ds->fetchItem($project, $deployment, $item);

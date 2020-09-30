@@ -50,36 +50,40 @@
     <div class="ui tab basic segment active" data-tab="items">
 
         {% if security.isGranted(['entry','approval'],deployment.project) and deployment.isActive() %}
-            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_item_create',deployment)}}">
-                <i class="ui plus icon"></i>Add Item
-            </a>
-            <div style="clear:both"></div>
+            <div style="margin-bottom:1em">
+                <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_item_create',deployment)}}">
+                    <i class="ui plus icon"></i>Add Item
+                </a>
+                <div style="clear:both"></div>
+            </div>
         {% endif %}
-
+        {{ _self.deploymentProgressBars(deployment) }}
         <div class="ui basic segment">
-            <div class="ui equal width stackable grid">
-                {% set statuses = deployment.project.item_statuses|keys %}
-                {% for s in statuses %}
-                    <div class="ui column">
-                        <div class="ui tiny statistic ">
+            <div class="ui grid">
+                <div class="doubling six column row">
+                    <div class="ui column center aligned">
+                        <div class="ui red tiny statistic">
                             <div class="label">
-                                {{s}}
+                                Rejected / Failed
                             </div>
                             <div class="value">
-                                {{deployment.getItemsWithStatus(s)|length}}
+                                {{deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_REJECTED'))|length + deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_FAILED'))|length}}
                             </div>
                         </div>
                     </div>
-                {% endfor %}
-                <div class="ui column">
-                    <div class="ui red tiny statistic">
-                        <div class="label">
-                            Rejected / Failed
+                    {% set statuses = deployment.project.item_statuses|keys %}
+                    {% for s in statuses %}
+                        <div class="ui column center aligned">
+                            <div class="ui tiny statistic ">
+                                <div class="label">
+                                    {{s}}
+                                </div>
+                                <div class="value">
+                                    {{deployment.getItemsWithStatus(s)|length}}
+                                </div>
+                            </div>
                         </div>
-                        <div class="value">
-                            {{deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_REJECTED'))|length + deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_FAILED'))|length}}
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -135,7 +139,7 @@
                             {% set last = item.comments.last() %}
                             <span class="ui circular {{comments?'blue':''}} label" title="{{last.text|default(null)}}">{{comments}}</span>
                         </td>
-                        <td class="ui collapsing top aligned">
+                        <td class="ui collapsing top aligned" data-sort-value="{{ item.deployment.project.item_statuses[item.status].sequence|default(0) }}">
                             {{ _self.itemStatusLabel(item) }}
                         </td>
                     </tr>
