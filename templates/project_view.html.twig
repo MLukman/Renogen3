@@ -26,14 +26,15 @@
                         <a class="ui item" href="{{nav.entityPath('app_template_list',project)}}"><i class="ui clipboard icon"></i>Activity Templates</a>
                         <a class="ui item" href="{{nav.entityPath('app_plugin_index',project)}}"><i class="ui plug icon"></i>Plugins</a>
                         <a class="ui item" href="{{nav.entityPath('app_project_users',project)}}"><i class="ui users icon"></i>Users</a>
+                        <a class="ui item" href="{{nav.entityPath('app_project_contrib',project)}}"><i class="ui hands helping icon"></i>Contributions</a>
                     </div>
                 </div>
             </div>
         {% endif %}
-        <div class="ui divider" style="clear: both"></div>
     </h1>
 
-    {{ _self.describe(project.description) }}
+    {{ _self.describe(project.description, 'project') }}
+    <div style="clear: both" class="ui divider"></div>
 
     {% if is_project_admin and project.templates.count() == 0 %}
         <div class="ui error message">
@@ -41,114 +42,143 @@
         </div>
     {% endif %}
 
-    <h2>
-        Upcoming Deployments
-        {% if security.isGranted('approval',project) and not project.archived %}
-            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_deployment_create',project)}}">
-                <i class="ui plus icon"></i>Create Deployment
-            </a>
+    <div class="ui top attached tabular secondary pointing menu">
+        <div class="active item" data-tab="upcoming">
+            <h2 class="ui header">
+                <span>
+                    <i class="ui clock outline icon hide-on-mobile"></i>Upcoming <span class="hide-on-mobile">Deployments <span class="ui circular large label">{{ project.upcoming().count() }}</span></span> 
+                </span>
+            </h2>
+        </div>
+        {% if security.isGranted(['entry','approval'],project) and not project.archived %}
+            <div class="item" data-tab="requests">
+                <h2 class="ui header">
+                    <span>
+                        <i class="ui calendar plus outline icon hide-on-mobile"></i><span class="hide-on-mobile">Deployment</span> Requests <span class="ui circular large label hide-on-mobile">{{ project.upcomingDeploymentRequests().count() }}</span>
+                    </span>
+                </h2>
+            </div>
         {% endif %}
-        <div style="clear:both"></div>
-    </h2>
-
-    <div class="ui basic segment">
-        {% if project.upcoming().count() > 0 %}
-            {{ _self.deploymentList(project.upcoming()) }}
-        {% else %}
-            <div class="ui warning message">
-                <p>This project has no upcoming deployments.</p> 
-                {% if not project.archived %}
-                    <p>A user with 'approval' role needs to create a new deployment:
-                        {% set approvers = project.usersWithRole('approval') %}
-                        {% if approvers|length > 0 %}
-                            {% for u in approvers %}
-                                <span class="nowrap"><i class="ui id badge outline icon"></i> {{ u.shortname }}</span>
-                            {% endfor %}
-                        {% endif %}
-                    </p>
-                    <p>Or a user with 'entry' role can create a deployment request.</p>
-                {% endif %}
+        {% if project.past(10).count() > 0 %}
+            <div class="item" data-tab="past">
+                <h2 class="ui header">
+                    <span>
+                        <i class="ui history icon hide-on-mobile"></i>Past <span class="hide-on-mobile">Deployments</span> 
+                    </span>
+                </h2>
             </div>
         {% endif %}
     </div>
 
-    {% if security.isGranted(['entry','approval'],project) and not project.archived %}
-        <h2>
-            Deployment Requests
-            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_deployment_request_create',project)}}">
-                <i class="ui plus icon"></i>Create Deployment Request
+    <div class="ui tab basic segment active" data-tab="upcoming">
+        {% if security.isGranted('approval',project) and not project.archived %}
+            <a class="ui primary button no-print" href="{{nav.entityPath('app_deployment_create',project)}}">
+                <i class="ui clock outline icon"></i>Create Deployment
             </a>
-            <div style="clear:both"></div>
-        </h2>
+        {% endif %}
+
         <div class="ui basic segment">
-            <table class="ui sortable orange selectable striped table">
-                <thead>
-                    <tr>
-                        <th class="ui collapsing">Datetime</th>
-                        <th>Title</th>
-                        <th class="ui collapsing">Requested By</th>
-                        <th class="ui collapsing">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for drequest in project.filterUpcomingDateOnly(project.deployment_requests, 'execute_date') %}
+            {% if project.upcoming().count() > 0 %}
+                {{ _self.deploymentList(project.upcoming()) }}
+            {% else %}
+                <div class="ui warning message">
+                    <p>This project has no upcoming deployments.</p> 
+                    {% if not project.archived %}
+                        <p>A user with 'approval' role needs to create a new deployment:
+                            {% set approvers = project.usersWithRole('approval') %}
+                            {% if approvers|length > 0 %}
+                                {% for u in approvers %}
+                                    <span class="nowrap"><i class="ui id badge outline icon"></i> {{ u.shortname }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </p>
+                        <p>Or a user with 'entry' role can create a deployment request.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if security.isGranted(['entry','approval'],project) and not project.archived %}
+        <div class="ui tab basic segment" data-tab="requests">
+            <a class="ui primary button no-print" href="{{nav.entityPath('app_deployment_request_create',project)}}">
+                <i class="ui calendar plus outline icon"></i>Create Deployment Request
+            </a>
+            <div class="ui basic segment">
+                <table class="ui sortable orange striped table">
+                    <thead>
                         <tr>
-                            <td class="ui collapsing" data-sort-value="{{ drequest.execute_date.getTimestamp() }}">{{ drequest.dateTimeString(true) }}</td>
-                            <td>{{ drequest.title }}</td>
-                            <td class="ui collapsing">{{ drequest.created_by.name }}</td>
-                            <td class="ui collapsing">
-                                {% if drequest.status == 'Approved' %}
-                                    <a href="{{nav.entityPath('app_deployment_view',drequest.deployment)}}">Approved</a>
-                                {% else %}
-                                    {{ drequest.status }}
-                                    <div>
-                                        {% if drequest.created_by == ds.currentUserEntity() %}
-                                            <a class="ui icon button" title="Edit" href="{{nav.entityPath('app_deployment_request_edit',drequest)}}">
-                                                <i class="ui pencil icon"></i>
-                                            </a>
+                            <th class="ui collapsing">Datetime</th>
+                            <th>Title</th>
+                            <th class="ui collapsing">Requested By</th>
+                            <th class="ui collapsing">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for drequest in project.upcomingDeploymentRequests() %}
+                            <tr>
+                                <td class="ui collapsing" data-sort-value="{{ drequest.execute_date.getTimestamp() }}">{{ drequest.dateTimeString(true) }}</td>
+                                <td>{{ drequest.title }}</td>
+                                <td class="ui collapsing">{{ drequest.created_by.name }}</td>
+                                <td class="ui collapsing">
+                                    {% if drequest.status == 'Approved' %}
+                                        {% if drequest.deployment %}
+                                            <a href="{{nav.entityPath('app_deployment_view',drequest.deployment)}}">Approved</a>
+                                        {% else %}
+                                            {{ drequest.status }}
                                         {% endif %}
-                                        {% if security.isGranted('approval',project) %}
-                                            <a class="ui icon button" title="Approve" href="{{nav.entityPath('app_deployment_request_approve',drequest)}}" onclick="return confirm('Approve this request and create a new deployment?')">
-                                                <i class="ui checkmark icon"></i>
-                                            </a>
-                                            {% if drequest.status != 'Rejected' %}
-                                                <a class="ui icon button" title="Reject" href="{{nav.entityPath('app_deployment_request_reject',drequest)}}" onclick="return confirm('Reject this request?')">
-                                                    <i class="ui x icon"></i>
+                                    {% else %}
+                                        {{ drequest.status }}
+                                        <div>
+                                            {% if drequest.created_by == ds.currentUserEntity() %}
+                                                <a class="ui icon button" title="Edit" href="{{nav.entityPath('app_deployment_request_edit',drequest)}}">
+                                                    <i class="ui pencil icon"></i>
                                                 </a>
                                             {% endif %}
-                                        {% endif %}
-                                    </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="3">No future deployment request yet</td></tr>
-                    {% endfor %} 
-                </tbody>
-            </table>
+                                            {% if security.isGranted('approval',project) %}
+                                                <a class="ui icon button" title="Approve" href="{{nav.entityPath('app_deployment_request_approve',drequest)}}" onclick="return confirm('Approve this request and create a new deployment?')">
+                                                    <i class="ui checkmark icon"></i>
+                                                </a>
+                                                {% if drequest.status != 'Rejected' %}
+                                                    <a class="ui icon button" title="Reject" href="{{nav.entityPath('app_deployment_request_reject',drequest)}}" onclick="return confirm('Reject this request?')">
+                                                        <i class="ui x icon"></i>
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="3">No future deployment request yet</td></tr>
+                        {% endfor %} 
+                    </tbody>
+                </table>
+            </div>
         </div>
     {% endif %}
 
     {% if project.past(10).count() > 0 %}
-        <h2>
-            Past Deployments (Showing last 10)
-            <a class="ui button right floated" href="{{nav.entityPath('app_project_past',project)}}"><i class="ui clock icon"></i>Show all past deployments</a>
-            <div style="clear:both"></div>
-        </h2>
-        <div class="ui basic segment">
-            {{ _self.deploymentList(project.past(10)) }}
+        <div class="ui tab basic segment" data-tab="past">
+            <h3>
+                Showing up to last 10
+            </h3>
+            <a class="ui primary button no-print" href="{{nav.entityPath('app_project_past',project)}}"><i class="ui history icon"></i>Show all past deployments</a>
+            <div class="ui basic segment">
+                {{ _self.deploymentList(project.past(10)) }}
+            </div>
         </div>
     {% endif %}
 
 {% endblock %}
 
-{% macro deploymentList(deployments) %}
+{% macro deploymentList(deployments,simple) %}
     <div class="ui {%if deployments|length > 1 %}two{% else %}one{% endif %} stackable cards">
         {% for deployment in deployments %}
             <div class="ui purple card">
                 <div class="content">
                     <a class="ui header" href="{{nav.entityPath('app_deployment_view',deployment)}}">
-                        <span class="ui right floated">
+                        <span class="ui right floated{% if deployment.isRunning() %} blink{% endif %}">
                             {{ _self.displayDateTime(deployment.execute_date) }}
                         </span>
                         <i class="calendar check o icon"></i>
@@ -156,14 +186,16 @@
                             {{ deployment.title }}
                         </div>
                     </a>
-                    {% if deployment.description %}
+                    {#% if deployment.description %}
                         <div class="ui description">
                             {{deployment.description|nl2br}}
                         </div>
-                    {% endif %}
+                    {% endif %#}
                     {% set item_count = deployment.items.count() %}
                     {% if item_count > 0 %}
-                        {{ _self.deploymentProgressBars(deployment, true) }}
+                        {% if not simple %}
+                            {{ _self.deploymentProgressBars(deployment, true) }}
+                        {% endif %}
                         <table class="ui very compact small sortable purple selectable striped table">
                             <thead>
                                 <tr>
@@ -176,7 +208,7 @@
                                 {% for item in deployment.items %}
                                     <tr>
                                         <td>
-                                            <a href="{{nav.entityPath('app_item_view',item)}}" class="ui item">
+                                            <a href="{{nav.entityPath('app_item_view',item)}}" class="ui item" style="display:block">
                                                 {{item.displayTitle}}
                                             </a>
                                         </td>
@@ -194,7 +226,7 @@
                         <div class="meta">
                             <div class="ui basic segment">
                                 <i class="ui warning sign icon"></i>
-                                No deployment item has been added to this deployment yet
+                                This deployment has no deployment item
                             </div>
                         </div>
                     {% endif %}

@@ -2,13 +2,13 @@
 
 namespace App\Plugin\Telegram;
 
+use App\Base\Entity;
 use App\Entity\Deployment;
+use App\Entity\DeploymentRequest;
 use App\Entity\Item;
-use App\Entity\Project;
 use App\Plugin\PluginAction;
 use App\Plugin\PluginCore;
 use GuzzleHttp\Client;
-use Symfony\Component\HttpFoundation\Request;
 use function GuzzleHttp\json_decode;
 
 class Core extends PluginCore
@@ -24,6 +24,9 @@ class Core extends PluginCore
         'template_item_status_changed' => '&#x1F4CC; [<b>{project}</b>] Status of item <a href="{url}">{title}</a> has been changed from <b>{old}</b> to <b>{new}</b> by {who}',
         'template_item_moved' => '&#x1F4CC; [<b>{project}</b>] Item <a href="{url}">{title}</a> has moved from <b>{old_title} ({old_datetime})</b> to <b>{new_title} ({new_datetime})</b> by {who}',
         'template_item_deleted' => '&#x1F4CC; [<b>{project}</b>] Item <b>{title}</b> has been deleted from deployment <b>{deployment_title} ({deployment_datetime})</b> by {who}',
+        'template_deployment_request_created' => '&#x1F514; [<b>{project}</b>] Deployment window <a href="{url}">{title}</a> has been requested for <b>{datetime}</b> by {who}',
+        'template_deployment_request_approved' => '&#x1F514; [<b>{project}</b>] Deployment window <a href="{url}">{title} ({datetime})</a> has been <b>APPROVED</b> by {who}',
+        'template_deployment_request_rejected' => '&#x1F514; [<b>{project}</b>] Deployment window <a href="{url}">{title} ({datetime})</a> has been <b>REJECTED</b> by {who}',
     );
 
     static public function getIcon()
@@ -72,13 +75,6 @@ class Core extends PluginCore
 
     protected function escape($text)
     {
-        /*
-          $text = str_replace("\\", "\\\\", $text);
-          $text = str_replace("[", "\\[", $text);
-          $text = str_replace("_", "\\_", $text);
-          $text = str_replace("*", "\\*", $text);
-          $text = str_replace("`", "\\`", $text);
-         */
         $text = preg_replace_callback('/[\x{80}-\x{10FFFF}]/u', function ($m) {
             $char = current($m);
             $utf = iconv('UTF-8', 'UCS-4', $char);
@@ -87,39 +83,49 @@ class Core extends PluginCore
         return htmlentities($text, ENT_COMPAT | ENT_HTML401, null, false);
     }
 
-    public function onEntityCreated(\App\Base\Entity $entity)
+    public function onEntityCreated(Entity $entity)
     {
-        if ($entity instanceof Deployment) {
-            $this->onDeploymentCreated($entity);
-        }
         if ($entity instanceof Item) {
             $this->onItemStatusUpdated($entity);
+        } elseif ($entity instanceof Deployment) {
+            $this->onDeploymentCreated($entity);
+        } elseif ($entity instanceof DeploymentRequest) {
+            $this->onDeploymentRequestEvent($entity, 'template_deployment_request_created');
         }
     }
 
-    public function onEntityDeleted(\App\Base\Entity $entity)
+    public function onEntityDeleted(Entity $entity)
     {
-        if ($entity instanceof Deployment) {
-            $this->onDeploymentDeleted($entity);
-        }
         if ($entity instanceof Item) {
             $this->onItemDeleted($entity);
+        } elseif ($entity instanceof Deployment) {
+            $this->onDeploymentDeleted($entity);
         }
     }
 
-    public function onEntityUpdated(\App\Base\Entity $entity, array $old_values)
+    public function onEntityUpdated(Entity $entity, array $old_values)
     {
-        if ($entity instanceof Deployment) {
-            if (isset($old_values['execute_date'])) {
-                $this->onDeploymentDateChanged($entity, $old_values['execute_date']);
-            }
-        }
         if ($entity instanceof Item) {
             if (isset($old_values['status'])) {
                 $this->onItemStatusUpdated($entity, $old_values['status']);
             }
             if (isset($old_values['deployment'])) {
                 $this->onItemMoved($entity, $old_values['deployment']);
+            }
+        } elseif ($entity instanceof Deployment) {
+            if (isset($old_values['execute_date'])) {
+                $this->onDeploymentDateChanged($entity, $old_values['execute_date']);
+            }
+        } elseif ($entity instanceof DeploymentRequest) {
+            if (isset($old_values['status'])) {
+                switch ($entity->status) {
+                    case 'Approved':
+                        $this->onDeploymentRequestEvent($entity, 'template_deployment_request_approved');
+                        break;
+                    case 'Rejected':
+                        $this->onDeploymentRequestEvent($entity, 'template_deployment_request_rejected');
+                        break;
+                }
             }
         }
     }
@@ -210,6 +216,20 @@ class Core extends PluginCore
         $message = str_replace('{deployment_datetime}', $this->escape($item->deployment->datetimeString(true)), $message);
         $message = str_replace('{who}', $this->escape($item->updated_by->shortname), $message);
         $message = str_replace('{bywho}', ' by '.$this->escape($item->updated_by->shortname), $message);
+        $this->sendMessage($message);
+    }
+
+    protected function onDeploymentRequestEvent(DeploymentRequest $deployment_request,
+                                                $template)
+    {
+        $message = $this->options[$template];
+        $message = str_replace('{project}', $this->escape($deployment_request->project->title), $message);
+        $message = str_replace('{url}', $this->escape($this->nav->url('app_project_view', $this->nav->entityParams($deployment_request->project)), '/requests'), $message);
+        $message = str_replace('{title}', $this->escape($deployment_request->title), $message);
+        $message = str_replace('{datetime}', $this->escape($deployment_request::generateDatetimeString($deployment_request->execute_date, true)), $message);
+        $message = str_replace('{who}', $this->escape((
+                $deployment_request->updated_by ?: $deployment_request->created_by)->shortname), $message);
+        $message = str_replace('{bywho}', ' by '.$this->escape($deployment_request->created_by->shortname), $message);
         $this->sendMessage($message);
     }
 

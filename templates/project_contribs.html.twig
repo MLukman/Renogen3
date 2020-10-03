@@ -1,0 +1,52 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <h1 class="ui header">
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(project, true)}} &raquo;</span>
+        </div>
+        <span><i class="ui hands helping icon"></i>User Contributions</span>
+        <div class="ui divider" style="clear: both"></div>
+    </h1>
+    <div style="position:relative; overflow: auto; max-width: inherit;">
+        <table class="ui celled structured sortable table">
+            <thead>
+                <tr>
+                    <th rowspan="2">User</th>
+                    <th rowspan="2">Role</th>
+                    <th colspan="2" class="ui center aligned no-sort">Deployment</th>
+                    <th colspan="7" class="ui center aligned no-sort">Item</th>
+                    <th colspan="2" class="ui center aligned no-sort">Checklist</th>
+                    <th rowspan="2" class="ui center aligned collapsing" data-sort-index="13">Activity<br />Created</th>
+                    <th rowspan="2" class="ui center aligned collapsing" data-sort-index="14">Attachment<br />Uploaded</th>
+                    <th rowspan="2" class="ui center aligned collapsing" data-sort-index="15"><i class="ui trophy icon"></i></th>
+                </tr>
+                <tr>
+                    <th class="ui center aligned collapsing" data-sort-index="2">Created</th>
+                    <th class="ui center aligned collapsing" data-sort-index="3">Requested</th>
+                    <th class="ui center aligned collapsing" data-sort-index="4">Created</th>
+                    <th class="ui center aligned collapsing" data-sort-index="5">Submitted</th>
+                    <th class="ui center aligned collapsing" data-sort-index="6">Reviewed</th>
+                    <th class="ui center aligned collapsing" data-sort-index="7">Approved</th>
+                    <th class="ui center aligned collapsing" data-sort-index="8">Rejected</th>
+                    <th class="ui center aligned collapsing" data-sort-index="9">Completed</th>
+                    <th class="ui center aligned collapsing" data-sort-index="10">Failed</th>
+                    <th class="ui center aligned collapsing" data-sort-index="11">Created</th>
+                    <th class="ui center aligned collapsing" data-sort-index="12">Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.user }}</td>
+                        <td>{{ user.role }}</td>
+                        {% for cat in contrib_categories %}
+                            <td class="ui center aligned" data-sort-value="{{ user.contribs[cat] }}">{{ user.contribs[cat] }}</td>
+                        {% endfor %}
+                        <td class="ui center aligned" data-sort-value="{{ user.score }}">{{ user.score }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

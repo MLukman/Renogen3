@@ -227,6 +227,18 @@
                 }
             }
 
+            .blink {
+                animation-duration: 1s;
+                animation-name: blink;
+                animation-iteration-count: infinite;
+                animation-timing-function: steps(2, start);
+            }
+            @keyframes blink {
+                80% {
+                    visibility: hidden;
+                }
+            }
+
             @media only screen and (max-width: 767px) {
                 .hide-on-mobile {
                     display: none !important;
@@ -242,85 +254,89 @@
         {% block head %}{% endblock %}
     </head>
     <body>
-        {% block topbar %}
-            <div id="topbar" class="no-print">
-                <div id="topmenu" class="ui stackable menu inverted purple">
-                    <div class="ui title item" style="padding:8px">
-                        <a style="padding: 0 30pt 0 0;" href="{{ nav.path('app_home') }}">
-                            {% block menutitle %}
-                                {% if controller.appLogo %}
-                                    <img src="{{nav.basePath}}{{ controller.appLogo }}" />
-                                {% else %}
-                                    <h3 style="padding: 8px;">
-                                        {% if controller.appIcon %}<i class="ui {{ controller.appIcon }} icon"></i>{% endif %}
-                                        {{ controller.appTitle }}
-                                    </h3>
-                                {% endif %}
-                            {% endblock %}
-                        </a>
-                    </div>
-                    {% block menubar %}
-                    {% endblock %}
-                    <div class="right menu">
-                        {% block menuright %}
-                        {% endblock %}
-                        {% if security.isGranted('IS_AUTHENTICATED_FULLY') %}
-                            <div class="ui dropdown item">
-                                <i class="ui user icon"></i> {{ds.currentUserEntity().getName()}}
-                                <i class="dropdown icon"></i>
-                                <div class="menu">
-                                    {% block usermenu %}
-                                    {% endblock %}
-                                    {{ m.topmenu_item('Logout', nav.path('app_logout'), 'sign out') }}
-                                    {% if security.isGranted('ROLE_ADMIN') %}
-                                        <div class="ui divider"></div>
-                                        <div class="header">Administrations</div>
-                                        {{ m.topmenu_item('Create Project', nav.path('app_project_create'), 'cube') }}
-                                        {{ m.topmenu_item('Users', nav.path('app_admin_users'), 'users') }}
-                                        {{ m.topmenu_item('Authentication', nav.path('app_admin_auth'), 'lock') }}
-                                        {{ m.topmenu_item('Archived Projects', nav.path('app_archived'), 'archive') }}
-                                        {{ m.topmenu_item('PHP Info', nav.path('app_admin_phpinfo'), 'php') }}
+        <div style="min-height: 100%; position: relative;">
+            {% block topbar %}
+                <div id="topbar" class="no-print">
+                    <div id="topmenu" class="ui stackable menu inverted purple">
+                        <div class="ui title item" style="padding:8px">
+                            <a style="padding: 0 30pt 0 0;" href="{{ nav.path('app_home') }}">
+                                {% block menutitle %}
+                                    {% if controller.appLogo %}
+                                        <img src="{{nav.basePath}}{{ controller.appLogo }}" />
+                                    {% else %}
+                                        <h3 style="padding: 8px;">
+                                            {% if controller.appIcon %}<i class="ui {{ controller.appIcon }} icon"></i>{% endif %}
+                                            {{ controller.appTitle }}
+                                        </h3>
                                     {% endif %}
-                                </div>
-                            </div>
-                        {% else %}
-                            <a href="{{nav.path('app_login')}}" class="ui link item"><i class="ui sign in icon"></i> Login</a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% block belowtopmenu %}
-                {% endblock %}
-            </div>
-            <div id="topfiller" class="no-print"></div>
-        {% endblock %}
-
-        {% for type,messages in app.flashes %}
-            {% for message in messages %}
-                <a class="ui floating {% if type == 'persistent' %}info persist{% else %}{{type}}{% endif %} flash message" style="display:block; margin:1em" onclick="javascript:$(this).fadeOut()">
-                    {% if false %}
-                        <div class="header">
-                            {{message.title}}
+                                {% endblock %}
+                            </a>
                         </div>
-                    {% endif %}
-                    <p>{{message|nl2br}}</p>
-                </a>
+                        {% block menubar %}
+                        {% endblock %}
+                        <div class="right menu">
+                            {% block menuright %}
+                            {% endblock %}
+                            {% if security.isGranted('IS_AUTHENTICATED_FULLY') %}
+                                <div class="ui dropdown item">
+                                    <i class="ui user icon"></i> {{ds.currentUserEntity().getName()}}
+                                    <i class="dropdown icon"></i>
+                                    <div class="menu">
+                                        {% block usermenu %}
+                                        {% endblock %}
+                                        {{ m.topmenu_item('About Renogen', nav.path('app_about'), 'help') }}
+                                        {{ m.topmenu_item('Logout', nav.path('app_logout'), 'sign out') }}
+                                        {% if security.isGranted('ROLE_ADMIN') %}
+                                            <div class="ui divider"></div>
+                                            <div class="header">Administrations</div>
+                                            {{ m.topmenu_item('Create Project', nav.path('app_project_create'), 'cube') }}
+                                            {{ m.topmenu_item('Users', nav.path('app_admin_users'), 'users') }}
+                                            {{ m.topmenu_item('Authentication', nav.path('app_admin_auth'), 'lock') }}
+                                            {{ m.topmenu_item('Archived Projects', nav.path('app_archived'), 'archive') }}
+                                            {{ m.topmenu_item('PHP Info', nav.path('app_admin_phpinfo'), 'php') }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <a href="{{nav.path('app_login')}}" class="ui link item"><i class="ui sign in icon"></i> Login</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% block belowtopmenu %}
+                    {% endblock %}
+                </div>
+                <div id="topfiller" class="no-print"></div>
+            {% endblock %}
+
+            {% for type,messages in app.flashes %}
+                {% for message in messages %}
+                    <a class="ui floating {% if type == 'persistent' %}info persist{% else %}{{type}}{% endif %} flash message" style="display:block; margin:1em" onclick="javascript:$(this).fadeOut()">
+                        {% if false %}
+                            <div class="header">
+                                {{message.title}}
+                            </div>
+                        {% endif %}
+                        <p>{{message|nl2br}}</p>
+                    </a>
+                {% endfor %}
             {% endfor %}
-        {% endfor %}
 
-        {% block container %}
-            <div class="ui basic segment">
-                {% block content %}
-                    {{content|default(null)|raw}}
-                {% endblock %}
-            </div>
-        {% endblock %}
+            {% block container %}
+                <div class="ui basic segment" style="padding-bottom: 100px;">
+                    {% block content %}
+                        {{content|default(null)|raw}}
+                    {% endblock %}
+                </div>
+            {% endblock %}
 
-        {% if block('footer')|trim is not empty %}
-            <div style="margin: 2em 0em; border-top: 1px solid silver">
-                {% block footer %}
-                {% endblock %}
-            </div>
-        {% endif %}
+            {% if block('footer')|trim is not empty %}
+                <div class="ui basic segment" style="  height: 100px; width:100%; position: absolute; bottom: 0;  left: 0">
+                    <div class="ui divider"></div>
+                    {% block footer %}
+                    {% endblock %}
+                </div>
+            {% endif %}
+        </div>
 
         <div id="overlay" class="ui page dimmer">
             <div id="overlayContent" class="content"></div>

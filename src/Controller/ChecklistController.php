@@ -9,7 +9,6 @@ use App\Exception\NoResultException;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ChecklistController extends RenoController
 {
@@ -40,9 +39,7 @@ class ChecklistController extends RenoController
     {
         try {
             $checklist_obj = $this->ds->fetchChecklist($project, $deployment, $checklist);
-            if (!$checklist_obj->isUsernameAllowed($this->ds->currentUserEntity()->username, 'edit')) {
-                throw new AccessDeniedException();
-            }
+            $this->checkAccess('edit', $checklist_obj);
             $this->addEntityCrumb($checklist_obj);
             return $this->edit_or_create($checklist_obj, $request->request);
         } catch (NoResultException $ex) {
@@ -50,7 +47,8 @@ class ChecklistController extends RenoController
         }
     }
 
-    protected function edit_or_create(ChecklistEntity $checklist, ParameterBag $post)
+    protected function edit_or_create(ChecklistEntity $checklist,
+                                      ParameterBag $post)
     {
         $context = array(
             'post' => $post,

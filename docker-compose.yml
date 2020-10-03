@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+
+  renogen:
+    container_name: renogen
+    image: mlukman/renogen3:v3.0.0
+    ports:
+      - "8088:80"
+    networks:
+      - renogen
+    environment:
+      DB_HOST: renogen-db
+      BASE_PATH: renogen
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  renogen-db:
+    container_name: renogen-db
+    image: mysql:8
+    networks:
+      - renogen
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: renogen
+      MYSQL_USER: renogen
+      MYSQL_PASSWORD: reno123gen      
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+networks:
+  renogen:

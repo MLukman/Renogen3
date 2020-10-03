@@ -14,6 +14,7 @@ class SystemController extends RenoController
      */
     public function phpinfo()
     {
+        $this->requireAdminRole();
         $this->title = "PHP Info";
         $this->addCrumb('PHP Info', $this->nav->path('app_admin_phpinfo'), 'php');
         return $this->render("renobase.html.twig", array(
@@ -26,6 +27,7 @@ class SystemController extends RenoController
      */
     public function phpinfo_content()
     {
+        $this->requireAdminRole();
         ob_start();
         phpinfo();
         $html = ob_get_contents();

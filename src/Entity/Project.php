@@ -111,6 +111,12 @@ class Project extends Entity
     public $plugins = null;
 
     /**
+     * Approximation of how many hours a deployment will take. Will be used to determine which deployment is ongoing.
+     * @ORM\Column(type="integer", options={"default" : 6})
+     */
+    public $approx_deployment_duration = 6;
+
+    /**
      * Validation rules
      * @var array
      */
@@ -198,7 +204,7 @@ class Project extends Entity
     public function upcoming()
     {
         return $this->cached('upcoming', function() {
-                return static::filterUpcomingDateOnly($this->deployments, 'execute_date');
+                return static::filterUpcomingDateOnly($this->deployments, 'execute_date', $this->approx_deployment_duration);
             });
     }
 
@@ -211,16 +217,23 @@ class Project extends Entity
      * @return Selectable the filtered collection sorted by the ascending order of the date field
      */
     static public function filterUpcomingDateOnly(Selectable $collection,
-                                                  $date_field, $strict = false,
+                                                  $date_field, $lookback = 0,
                                                   $limit = 0): Selectable
     {
-        if ($strict) {
-            $compare_dates = array(date_create());
-        } else {
-            $compare_dates = array(date_create(), date_create()->setTime(0, 0, 0),
-                date_create('yesterday')->setTime(18, 0, 0));
+        $compare_dates = [];
+        if ($lookback > 0) {
+            // find out if there is ongoing deployment (the latest one between now and previous $lookback hours)
+            $ongoing = $collection->matching(Criteria::create()
+                    ->where(new Comparison($date_field, '>=', date_create("- $lookback hours")))
+                    ->andWhere(new Comparison($date_field, '<=', date_create()))
+                    ->orderBy([$date_field => 'DESC'])
+                    ->setMaxResults(1));
+            if ($ongoing->count() > 0) {
+                $compare_dates[] = $ongoing->get(0)->execute_date;
+            }
         }
-        $upcoming = array();
+        $compare_dates[] = date_create();
+        $upcoming = [];
         foreach ($compare_dates as $compare) {
             $criteria = Criteria::create()
                 ->where(new Comparison($date_field, '>=', $compare))
@@ -253,6 +266,13 @@ class Project extends Entity
                     $criteria = $criteria->setMaxResults($limit);
                 }
                 return $this->deployments->matching($criteria);
+            });
+    }
+
+    public function upcomingDeploymentRequests()
+    {
+        return $this->cached('upcomingRequests', function() {
+                return static::filterUpcomingDateOnly($this->deployment_requests, 'execute_date');
             });
     }
 
@@ -361,5 +381,10 @@ class Project extends Entity
             'modules' => Rules::new()->required(),
             'icon' => Rules::new()->trim()->maxlen(30),
         ];
+    }
+
+    public function isSafeToDelete(): bool
+    {
+        return $this->deployments->count() == 0;
     }
 }

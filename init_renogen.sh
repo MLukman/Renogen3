@@ -20,4 +20,8 @@ bin/console make:migration
 export APP_ENV=${APP_ENV_ORI}
 bin/console doctrine:migrations:migrate --no-interaction || echo No migrations needed!
 
+# Patch item status from 'Test Review' to 'Review'
+bin/console doctrine:query:dql "UPDATE \App\Entity\Item i SET i.status = 'Review' WHERE i.status = 'Test Review'" -q
+bin/console doctrine:query:dql "UPDATE \App\Entity\ItemStatusLog i SET i.status = 'Review' WHERE i.status = 'Test Review'" -q
+
 chown -R www-data:www-data var

@@ -511,7 +511,7 @@ class DataStore
             $this->em->persist($auth_password);
             $this->em->flush();
         }
-        return $this->em->getRepository('\\App\\Entity\\AuthDriver')->find($classId);
+        return $this->em->getRepository('\App\Entity\AuthDriver')->find($classId);
     }
 
     public function getAuthClassNames()

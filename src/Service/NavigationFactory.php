@@ -45,9 +45,10 @@ class NavigationFactory
      * @param array $params
      * @return string The url
      */
-    public function url($route, array $params = array())
+    public function url($route, array $params = array(), $anchor = null)
     {
-        return $this->urlgen->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_URL);
+        return $this->urlgen->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_URL)
+            .($anchor ? "#$anchor" : '');
     }
 
     /**
@@ -55,9 +56,10 @@ class NavigationFactory
      * @param array $params
      * @return string The path
      */
-    public function path($route, array $params = array())
+    public function path($route, array $params = array(), $anchor = null)
     {
-        return $this->urlgen->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_PATH);
+        return $this->urlgen->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_PATH)
+            .($anchor ? "#$anchor" : '');
     }
 
     public function getBasePath()
@@ -138,9 +140,10 @@ class NavigationFactory
      * @param array $extras
      * @return string The path
      */
-    public function entityPath($route, Entity $entity, array $extras = array())
+    public function entityPath($route, Entity $entity, array $extras = [],
+                               $anchor = null)
     {
-        return $this->path($route, $this->entityParams($entity) + $extras);
+        return $this->path($route, $this->entityParams($entity) + $extras, $anchor);
     }
 
     /**
@@ -152,8 +155,8 @@ class NavigationFactory
     public function redirectRoute($route = null, Array $params = array(),
                                   $anchor = null)
     {
-        return new RedirectResponse($route ? $this->path($route, $params).
-            ($anchor ? "#$anchor" : "") : $this->requestStack->getMasterRequest()->getUri());
+        return new RedirectResponse($route ? $this->path($route, $params, $anchor)
+                : $this->requestStack->getMasterRequest()->getUri());
     }
 
     /**

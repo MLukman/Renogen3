@@ -55,20 +55,17 @@
                 </a>
             {% endif %}
         </span>
-        {% if editable %}
-            <a class="ui right floated button no-print" href="{{nav.entityPath('app_item_edit',item)}}"><i class="ui pencil icon"></i>Edit</a>
-        {% endif %}
+        <div class="ui labels" style="float:right">
+            {{ _self.itemCategoryLabel(item) }}
+            {{ _self.itemModulesLabel(item) }}
+            {% if editable %}
+                <a class="ui right floated button no-print" href="{{nav.entityPath('app_item_edit',item)}}"><i class="ui pencil icon"></i>Edit</a>
+            {% endif %}
+        </div>
     </h1>
 
-    <div class="ui labels">
-        {{ _self.itemCategoryLabel(item) }}
-        {{ _self.itemModulesLabel(item) }}
-    </div>
-
-    <div style="clear:both"></div>
-    <div class="ui divider"></div>
-
-    {{ _self.describe(item.description) }}
+    {{ _self.describe(item.description, 'item') }}
+    <div class="ui divider" style="clear:both"></div>
 
     <div class="ui mobile stackable grid">
         <div class="four wide column">

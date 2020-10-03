@@ -43,7 +43,7 @@ class ChecklistUpdate extends Entity
 
     public function getProject(): ?Project
     {
-        $this->checklist->getProject();
+        return $this->checklist->getProject();
     }
 
     public static function getValidationRules(): ?array

@@ -116,7 +116,7 @@
                                onclick="return confirm('Are you sure you want to block this user from login?')" />
                     {% endif %}
                 {% endif %}
-                {% if is_existing and ds.getAuthDriver(user.auth) and ds.getAuthDriver(user.auth).canResetPassword() %}
+                {% if is_existing and ds.getAuthDriver(user.auth) and ds.getAuthDriver(user.auth).driverClass().canResetPassword() %}
                     <input type="submit" class="ui orange right floated button" name="_action" value="Reset Password"
                            onclick="return confirm('Are you sure you want to reset the user password?')" />
                 {% endif %}

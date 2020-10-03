@@ -1,12 +1,14 @@
 {% extends "renobase.html.twig" %}
 
 {% block content %}
+    {% set items = deployment.items.toArray() %}
+    {% set checklists = deployment.checklists.toArray() %}
 
     <h1 class="ui header">
         <div class="breadcrumb">
             <span>{{_self.crumb_project(deployment.project, true)}} &raquo;</span>
         </div>
-        <span>
+        <span{% if deployment.isRunning() %} class="blink"{% endif %}>
             <i class="ui calendar check o icon" title="Deployment"></i>{{deployment.displayTitle}}
             {% if deployment.external_url %}
                 <a class="ui circular black label no-print" href="{{ deployment.external_url }}" target="_blank">
@@ -23,17 +25,15 @@
         <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_release_note',deployment)}}"><i class="ui ordered list icon"></i>Release Note</a>
     </h1>
 
-    <div style="clear:both"></div>
-    <div class="ui divider"></div>
-
-    {{ _self.describe(deployment.description) }}
+    {{ _self.describe(deployment.description, 'deployment') }}
+    <div class="ui divider"  style="clear:both"></div>
 
     <div class="ui top attached tabular secondary pointing menu">
         <div class="active item" data-tab="items">
             <h2 class="ui header">
                 <span>
                     <i class="ui flag icon hide-on-mobile"></i> <span class="hide-on-mobile">Deployment</span> Items 
-                    <span class="ui circular large label">{{deployment.items|length}}</span>
+                    <span class="ui circular large label">{{items|length}}</span>
                 </span>
             </h2>
         </div>
@@ -41,7 +41,7 @@
             <h2 class="ui header">
                 <span>
                     <i class="ui tasks icon hide-on-mobile"></i> Checklist
-                    <span class="ui circular large label">{{deployment.checklists|length}}</span>
+                    <span class="ui circular large label">{{checklists|length}}</span>
                 </span>
             </h2>
         </div>
@@ -51,42 +51,43 @@
 
         {% if security.isGranted(['entry','approval'],deployment.project) and deployment.isActive() %}
             <div style="margin-bottom:1em">
-                <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_item_create',deployment)}}">
-                    <i class="ui plus icon"></i>Add Item
+                <a class="ui primary button no-print" href="{{nav.entityPath('app_item_create',deployment)}}">
+                    <i class="ui plus icon"></i>Add Deployment Item
                 </a>
-                <div style="clear:both"></div>
             </div>
         {% endif %}
-        {{ _self.deploymentProgressBars(deployment) }}
-        <div class="ui basic segment">
-            <div class="ui grid">
-                <div class="doubling six column row">
-                    <div class="ui column center aligned">
-                        <div class="ui red tiny statistic">
-                            <div class="label">
-                                Rejected / Failed
-                            </div>
-                            <div class="value">
-                                {{deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_REJECTED'))|length + deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_FAILED'))|length}}
-                            </div>
-                        </div>
-                    </div>
-                    {% set statuses = deployment.project.item_statuses|keys %}
-                    {% for s in statuses %}
+        {% if items|length > 0 %}
+            <div class="ui basic segment">
+                <div class="ui grid">
+                    <div class="doubling six column row">
                         <div class="ui column center aligned">
-                            <div class="ui tiny statistic ">
+                            <div class="ui red tiny statistic">
                                 <div class="label">
-                                    {{s}}
+                                    Rejected / Failed
                                 </div>
                                 <div class="value">
-                                    {{deployment.getItemsWithStatus(s)|length}}
+                                    {{deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_REJECTED'))|length + deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_FAILED'))|length}}
                                 </div>
                             </div>
                         </div>
-                    {% endfor %}
+                        {% set statuses = deployment.project.item_statuses|keys %}
+                        {% for s in statuses %}
+                            <div class="ui column center aligned">
+                                <div class="ui tiny statistic ">
+                                    <div class="label">
+                                        {{s}}
+                                    </div>
+                                    <div class="value">
+                                        {{deployment.getItemsWithStatus(s)|length}}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
-        </div>
+            {{ _self.deploymentProgressBars(deployment) }}
+        {% endif %}
 
         <table class="ui celled striped sortable purple selectable table">
             <thead>
@@ -102,7 +103,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in deployment.items %}
+                {% for item in items %}
                     <tr data-category="{{item.category}}" data-status="{{item.status}}" data-modules="{% for m in item.modules %}[{{m}}]{% endfor %}">
                         <td class="ui collapsing top aligned">
                             {{item.refnum|default('-')}}
@@ -114,10 +115,10 @@
                                         <i class="ui linkify icon"></i>
                                     </a>
                                 {% endif %}
-                                <a href="{{nav.entityPath('app_item_view',item)}}">{{item.title}}</a>
+                                <a href="{{nav.entityPath('app_item_view',item)}}" style="display:block">{{item.title}}</a>
                             </h3>
                             {% if item.description %}
-                                <p>{{item.description|nl2br}}</p>
+                                <div class="ui message">{{item.description|nl2br}}</div>
                             {% endif %}
                         </td>
                         <td class="ui collapsing top aligned">
@@ -136,8 +137,7 @@
                         </td>
                         <td class="ui collapsing top aligned">
                             {% set comments = item.comments.count() %}
-                            {% set last = item.comments.last() %}
-                            <span class="ui circular {{comments?'blue':''}} label" title="{{last.text|default(null)}}">{{comments}}</span>
+                            <span class="ui circular {{comments?'blue':''}} label">{{comments}}</span>
                         </td>
                         <td class="ui collapsing top aligned" data-sort-value="{{ item.deployment.project.item_statuses[item.status].sequence|default(0) }}">
                             {{ _self.itemStatusLabel(item) }}
@@ -156,10 +156,9 @@
         {% set can_manage = security.isGranted(['entry','approval'],deployment.project) and deployment.isActive(1) %}
 
         {% if can_manage %}
-            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_checklist_create',deployment)}}">
-                <i class="ui plus icon"></i>Add Task
+            <a class="ui primary button no-print" href="{{nav.entityPath('app_checklist_create',deployment)}}">
+                <i class="ui plus icon"></i>Add Checklist Task
             </a>
-            <div style="clear:both"></div>
         {% endif %}
 
         <table class="ui celled red striped sortable selectable table">
@@ -176,7 +175,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for c in deployment.checklists %}
+                {% for c in checklists %}
                     <tr class="top aligned">
                         <td data-sort-value="{{ loop.index }}">{{ loop.index }}</td>
                         <td>{{ c.title }}</td>

@@ -6,8 +6,6 @@ use App\Base\Entity;
 use App\Service\DataStore;
 use App\Validation\Rules;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -119,34 +117,14 @@ class Deployment extends Entity
         return static::generateDatetimeString($ddate, $pretty);
     }
 
-    public function isActive($buffer_day = 0)
+    public function isActive()
     {
-        $ref_date = clone $this->execute_date;
-        $buffer_day = intval($buffer_day);
-        if ($buffer_day != 0) {
-            $ref_date->add(new \DateInterval("P${buffer_day}D"));
-        }
-        return ($ref_date >= date_create()->setTime(0, 0, 0)) && !$this->project->archived;
+        return !$this->project->archived && ($this->execute_date >= date_create(sprintf("-%d hours", $this->project->approx_deployment_duration)));
     }
 
-    /**
-     *
-     * @return ArrayCollection
-     */
-    public function getApprovedItems()
+    public function isRunning()
     {
-        return $this->items->matching(Criteria::create()->where(
-                    new Comparison('approved_date', '<>', null)));
-    }
-
-    /**
-     *
-     * @return ArrayCollection
-     */
-    public function getUnapprovedItems()
-    {
-        return $this->items->matching(Criteria::create()->where(
-                    new Comparison('approved_date', '=', null)));
+        return $this->isActive() && $this->execute_date <= date_create();
     }
 
     /**
@@ -155,11 +133,17 @@ class Deployment extends Entity
      */
     public function getItemsWithStatus($status)
     {
-        if (!isset($this->_caches["items.$status"])) {
-            $this->_caches["items.$status"] = $this->items->matching(Criteria::create()->where(
-                    new Comparison('status', '=', $status)));
-        }
-        return $this->_caches["items.$status"];
+        $status_items = $this->cached("items", function() use ($status) {
+            $status_items = [];
+            foreach ($this->items as $item) {
+                if (!isset($status_items[$item->status])) {
+                    $status_items[$item->status] = [];
+                }
+                $status_items[$item->status][] = $item;
+            }
+            return $status_items;
+        });
+        return $status_items[$status] ?? [];
     }
 
     public function generateRunbooks(DataStore $ds)
@@ -225,5 +209,10 @@ class Deployment extends Entity
             'external_url' => Rules::new()->trim()->maxlen(2000)->url(),
             'external_url_label' => Rules::new()->trim()->truncate(30),
         ];
+    }
+
+    public function isSafeToDelete(): bool
+    {
+        return $this->items->count() == 0 && $this->checklists->count() == 0;
     }
 }

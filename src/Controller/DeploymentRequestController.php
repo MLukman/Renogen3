@@ -22,7 +22,7 @@ class DeploymentRequestController extends RenoController
     {
         try {
             $project_obj = $this->ds->fetchProject($project);
-            $this->checkAccess('approval', $project_obj);
+            $this->checkAccess(['entry','approval'], $project_obj);
             $this->addEntityCrumb($project_obj);
             $this->addCreateCrumb('Request for deployment', $this->nav->entityPath('app_deployment_request_create', $project_obj));
             return $this->edit_or_create(new DeploymentRequest($project_obj), $request->request);
@@ -91,7 +91,7 @@ class DeploymentRequestController extends RenoController
             $deployment_request_obj->status = 'Rejected';
             $this->ds->commit();
             $this->addFlash('info', "Deployment request '$deployment_request_obj->title' has been rejected");
-            return $this->nav->redirectForEntity('app_project_view', $deployment_request_obj->project);
+            return $this->nav->redirectForEntity('app_project_view', $deployment_request_obj->project, '/requests');
         } catch (NoResultException $ex) {
             return $this->errorPage('Deployment request not found', $ex->getMessage());
         }
@@ -107,14 +107,14 @@ class DeploymentRequestController extends RenoController
                     $this->ds->deleteEntity($deployment_request);
                     $this->ds->commit();
                     $this->addFlash('info', "Deployment request '$deployment_request->title' has been deleted");
-                    return $this->nav->redirectForEntity('app_project_view', $deployment_request->project);
+                    return $this->nav->redirectForEntity('app_project_view', $deployment_request->project, '/requests');
             }
 
             if ($this->ds->prepareValidateEntity($deployment_request, static::entityFields, $post)) {
                 $deployment_request->status = 'New';
                 $this->ds->commit($deployment_request);
                 $this->addFlash('info', "Deployment request '$deployment_request->title' has been successfully saved");
-                return $this->nav->redirectForEntity('app_project_view', $deployment_request->project);
+                return $this->nav->redirectForEntity('app_project_view', $deployment_request->project, '/requests');
             } else {
                 $context['errors'] = $deployment_request->errors;
             }

@@ -16,6 +16,7 @@ class AuthController extends RenoController
      */
     public function index(Request $request)
     {
+        $this->requireAdminRole();
         $this->title = 'Authentication';
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
         return $this->render('admin/auth_list.html.twig', array('drivers' => $this->ds->queryMany('\App\Entity\AuthDriver')));
@@ -26,6 +27,7 @@ class AuthController extends RenoController
      */
     public function create(Request $request)
     {
+        $this->requireAdminRole();
         $this->title = 'Create Authentication';
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
         $this->addCreateCrumb('Create new authentication', $this->nav->path('app_admin_auth_create'));
@@ -37,6 +39,7 @@ class AuthController extends RenoController
      */
     public function edit(Request $request, $driver)
     {
+        $this->requireAdminRole();
         $this->title = "Edit '$driver' Authentication";
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
         $this->addEditCrumb($this->nav->path('app_admin_auth_edit', array('driver' => $driver)));

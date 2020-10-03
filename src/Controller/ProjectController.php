@@ -9,17 +9,18 @@ use App\Exception\NoResultException;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ProjectController extends RenoController
 {
-    const entityFields = array('name', 'title', 'icon', 'description');
+    const entityFields = array('name', 'title', 'icon', 'description', 'approx_deployment_duration');
 
     /**
      * @Route("/+", name="app_project_create")
      */
     public function create(Request $request)
     {
+        $this->requireAdminRole();
+        $this->title = 'Create project';
         $this->addCreateCrumb('Create project', $this->nav->path('app_project_create'));
         return $this->edit_or_create($request->request);
     }
@@ -110,9 +111,8 @@ class ProjectController extends RenoController
     {
         try {
             $project = $this->ds->fetchProject($project);
-            if (!$this->security->isGranted('ROLE_ADMIN') && !$this->security->isGranted('approval', $project)) {
-                throw new AccessDeniedException();
-            }
+            $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project);
+
             $this->addEntityCrumb($project);
             $this->addEditCrumb($this->nav->entityPath('app_project_edit', $project));
             return $this->edit_or_create($request->request, $project);
@@ -171,5 +171,92 @@ class ProjectController extends RenoController
 
         $context['project'] = $project;
         return $this->render('project_form.html.twig', $context);
+    }
+
+    /**
+     * @Route("/{project}/contributions", name="app_project_contrib", priority=10)
+     */
+    public function contributions(Request $request, $project)
+    {
+        $project = $this->ds->fetchProject($project);
+        $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project);
+
+        $queries = [
+            'deployment_created' => 'SELECT COUNT(d.id) FROM \App\Entity\Deployment d WHERE d.project = :project AND d.created_by = :user',
+            'deployment_requested' => 'SELECT COUNT(dr.id) FROM \App\Entity\DeploymentRequest dr WHERE dr.project = :project AND dr.created_by = :user',
+            'item_created' => 'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE i.created_by = :user',
+            'item_submitted' => [
+                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                [
+                    'status' => Project::ITEM_STATUS_REVIEW,
+                ]
+            ],
+            'item_reviewed' => [
+                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                [
+                    'status' => Project::ITEM_STATUS_APPROVAL,
+                ]
+            ],
+            'item_approved' => [
+                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                [
+                    'status' => Project::ITEM_STATUS_READY,
+                ]
+            ],
+            'item_rejected' => [
+                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                [
+                    'status' => Project::ITEM_STATUS_REJECTED,
+                ]
+            ],
+            'item_completed' => [
+                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                [
+                    'status' => Project::ITEM_STATUS_COMPLETED,
+                ]
+            ],
+            'item_failed' => [
+                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                [
+                    'status' => Project::ITEM_STATUS_FAILED,
+                ]
+            ],
+            'checklist_created' => 'SELECT COUNT(cl.id) FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d WHERE cl.created_by = :user',
+            'checklist_updated' => 'SELECT COUNT(cl.id) FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d  WHERE EXISTS(SELECT clu FROM \App\Entity\ChecklistUpdate clu WHERE clu.checklist = cl AND clu.created_by = :user)',
+            'activity_created' => 'SELECT COUNT(a.id) FROM \App\Entity\Activity a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE a.created_by = :user',
+            'attachment_uploaded' => 'SELECT COUNT(a.id) FROM \App\Entity\Attachment a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE a.created_by = :user',
+        ];
+
+        $contribs = [];
+        foreach ($project->userProjects as $up) {
+            $results = [];
+            $score = 0;
+            foreach ($queries as $q => $dql) {
+                $query = $this->ds->em()
+                    ->createQuery(is_array($dql) ? $dql[0] : $dql);
+                if (is_array($dql)) {
+                    $query->setParameters($dql[1]);
+                }
+                $query->setParameter('project', $project)
+                    ->setParameter('user', $up->user);
+
+                $results[$q] = $query->getSingleScalarResult();
+                $score += $results[$q];
+            }
+            $contribs[] = [
+                'user' => $up->user->getName(),
+                'role' => $up->role,
+                'contribs' => $results,
+                'score' => $score,
+            ];
+        }
+
+        $this->addEntityCrumb($project);
+        $this->addCrumb('Contributions', $this->nav->entityPath('app_project_contrib', $project), 'hands helping');
+        return $this->render('project_contribs.html.twig', [
+                'project' => $project,
+                'users' => $contribs,
+                'contrib_categories' => array_keys($queries),
+        ]);
     }
 }

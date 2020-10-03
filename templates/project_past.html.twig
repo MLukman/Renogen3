@@ -3,19 +3,16 @@
 
 {% block content %}
     <h1 class="ui header">
-        <span>
-            <i class="ui {{project.icon}} icon" title="Project"></i>{{project.title}}
-        </span>
+        <div class="breadcrumb">
+            <span>{{_self.crumb_project(project, true)}} &raquo;</span>
+        </div>
+        <span><i class="ui history icon"></i>Past Deployments</span>
         <div class="ui divider" style="clear: both"></div>
     </h1>
 
-    <h2>
-        Past Deployments
-    </h2>
-
     {% if project.past().count() > 0 %}
         <div class="ui basic segment">
-            {{ pv.deploymentList(project.past()) }}
+            {{ pv.deploymentList(project.past(),true) }}
         </div>
     {% endif %}
 

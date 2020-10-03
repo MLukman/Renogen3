@@ -107,7 +107,7 @@ abstract class Entity implements SecuredAccessInterface
 
         switch ($attribute) {
             case 'delete':
-                $allowed = ($this->created_by->username == $username);
+                $allowed = ($this->created_by->username == $username) && $this->isSafeToDelete();
                 break;
         }
 
@@ -134,4 +134,9 @@ abstract class Entity implements SecuredAccessInterface
      * @return Project The belonging Project
      */
     abstract public function getProject(): ?Project;
+
+    public function isSafeToDelete(): bool
+    {
+        return true;
+    }
 }

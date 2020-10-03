@@ -9,7 +9,7 @@ use App\Entity\Deployment;
 use App\Entity\Item;
 use App\Entity\Project;
 use App\Entity\Template;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 abstract class RenoController extends Controller
 {
@@ -76,22 +76,29 @@ abstract class RenoController extends Controller
         $this->addCrumb($text, $path, 'plus');
     }
 
+    protected function requireAdminRole()
+    {
+        if (!$this->security->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedHttpException('Administrator role is required', null, 403);
+        }
+    }
+
     protected function checkAccess($attr, Entity $entity)
     {
         if ($attr == 'any') {
             $attr = array('view', 'execute', 'entry', 'review', 'approval');
         }
 
-        if ($entity instanceof Project) {
-            if ($this->security->isGranted('ROLE_ADMIN')) {
-                
-            } elseif (!$this->security->isGranted($attr, $entity)) {
-                throw new AccessDeniedException();
-            }
-        } elseif (($project = $entity->getProject())) {
-            $this->checkAccess($attr, $project);
-        } else {
+        if ($this->security->isGranted('ROLE_ADMIN')) {
+            // Admins can do anything
             return true;
+        }
+
+        if (!$this->security->isGranted($attr, $entity)) {
+            $message = is_array($attr) ?
+                "This page/action requires any of the following roles: ".join(', ', $attr)
+                    : "This page/action requires $attr role";
+            throw new AccessDeniedHttpException($message, null, 403);
         }
     }
 }

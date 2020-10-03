@@ -324,4 +324,9 @@ class Item extends Entity
             'external_url_label' => Rules::new()->trim()->truncate(30),
         ];
     }
+
+    public function isSafeToDelete(): bool
+    {
+        return $this->activities->count() == 0 && $this->attachments->count() == 0;
+    }
 }

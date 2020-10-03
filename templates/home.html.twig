@@ -11,8 +11,8 @@
                     <thead>
                         <tr>
                             <th>Project</th>
-                            <th class="ui collapsing">Next deployment</th>
-                            <th class="ui collapsing">Previous deployment</th>
+                            <th class="ui collapsing">Upcoming</th>
+                            <th class="ui collapsing">Previous</th>
                             <th class="ui collapsing">Role</th>
                         </tr>
                     </thead>
@@ -33,13 +33,19 @@
                                 {%  if project.upcoming()|length > 0 %}
                                     {% set upcoming = project.upcoming()[0] %}
                                     <td data-sort-value="{{ upcoming.execute_date.getTimestamp() }}">
-                                        <a href="{{nav.entityPath('app_deployment_view',upcoming)}}" title="{{ upcoming.title }}"><strong>{{ _self.displayDateTime(upcoming.execute_date) }}</strong></a>
+                                        <a href="{{nav.entityPath('app_deployment_view',upcoming)}}" title="{{ upcoming.title }}">
+                                            <strong{% if upcoming.isRunning() %} class="blink"{% endif %}>{{ _self.displayDateTime(upcoming.execute_date) }}</strong>
+                                        </a>
                                     </td>
                                 {% else %}
                                     <td data-sort-value="0" class="ui center aligned">
                                         {% if security.isGranted('approval',project) and not project.archived %}
                                             <a href="{{nav.entityPath('app_deployment_create',project)}}" class="ui button no-print nowrap">
                                                 <i class="ui plus icon"></i>Create new
+                                            </a>
+                                        {% elseif security.isGranted('entry',project) and not project.archived %}
+                                            <a href="{{nav.entityPath('app_project_view',project,[],'/requests')}}" class="ui button no-print nowrap">
+                                                <i class="ui calendar plus icon"></i>Request
                                             </a>
                                         {% else %}
                                             <span class="ui basic label">N/A</span>

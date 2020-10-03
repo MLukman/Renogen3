@@ -4,13 +4,12 @@ namespace App\Entity;
 
 use App\Base\Entity;
 use App\Validation\Rules;
-use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * @ORM\Entity(repositoryClass=UserRepository::class) @ORM\Table(name="users")
+ * @ORM\Entity(repositoryClass=\App\Repository\UserRepository::class) @ORM\Table(name="users")
  */
 class User extends Entity implements UserInterface
 {
@@ -39,7 +38,7 @@ class User extends Entity implements UserInterface
      * @var string The hashed password
      * @ORM\Column(type="string")
      */
-    protected $password;
+    protected $password = '';
 
     /**
      * @ORM\Column(type="string", length=64)

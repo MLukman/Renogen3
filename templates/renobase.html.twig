@@ -19,18 +19,26 @@
     {% endif %}
 {% endblock %}
 
+{% block footer %}
+    <span class="ui grey text">
+        All timestamps are in {{ "now"|date('e')|replace({'_':' '}) }} timezone ({{ "now"|date('P') }} from GMT).
+        All dates use 'dd/mm/yyyy' format.
+        Server time when the page was generated is {{ "now"|date('d/m/Y h:i A P') }}.
+    </span>
+{% endblock %}
+
 {% macro timestamps(entity) %}
     {% if entity.created_date %}
         <div class="ui label">
             Created
-            <span class="detail"><i class="ui clock icon"></i>{{entity.created_date|date('d/m/Y h:ia')}}</span>
+            <span class="detail"><i class="ui clock icon"></i>{{entity.created_date|date('d/m/Y h:i A')}}</span>
             <span class="detail"><i class="ui user icon"></i>{{entity.created_by.name()|default('Anonymous')}}</span>
         </div>
     {% endif %}
     {% if entity.updated_date %}
         <div class="ui label">
             Updated 
-            <span class="detail"><i class="ui clock icon"></i>{{entity.updated_date|date('d/m/Y h:ia')}}</span>
+            <span class="detail"><i class="ui clock icon"></i>{{entity.updated_date|date('d/m/Y h:i A')}}</span>
             <span class="detail"><i class="ui user icon"></i>{{entity.updated_by.name|default('Anonymous')}}</span>
         </div>
     {% endif %}
@@ -94,14 +102,14 @@
     </span>
 {% endmacro %}
 
-{% macro itemCategoryLabel(item) %}
-    <span class="ui tag label">
+{% macro itemCategoryLabel(item, ext_class) %}
+    <span class="ui {{ ext_class }} tag label">
         <i class="ui tag icon"></i>{{item.category}}
     </span>
 {% endmacro %}
 
-{% macro itemModulesLabel(item) %}
-    <span class="ui grey tag label">
+{% macro itemModulesLabel(item, ext_class) %}
+    <span class="ui {{ ext_class }} grey tag label">
         <i class="ui plug icon"></i>
         {{ item.modules|join(' + ') }}
     </span>
@@ -176,12 +184,14 @@
 {% endmacro %}
 
 {% macro crumb_deployment(deployment, link, anchor) %}
-    <i class="ui calendar check o icon" title="Deployment"></i>
-    {% if link %}
-        <a href="{{nav.entityPath('app_deployment_view',deployment)}}{{anchor}}">{{deployment.displayTitle}}</a>
-    {% else %}
-        {{deployment.displayTitle}}
-    {% endif %}
+    <span{% if deployment.isRunning() %} class="blink"{% endif %}>
+        <i class="ui calendar check o icon" title="Deployment"></i>
+        {% if link %}
+            <a href="{{nav.entityPath('app_deployment_view',deployment)}}{{anchor}}">{{deployment.displayTitle}}</a>
+        {% else %}
+            {{deployment.displayTitle}}
+        {% endif %}
+    </span>
 {% endmacro %}
 
 {% macro crumb_item(item, link) %}
@@ -193,17 +203,25 @@
     {% endif %}
 {% endmacro %}
 
-{% macro describe(description) %}
+{% macro describe(description, label) %}
     {% if description %}
-        <div class="ui secondary segment">
-            {{ description|nl2br }}
+        <div class="ui fluid accordion">
+            <div class="title">
+                <i class="dropdown icon"></i>
+                Click to show/hide description
+            </div>
+            <div class="content">
+                <div class="ui message">
+                    {{ description|nl2br }}
+                </div>
+            </div>
         </div>
     {% endif %}
 {% endmacro %}
 
 {% macro deploymentProgressBars(deployment, is_small) %}
     {% set statusinfos = { labels:[], colors:[], counts:[] } %}
-    {% set sc = deployment.getItemsWithStatus('Rejected')|length + deployment.getItemsWithStatus('Failed')|length %}
+    {% set sc = deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_REJECTED'))|length + deployment.getItemsWithStatus(constant('App\\Entity\\Project::ITEM_STATUS_FAILED'))|length %}
     {% if sc > 0 %}
         {% set statusinfos = statusinfos|merge({ labels: statusinfos.labels|merge([ 'Rejected/Failed' ]), colors: statusinfos.colors|merge([ 'red' ]), counts: statusinfos.counts|merge([ sc ]) }) %}
     {% endif %}

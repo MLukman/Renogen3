@@ -22,12 +22,13 @@
 	$.tablesort.prototype = {
 
 		sort: function(th, direction) {
+                        var thIndex = (th.data().sortIndex ? Math.abs(th.data().sortIndex) : th.index());
 			var start = new Date(),
 				self = this,
 				table = this.$table,
 				rowsContainer = table.find('tbody').length > 0 ? table.find('tbody') : table,
 				rows = rowsContainer.find('tr').has('td, th'),
-				cells = rows.find(':nth-child(' + (th.index() + 1) + ')').filter('td, th'),
+				cells = rows.find(':nth-child(' + (thIndex + 1) + ')').filter('td, th'),
 				sortBy = th.data().sortBy,
 				sortedMap = [];
 
@@ -39,9 +40,9 @@
 			if (unsortedValues.length === 0) return;
 
 			//click on a different column
-			if (this.index !== th.index()) {
+			if (this.index !== thIndex) {
 				this.direction = 'asc';
-				this.index = th.index();
+				this.index = thIndex;
 			}
 			else if (direction !== 'asc' && direction !== 'desc')
 				this.direction = this.direction === 'asc' ? 'desc' : 'asc';

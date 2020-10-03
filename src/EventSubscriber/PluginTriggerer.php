@@ -2,8 +2,6 @@
 
 namespace App\EventSubscriber;
 
-use App\Entity\Deployment;
-use App\Entity\Item;
 use App\Service\DataStore;
 use App\Service\NavigationFactory;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;

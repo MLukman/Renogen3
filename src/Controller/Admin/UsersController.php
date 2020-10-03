@@ -18,6 +18,7 @@ class UsersController extends RenoController
      */
     public function index(Request $request)
     {
+        $this->requireAdminRole();
         $this->title = "Users";
         $this->addCrumb('Users', $this->nav->path('app_admin_users'), 'users');
         return $this->render('admin/user_list.html.twig', array('users' => $this->ds->queryMany('\App\Entity\User')));
@@ -28,6 +29,7 @@ class UsersController extends RenoController
      */
     public function create(Request $request)
     {
+        $this->requireAdminRole();
         $this->title = "Add User";
         $this->addCrumb('Users', $this->nav->path('app_admin_users'), 'users');
         $this->addCreateCrumb('Add user', $this->nav->path('app_admin_users_create'));
@@ -39,6 +41,7 @@ class UsersController extends RenoController
      */
     public function edit(Request $request, $username)
     {
+        $this->requireAdminRole();
         $this->title = "Edit User '$username'";
         $user = $this->ds->fetchUser($username);
         $this->addCrumb('Users', $this->nav->path('app_admin_users'), 'users');

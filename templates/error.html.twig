@@ -2,7 +2,13 @@
 
 {% block content %}
     <div class="ui basic segment">
-        <h1 class="ui header">{{error.title|default('Error found!')}}</h1>
-        {{error.message}}
+        <h1 class="ui header">
+            <i class="ui exclamation triangle icon"></i>
+            {{error.title|default('Error found!')}}
+        </h1>
+
+        <div class="ui error large message">
+            {{error.message}}
+        </div>
     </div>
 {% endblock %}

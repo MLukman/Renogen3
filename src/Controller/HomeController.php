@@ -136,4 +136,14 @@ class HomeController extends RenoController
         );
         return $this->render('archived.html.twig', array('projects' => $projects));
     }
+
+    /**
+     * @Route("/about", name="app_about", priority=10)
+     */
+    public function about()
+    {
+        $this->title = 'About';
+        $this->addCrumb('About Renogen', $this->nav->path('app_about'), 'help');
+        return $this->render('about.html.twig');
+    }
 }

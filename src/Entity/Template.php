@@ -104,4 +104,9 @@ class Template extends Entity
             'title' => Rules::new()->required()->trim()->unique('project')->maxlen(100),
         ];
     }
+
+    public function isSafeToDelete(): bool
+    {
+        return $this->activities->count() == 0;
+    }
 }
