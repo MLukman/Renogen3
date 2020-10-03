@@ -47,13 +47,14 @@ COPY bin /var/www/html/bin
 
 RUN set -eux \
 	&& mkdir -p var/cache var/log && chown -R www-data:www-data var/ \
-	&& composer install --prefer-dist --no-progress --no-scripts --no-interaction
+	&& composer install --prefer-dist --no-progress --no-scripts --no-interaction \
+	&& chown -R www-data:www-data vendor/
 
 COPY --chown=www-data:www-data . /var/www/html/
 COPY --chown=www-data:www-data .env /var/www/html/
 RUN sed -i 's#APP_ENV=dev#APP_ENV=prod#' .env \
 	&& composer dump-autoload --classmap-authoritative \
-	&& chmod +x init_renogen.sh
+	&& chmod +x init_renogen.sh bin/*
 
 # Database info
 ENV DB_HOST=localhost
