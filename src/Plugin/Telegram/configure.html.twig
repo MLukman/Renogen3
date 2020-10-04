@@ -26,38 +26,53 @@
             </div>
             <div class="ui required field grey basic segment">
                 <label class="ui top attached large label">Message Template: Deployment Created</label>
-                <p>Available variables: <code>{project} {title} {url} {datetime} {bywho}</code></p>
+                <p>Available variables: <code>{project} {title} {url} {datetime} {who}</code></p>
                 <input type="text" name="template_deployment_created" value="{{core.options.template_deployment_created}}" />
             </div>
             <div class="ui required field grey basic segment">
                 <label class="ui top attached large label">Message Template: Deployment Date Changed</label>
-                <p>Available variables: <code>{project} {title} {url} {old} {new} {bywho}</code></p>
+                <p>Available variables: <code>{project} {title} {url} {old} {new} {who}</code></p>
                 <input type="text" name="template_deployment_date_changed" value="{{core.options.template_deployment_date_changed}}" />
             </div>
             <div class="ui required field grey basic segment">
                 <label class="ui top attached large label">Message Template: Deployment Deleted</label>
-                <p>Available variables: <code>{project} {title} {datetime} {bywho}</code></p>
+                <p>Available variables: <code>{project} {title} {datetime} {who}</code></p>
                 <input type="text" name="template_deployment_deleted" value="{{core.options.template_deployment_deleted}}" />
             </div>
             <div class="ui required field grey basic segment">
                 <label class="ui top attached large label">Message Template: Item Created</label>
-                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {url} {bywho}</code></p>
+                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {url} {who}</code></p>
                 <input type="text" name="template_item_created" value="{{core.options.template_item_created}}" />
             </div>
             <div class="ui required field grey basic segment">
                 <label class="ui top attached large label">Message Template: Item Status Changed</label>
-                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {url} {old} {new} {bywho}</code></p>
+                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {url} {old} {new} {who}</code></p>
                 <input type="text" name="template_item_status_changed" value="{{core.options.template_item_status_changed}}" />
             </div>
             <div class="ui required field grey basic segment">
                 <label class="ui top attached large label">Message Template: Item Moved Between Deployments</label>
-                <p>Available variables: <code>{project} {title} {url} {old_title} {old_datetime} {new_title} {new_datetime} {bywho}</code></p>
+                <p>Available variables: <code>{project} {title} {url} {old_title} {old_datetime} {new_title} {new_datetime} {who}</code></p>
                 <input type="text" name="template_item_moved" value="{{core.options.template_item_moved}}" />
             </div>
             <div class="ui required field grey basic segment">
                 <label class="ui top attached large label">Message Template: Item Deleted</label>
-                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {bywho}</code></p>
+                <p>Available variables: <code>{project} {deployment_title} {deployment_datetime} {title} {who}</code></p>
                 <input type="text" name="template_item_deleted" value="{{core.options.template_item_deleted}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Deployment Request Created</label>
+                <p>Available variables: <code>{project} {title} {url} {datetime} {who}</code></p>
+                <input type="text" name="template_deployment_request_created" value="{{core.options.template_deployment_request_created}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Deployment Request Approved</label>
+                <p>Available variables: <code>{project} {title} {url} {datetime} {who}</code></p>
+                <input type="text" name="template_deployment_request_approved" value="{{core.options.template_deployment_request_approved}}" />
+            </div>
+            <div class="ui required field grey basic segment">
+                <label class="ui top attached large label">Message Template: Deployment Request Rejected</label>
+                <p>Available variables: <code>{project} {title} {url} {datetime} {who}</code></p>
+                <input type="text" name="template_deployment_request_rejected" value="{{core.options.template_deployment_request_rejected}}" />
             </div>
             <div class="ui field">
                 <input type="submit" class="ui submit primary button" name="_action" value="Save" />

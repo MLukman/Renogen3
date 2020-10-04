@@ -176,85 +176,95 @@ class ProjectController extends RenoController
     /**
      * @Route("/{project}/contributions", name="app_project_contrib", priority=10)
      */
-    public function contributions(Request $request, $project)
+    public function contributions($project)
     {
-        $project = $this->ds->fetchProject($project);
-        $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project);
+        $project_obj = $this->ds->fetchProject($project);
+        $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
 
         $queries = [
-            'deployment_created' => 'SELECT COUNT(d.id) FROM \App\Entity\Deployment d WHERE d.project = :project AND d.created_by = :user',
-            'deployment_requested' => 'SELECT COUNT(dr.id) FROM \App\Entity\DeploymentRequest dr WHERE dr.project = :project AND dr.created_by = :user',
-            'item_created' => 'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE i.created_by = :user',
+            'deployment_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT d.id) AS contribs FROM \App\Entity\Deployment d JOIN \App\Entity\User u WITH d.created_by = u WHERE d.project = :project GROUP BY u',
+            'deployment_requested' => 'SELECT u.username, u.shortname, COUNT(DISTINCT d.id) AS contribs FROM \App\Entity\DeploymentRequest d JOIN \App\Entity\User u WITH d.created_by = u WHERE d.project = :project GROUP BY u',
+            'item_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH i.created_by = u GROUP BY u',
             'item_submitted' => [
-                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
                 [
                     'status' => Project::ITEM_STATUS_REVIEW,
                 ]
             ],
             'item_reviewed' => [
-                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
                 [
                     'status' => Project::ITEM_STATUS_APPROVAL,
                 ]
             ],
             'item_approved' => [
-                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
                 [
                     'status' => Project::ITEM_STATUS_READY,
                 ]
             ],
             'item_rejected' => [
-                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
                 [
                     'status' => Project::ITEM_STATUS_REJECTED,
                 ]
             ],
             'item_completed' => [
-                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
                 [
                     'status' => Project::ITEM_STATUS_COMPLETED,
                 ]
             ],
             'item_failed' => [
-                'SELECT COUNT(i.id) FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE EXISTS(SELECT isl FROM \App\Entity\ItemStatusLog isl WHERE isl.item = i AND isl.created_by = :user AND isl.status = :status)',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
                 [
                     'status' => Project::ITEM_STATUS_FAILED,
                 ]
             ],
-            'checklist_created' => 'SELECT COUNT(cl.id) FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d WHERE cl.created_by = :user',
-            'checklist_updated' => 'SELECT COUNT(cl.id) FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d  WHERE EXISTS(SELECT clu FROM \App\Entity\ChecklistUpdate clu WHERE clu.checklist = cl AND clu.created_by = :user)',
-            'activity_created' => 'SELECT COUNT(a.id) FROM \App\Entity\Activity a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE a.created_by = :user',
-            'attachment_uploaded' => 'SELECT COUNT(a.id) FROM \App\Entity\Attachment a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d WHERE a.created_by = :user',
+            'checklist_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\User u WITH cl.created_by = u GROUP BY u',
+            'checklist_updated' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\ChecklistUpdate clu WITH clu.checklist = cl JOIN \App\Entity\User u WITH clu.created_by = u GROUP BY u',
+            'activity_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Activity a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u',
+            'attachment_uploaded' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Attachment a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u',
         ];
 
-        $contribs = [];
-        foreach ($project->userProjects as $up) {
-            $results = [];
-            $score = 0;
-            foreach ($queries as $q => $dql) {
-                $query = $this->ds->em()
-                    ->createQuery(is_array($dql) ? $dql[0] : $dql);
-                if (is_array($dql)) {
-                    $query->setParameters($dql[1]);
-                }
-                $query->setParameter('project', $project)
-                    ->setParameter('user', $up->user);
 
-                $results[$q] = $query->getSingleScalarResult();
-                $score += $results[$q];
+        $results = [];
+        foreach ($queries as $q => $dql) {
+            $query = $this->ds->em()
+                ->createQuery(is_array($dql) ? $dql[0] : $dql);
+            if (is_array($dql)) {
+                $query->setParameters($dql[1]);
+            }
+            $query->setParameter('project', $project_obj);
+            $results[$q] = [];
+            foreach ($query->getArrayResult() as $result) {
+                $results[$q][$result['username']] = $result['contribs'];
+            }
+        }
+
+        $contribs = [];
+        foreach ($project_obj->userProjects as $up) {
+            $score = 0;
+            $ucontrib = [];
+            foreach ($queries as $q => $dql) {
+                $ucontrib[$q] = $results[$q][$up->user->username] ?? 0;
+                $score += $ucontrib[$q];
             }
             $contribs[] = [
                 'user' => $up->user->getName(),
                 'role' => $up->role,
-                'contribs' => $results,
+                'contribs' => $ucontrib,
                 'score' => $score,
             ];
         }
+        usort($contribs, function($a, $b) {
+            return $b['score'] <=> $a['score'];
+        });
 
-        $this->addEntityCrumb($project);
-        $this->addCrumb('Contributions', $this->nav->entityPath('app_project_contrib', $project), 'hands helping');
+        $this->addEntityCrumb($project_obj);
+        $this->addCrumb('Contributions', $this->nav->entityPath('app_project_contrib', $project_obj), 'hands helping');
         return $this->render('project_contribs.html.twig', [
-                'project' => $project,
+                'project' => $project_obj,
                 'users' => $contribs,
                 'contrib_categories' => array_keys($queries),
         ]);
