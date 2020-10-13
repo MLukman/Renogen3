@@ -32,13 +32,16 @@ class Core extends PluginCore
     );
     protected $deployment_date_adjustments = array(
         '+0 day' => 'Same day',
-        '+1 day' => 'Next day',
+        '-1 day' => 'The day before',
+        '+1 day' => 'The next day',
         '+2 day' => 'The day after next',
         'next monday' => 'The coming Monday',
         'next tuesday' => 'The coming Tuesday',
         'next wednesday' => 'The coming Wednesday',
         'next thursday' => 'The coming Thursday',
         'next friday' => 'The coming Friday',
+        'next saturday' => 'The coming Saturday',
+        'next sunday' => 'The coming Sunday',
     );
 
     static public function getIcon()
@@ -69,13 +72,18 @@ class Core extends PluginCore
     public function handleConfigure(PluginAction $action)
     {
         if ($action->getRequest()->request->get('_action') == 'Save') {
-            $options = $this->getOptions();
-            foreach ($options as $k => $v) {
-                $options[$k] = $action->getRequest()->request->get($k, $v);
+            if (!$action->getRequest()->request->get('enabled')) {
+                $this->deletePluginEntity();
+            } else {
+                $options = $this->getOptions();
+                foreach ($options as $k => $v) {
+                    $options[$k] = $action->getRequest()->request->get($k, $v);
+                }
+                $this->savePluginEntity($options);
             }
-            $this->savePluginEntity($action->getDataStore(), $options);
         }
         $action->render('configure.html.twig', array(
+            'plugin_entity' => $this->getPluginEntity(),
             'extract_refnum_patterns' => $this->extract_refnum_patterns,
             'deployment_date_adjustments' => $this->deployment_date_adjustments,
         ));
@@ -145,6 +153,7 @@ class Core extends PluginCore
                 }
                 $action->respond(new JsonResponse(array(
                         'status' => empty($errors) ? 'success' : 'failed',
+                        'handled_as' => 'deployment',
                         'errors' => $errors,
                 )));
                 break;
@@ -215,7 +224,10 @@ class Core extends PluginCore
         }
         if (!($d_deployment = $this->findDeploymentWithTaigaId($project, $payload['data']['milestone']['id'], $payload['data']['project']['permalink']))) {
             // do not process the milestone was not integrated into Renogen
-            return;
+            return new JsonResponse(array(
+                'status' => 'failed',
+                'message' => 'milestone not integrated into Renogen',
+            ));
         }
 
         $parameters = new ParameterBag(array(
@@ -277,6 +289,7 @@ class Core extends PluginCore
 
         return new JsonResponse(array(
             'status' => empty($errors) ? 'success' : 'error',
+            'handled_as' => 'item',
             'errors' => $d_item->errors,
         ));
     }

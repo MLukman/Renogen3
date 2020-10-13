@@ -3,8 +3,6 @@
 namespace App\Plugin;
 
 use App\Base\Entity;
-use App\Entity\Deployment;
-use App\Entity\Item;
 use App\Entity\Plugin;
 use App\Entity\Project;
 use App\Service\DataStore;
@@ -95,22 +93,26 @@ abstract class PluginCore
         $this->setOptions($this->entity->options);
     }
 
-    public function getPluginEntity(DataStore $ds, $create = false): ?Plugin
+    public function getPluginEntity($create = false): ?Plugin
     {
+        $ds = $this->ds;
         if (!$this->entity) {
             if (($entity = $ds->queryOne('\App\Entity\Plugin', array(
                 'project' => $this->project,
                 'name' => $this->getName(),
                 )))) {
                 $this->setPluginEntity($entity);
+            } elseif ($create) {
+                $this->setPluginEntity(new Plugin($this->project, $this));
             }
         }
-        return $this->entity ?: ($create ? new Plugin($this->project, $this) : null);
+        return $this->entity;
     }
 
-    public function savePluginEntity(DataStore $ds, array $options = null)
+    public function savePluginEntity(array $options = null)
     {
-        $entity = $this->getPluginEntity($ds, true);
+        $ds = $this->ds;
+        $entity = $this->getPluginEntity(true);
         if (!empty($options)) {
             $this->options = $options;
         }
@@ -118,9 +120,10 @@ abstract class PluginCore
         $ds->commit($entity);
     }
 
-    public function deletePluginEntity(DataStore $ds): bool
+    public function deletePluginEntity(): bool
     {
-        if (($entity = $this->getPluginEntity($ds))) {
+        $ds = $this->ds;
+        if (($entity = $this->getPluginEntity())) {
             $ds->deleteEntity($entity);
             $ds->commit();
             $this->entity = null;

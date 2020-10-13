@@ -47,6 +47,38 @@
                     </tr>
                 {% endfor %}
             </tbody>
+            <tfoot>
+                <tr>
+                    <td>Total users: {{ users|length }}</td>
+                    <td>
+                        <div class="ui middle aligned divided tiny list">
+                            {% for r,c in role_counts %}
+                                <div class="item">
+                                    <div class="right floated content">
+                                        {{ c }}
+                                    </div>
+                                    <div class="content">
+                                        {{ r }}
+                                    </div>
+                                </div>
+                            {% else %}
+                                N/A
+                            {% endfor %}
+                        </div>
+                    </td>
+                    {% for cat in contrib_categories %}
+                        <td class="ui center aligned">{{ totals[cat] }}</td>
+                    {% endfor %}
+                    <td class="ui center aligned">{{ super_total }}</td>
+                </tr>
+            </tfoot>
         </table>
     </div>
+    <script>
+        $(function () {
+            $('#league_table').stickyTableHeaders({
+                fixedOffset: $('#topbar')
+            });
+        });
+    </script>
 {% endblock %}

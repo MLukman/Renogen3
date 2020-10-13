@@ -36,5 +36,5 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/(login|register), roles: IS_AUTHENTICATED_ANONYMOUSLY }        
-        - { path: ^/playground/plugins/Taiga/webhook, roles: IS_AUTHENTICATED_ANONYMOUSLY }        
+        - { path: ^/[^/]+/plugins/[^/]+/[^/]+, roles: IS_AUTHENTICATED_ANONYMOUSLY }        
         - { path: ^/, roles: ROLE_USER }

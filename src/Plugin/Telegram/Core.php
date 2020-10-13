@@ -113,7 +113,8 @@ class Core extends PluginCore
                 $this->onItemMoved($entity, $old_values['deployment']);
             }
         } elseif ($entity instanceof Deployment) {
-            if (isset($old_values['execute_date'])) {
+            if (isset($old_values['execute_date']) &&
+                ($entity->execute_date->format('YmdHi') != $old_values['execute_date']->format('YmdHi'))) {
                 $this->onDeploymentDateChanged($entity, $old_values['execute_date']);
             }
         } elseif ($entity instanceof DeploymentRequest) {
@@ -274,7 +275,7 @@ class Core extends PluginCore
                 $group_id = $request->request->get('group_id');
                 $group_names = $request->request->get('group_name');
                 if (!$request->request->get('bot_token')) {
-                    $this->deletePluginEntity($action->getDataStore());
+                    $this->deletePluginEntity();
                     $action->redirect();
                     return;
                 } else if ($token) {
@@ -291,7 +292,7 @@ class Core extends PluginCore
                             $noptions[$template] = $request->request->get($template);
                         }
                     }
-                    $this->savePluginEntity($action->getDataStore(), $noptions);
+                    $this->savePluginEntity($noptions);
                     $action->redirect();
                     return;
                 }

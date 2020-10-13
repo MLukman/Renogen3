@@ -78,8 +78,8 @@ class Project extends Entity
     public $archived = false;
 
     /**
-     * @ORM\OneToMany(targetEntity="Deployment", mappedBy="project", indexBy="id", orphanRemoval=true, fetch="EXTRA_LAZY")
-     * @ORM\OrderBy({"execute_date" = "DESC"})
+     * @ORM\OneToMany(targetEntity="Deployment", mappedBy="project", orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OrderBy({"execute_date" = "ASC"})
      * @var ArrayCollection|Deployment[]
      */
     public $deployments = null;
@@ -267,6 +267,29 @@ class Project extends Entity
                 }
                 return $this->deployments->matching($criteria);
             });
+    }
+
+    public function getDeploymentNumber(Deployment $deployment)
+    {
+        return $this->deployments->indexOf($deployment) + 1;
+    }
+
+    public function nextDeploymentAfter(\DateTime $date)
+    {
+        return $this->deployments->matching(Criteria::create()
+                    ->where(new Comparison('execute_date', '>', $date))
+                    ->orderBy(array('execute_date' => 'ASC'))
+                    ->setMaxResults(1))
+                ->first();
+    }
+
+    public function previousDeploymentBefore(\DateTime $date)
+    {
+        return $this->deployments->matching(Criteria::create()
+                    ->where(new Comparison('execute_date', '<', $date))
+                    ->orderBy(array('execute_date' => 'DESC'))
+                    ->setMaxResults(1))
+                ->first();
     }
 
     public function upcomingDeploymentRequests()

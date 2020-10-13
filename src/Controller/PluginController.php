@@ -67,7 +67,7 @@ class PluginController extends RenoController
     }
 
     /**
-     * @Route("/{project}/plugins/{plugin}/{action}", name="app_plugin_action", priority=10)
+     * @Route("/{project}/plugins/{plugin}/{action}/", name="app_plugin_action", priority=10)
      */
     public function action(Request $request, $project, $plugin, $action)
     {
@@ -77,7 +77,7 @@ class PluginController extends RenoController
                     + array('plugin' => $plugin));
         }
         if (!($pluginCore = $this->fetchPluginCore($project_obj, $plugin))) {
-            throw new NoResultException("Project '$project' does not have plugin named '$pname'");
+            throw new NoResultException("Project '$project' does not have plugin named '$plugin'");
         }
         if (!in_array($action, array_keys($pluginCore::availableActions()))) {
             throw new NoResultException("Plugin '$plugin' does not support action '$action'");
@@ -91,7 +91,7 @@ class PluginController extends RenoController
     }
 
     protected function fetchPluginCore(Project $project, $plugin,
-                                       $create_if_not_exist = false): PluginCore
+                                       $create_if_not_exist = false): ?PluginCore
     {
         $plugin_entity = $this->ds->queryOne('\\App\\Entity\\Plugin', array(
             'project' => $project,

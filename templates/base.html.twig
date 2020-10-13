@@ -13,6 +13,7 @@
 
         <script src="{{nav.basePath}}/ui/jquery/jquery-2.1.3.min.js"></script>
         <script src="{{nav.basePath}}/ui/jquery/jquery.address.js"></script>
+        <script src="{{nav.basePath}}/ui/jquery/jquery.stickytableheaders.js"></script>
         <script src="{{nav.basePath}}/ui/semantic2/semantic.js"></script>
         <script src="{{nav.basePath}}/ui/semantic2/library/jquery.tablesort.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
@@ -161,6 +162,9 @@
                     historyType: 'hash'
                 });
                 $('table.sortable').tablesort();
+                $('table.fixedheader').stickyTableHeaders({
+                    fixedOffset: $('#topbar')
+                });
                 $('.ui.checkbox').checkbox();
                 $('.ui.dropdown.action-nothing').dropdown({
                     action: 'nothing'
@@ -245,7 +249,7 @@
                 }
             }
 
-            @media only screen and (min-width: 767px) {
+            @media only screen and (min-width: 768px) {
                 .show-on-mobile-only {
                     display: none !important;
                 }

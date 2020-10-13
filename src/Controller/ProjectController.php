@@ -243,12 +243,20 @@ class ProjectController extends RenoController
         }
 
         $contribs = [];
+        $totals = [];
+        $super_total = 0;
+        $role_counts = [];
         foreach ($project_obj->userProjects as $up) {
             $score = 0;
             $ucontrib = [];
             foreach ($queries as $q => $dql) {
                 $ucontrib[$q] = $results[$q][$up->user->username] ?? 0;
                 $score += $ucontrib[$q];
+                if (!isset($totals[$q])) {
+                    $totals[$q] = 0;
+                }
+                $totals[$q] += $ucontrib[$q];
+                $super_total += $ucontrib[$q];
             }
             $contribs[] = [
                 'user' => $up->user->getName(),
@@ -256,16 +264,25 @@ class ProjectController extends RenoController
                 'contribs' => $ucontrib,
                 'score' => $score,
             ];
+            if (!isset($role_counts[$up->role])) {
+                $role_counts[$up->role] = 1;
+            } else {
+                $role_counts[$up->role]++;
+            }
         }
         usort($contribs, function($a, $b) {
             return $b['score'] <=> $a['score'];
         });
+        ksort($role_counts);
 
         $this->addEntityCrumb($project_obj);
         $this->addCrumb('Contributions', $this->nav->entityPath('app_project_contrib', $project_obj), 'hands helping');
         return $this->render('project_contribs.html.twig', [
                 'project' => $project_obj,
                 'users' => $contribs,
+                'totals' => $totals,
+                'super_total' => $super_total,
+                'role_counts' => $role_counts,
                 'contrib_categories' => array_keys($queries),
         ]);
     }

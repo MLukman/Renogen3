@@ -7,6 +7,21 @@
     <h1 class="ui header">
         <div class="breadcrumb">
             <span>{{_self.crumb_project(deployment.project, true)}} &raquo;</span>
+            {% set next = deployment.project.nextDeploymentAfter(deployment.execute_date) %}
+            {% set prev = deployment.project.previousDeploymentBefore(deployment.execute_date) %}
+            {% if next %}
+                <a class="ui right floated tertiary icon button no-print" href="{{nav.entityPath('app_deployment_view',next)}}" title="{{ next.displayTitle() }}">
+                    Next <span class="hide-on-mobile">Deployment</span>
+                    <i class="right arrow icon"></i>
+                </a>
+            {% endif %}
+            <span style="float:right; padding:0 0.5em;">#{{ deployment.project.getDeploymentNumber(deployment) }}</span>
+            {% if prev %}
+                <a class="ui right floated tertiary icon button no-print" href="{{nav.entityPath('app_deployment_view',prev)}}" title="{{ prev.displayTitle() }}">
+                    <i class="left arrow icon"></i> 
+                    Previous <span class="hide-on-mobile">Deployment</span>
+                </a>
+            {% endif %}
         </div>
         <span{% if deployment.isRunning() %} class="blink"{% endif %}>
             <i class="ui calendar check o icon" title="Deployment"></i>{{deployment.displayTitle}}
@@ -26,7 +41,7 @@
     </h1>
 
     {{ _self.describe(deployment.description, 'deployment') }}
-    <div class="ui divider"  style="clear:both"></div>
+    <div class="ui divider" style="clear:both"></div>
 
     <div class="ui top attached tabular secondary pointing menu">
         <div class="active item" data-tab="items">
