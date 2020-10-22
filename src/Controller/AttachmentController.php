@@ -14,7 +14,7 @@ class AttachmentController extends RenoController
     const editAccess = array('entry', 'review', 'approval');
 
     /**
-     * @Route("/{project}/{deployment}/{item}/attachments", name="app_attachment_create")
+     * @Route("/{project}/{deployment}/{item}/attachments", name="app_attachment_create", priority=10)
      */
     public function create(Request $request, $project, $deployment, $item)
     {
@@ -31,7 +31,7 @@ class AttachmentController extends RenoController
     }
 
     /**
-     * @Route("/{project}/{deployment}/{item}/attachments/{attachment}", name="app_attachment_download")
+     * @Route("/{project}/{deployment}/{item}/attachments/{attachment}", name="app_attachment_download", priority=10)
      */
     public function download(Request $request, $project, $deployment, $item,
                              $attachment)
@@ -45,7 +45,7 @@ class AttachmentController extends RenoController
     }
 
     /**
-     * @Route("/{project}/{deployment}/{item}/attachments/{attachment}/edit", name="app_attachment_edit")
+     * @Route("/{project}/{deployment}/{item}/attachments/{attachment}/edit", name="app_attachment_edit", priority=10)
      */
     public function edit(Request $request, $project, $deployment, $item,
                          $attachment)
