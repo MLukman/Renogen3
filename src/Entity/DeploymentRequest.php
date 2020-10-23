@@ -83,7 +83,7 @@ class DeploymentRequest extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'title' => Rules::new()->required()->trim()->truncate(100),
+            'title' => Rules::new()->trim()->required()->truncate(100),
             'execute_date' => Rules::new()->required()->unique('project')->future(2)->callback(function(DeploymentRequest $e) {
                     if (0 < $e->project->deployments->matching(Criteria::create()->where(new Comparison('execute_date', '=', $e->execute_date)))->count()) {
                         throw new RuntimeException('Existing deployment with the exact date and time already exist within the same project');

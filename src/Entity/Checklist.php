@@ -68,16 +68,6 @@ class Checklist extends Entity
      */
     public $updates;
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'title' => array('trim' => 1, 'required' => 1, 'truncate' => 250, 'unique' => 'deployment'),
-        'start_datetime' => array('required' => 1),
-        'pics' => array('required' => 1),
-    );
-
     public function __construct(Deployment $deployment)
     {
         $this->deployment = $deployment;
@@ -123,9 +113,9 @@ class Checklist extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'title' => Rules::new()->required()->trim()->truncate(250)->unique('deployment'),
+            'title' => Rules::new()->trim()->required()->truncate(250)->unique('deployment'),
             'start_datetime' => Rules::new()->required(),
-            'pics' => Rules::new()->required(),
+            'pics' => Rules::new()->trim()->required(),
         ];
     }
 }

@@ -41,17 +41,6 @@ class AuthDriver extends Entity
      */
     public $registration_explanation;
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'name' => array('trim' => 1, 'required' => 1, 'unique' => 1),
-        'title' => array('trim' => 1, 'required' => 1, 'unique' => 1),
-        'class' => array('required' => 1),
-        'registration_explanation' => array('trim' => 1),
-    );
-
     public function __construct($name = null)
     {
         $this->name = $name;
@@ -70,9 +59,9 @@ class AuthDriver extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'name' => Rules::new()->required()->trim()->unique(),
-            'title' => Rules::new()->required()->trim()->unique(),
-            'class' => Rules::new()->required(),
+            'name' => Rules::new()->trim()->required()->unique(),
+            'title' => Rules::new()->trim()->required()->unique(),
+            'class' => Rules::new()->trim()->required(),
             'registration_explanation' => Rules::new()->trim(),
         ];
     }

@@ -80,6 +80,12 @@
                 </script>
             </div>
             <div class="ui field basic segment">
+                <label class="ui top attached large label">Acceptable Attachment File Extensions</label>
+                <input placeholder="{{ constant('App\\Entity\\Project::DEFAULT_ATTACHMENT_FILE_EXTS') }}" type="text" name="attachment_file_exts" value="{{project.attachment_file_exts|default(constant('App\\Entity\\Project::DEFAULT_ATTACHMENT_FILE_EXTS'))}}" />
+                {{ _self.fieldError(errors|default([]), 'attachment_file_exts') }}
+                Comma-delimited list of acceptable file extensions for deployment item attachments (max 255 characters). Empty this field to restore the default.
+            </div>
+            <div class="ui field basic segment">
                 <label class="ui top attached large label">Private Project</label>
                 <div class="ui checkbox">
                     <input type="checkbox" value="1" name="private" {% if project.private %}checked="checked"{% endif %} />

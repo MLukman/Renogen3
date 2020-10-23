@@ -92,9 +92,13 @@ class DoctrineValidator
             $value = substr($value, 0, $rules['truncate'] - 6).'…';
         }
 
-        // validation: value is not null/empty
-        if (isset($rules['required']) && $rules['required'] && empty($value)) {
-            $errors[] = 'Required';
+        // validation: value is not null/empty, otherwise set default or raise error
+        if (empty($value)) {
+            if (isset($rules['default']) && !empty($rules['default'])) {
+                $value = $rules['default'];
+            } elseif (isset($rules['required']) && $rules['required']) {
+                $errors[] = 'Required';
+            }
         }
 
         // further validations

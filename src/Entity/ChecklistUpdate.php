@@ -28,14 +28,6 @@ class ChecklistUpdate extends Entity
      */
     public $comment;
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'comment' => array('trim' => 1, 'required' => 1, 'maxlen' => 150),
-    );
-
     public function __construct(Checklist $checklist)
     {
         $this->checklist = $checklist;
@@ -49,7 +41,7 @@ class ChecklistUpdate extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'comment' => Rules::new()->required()->trim()->maxlen(150),
+            'comment' => Rules::new()->trim()->required()->maxlen(150),
         ];
     }
 }

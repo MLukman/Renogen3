@@ -79,16 +79,6 @@ class Deployment extends Entity
      */
     public $plugin_data = array();
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'execute_date' => array('required' => 1, 'unique' => 'project'),
-        'title' => array('trim' => 1, 'required' => 1, 'truncate' => 100),
-        'external_url' => array('trim' => 1, 'maxlen' => 2000, 'url' => 1),
-        'external_url_label' => array('trim' => 1, 'truncate' => 30),
-    );
     protected $_caches = [];
 
     public function __construct(Project $project)
@@ -205,7 +195,7 @@ class Deployment extends Entity
     {
         return [
             'execute_date' => Rules::new()->required()->unique('project'),
-            'title' => Rules::new()->required()->trim()->truncate(100),
+            'title' => Rules::new()->trim()->required()->truncate(100),
             'external_url' => Rules::new()->trim()->maxlen(2000)->url(),
             'external_url_label' => Rules::new()->trim()->truncate(30),
         ];

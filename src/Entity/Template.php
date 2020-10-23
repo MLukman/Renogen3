@@ -67,15 +67,6 @@ class Template extends Entity
      */
     public $activities = null;
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'class' => array('required' => 1),
-        'title' => array('trim' => 1, 'required' => 1, 'unique' => 'project', 'maxlen' => 100),
-    );
-
     public function __construct(Project $project)
     {
         $this->project = $project;
@@ -101,7 +92,7 @@ class Template extends Entity
     {
         return [
             'class' => Rules::new()->required(),
-            'title' => Rules::new()->required()->trim()->unique('project')->maxlen(100),
+            'title' => Rules::new()->trim()->required()->unique('project')->maxlen(100),
         ];
     }
 

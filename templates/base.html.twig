@@ -266,7 +266,7 @@
                             <a style="padding: 0 30pt 0 0;" href="{{ nav.path('app_home') }}">
                                 {% block menutitle %}
                                     {% if controller.appLogo %}
-                                        <img src="{{nav.basePath}}{{ controller.appLogo }}" />
+                                        <img src="{{nav.basePath}}{{ controller.appLogo }}" alt="Renogen" />
                                     {% else %}
                                         <h3 style="padding: 8px;">
                                             {% if controller.appIcon %}<i class="ui {{ controller.appIcon }} icon"></i>{% endif %}
@@ -334,7 +334,7 @@
             {% endblock %}
 
             {% if block('footer')|trim is not empty %}
-                <div class="ui basic segment" style="  height: 100px; width:100%; position: absolute; bottom: 0;  left: 0">
+                <div class="ui basic segment" style="height: 100px; width:100%; position: absolute; bottom: 0; left: 0; clear:both">
                     <div class="ui divider"></div>
                     {% block footer %}
                     {% endblock %}

@@ -66,16 +66,6 @@ abstract class FileLink extends Entity
      */
     public $runitem;
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'filename' => array('required' => 1, 'truncate' => 100),
-        'classifier' => array('required' => 1, 'truncate' => 100),
-        'description' => array('trim' => 1),
-    );
-
     public function cascadeDelete(): array
     {
         $cascade = parent::cascadeDelete();
@@ -111,8 +101,8 @@ abstract class FileLink extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'filename' => Rules::new()->required()->truncate(100),
-            'classifier' => Rules::new()->required()->truncate(100),
+            'filename' => Rules::new()->trim()->required()->truncate(100),
+            'classifier' => Rules::new()->trim()->required()->truncate(100),
             'description' => Rules::new()->trim(),
         ];
     }

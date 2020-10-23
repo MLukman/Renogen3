@@ -24,7 +24,7 @@
         <div class="ui form">
             <div class="ui required field basic segment">
                 <label class="ui top attached large label">Upload File</label>
-                <input type="file" name="file" />
+                <input type="file" name="file" accept="{{ attachment.getProject().attachment_file_exts }}"/>
                 {% if is_existing %}
                     <p>Existing file: <strong>{{attachment.filename}}</strong> of type <strong>{{attachment.filestore.mime_type}}</strong> with size <strong>{{_self.bytesToSize(attachment.filestore.filesize)}}</strong></p>
                 {% endif %}

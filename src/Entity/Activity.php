@@ -37,14 +37,6 @@ class Activity extends Actionable
      */
     public $runitem;
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'title' => array('required' => 1, 'trim' => 1, 'maxlen' => 100),
-        'template' => array('required' => 1),
-    );
     public $fileClass = '\App\Entity\ActivityFile';
     public $actionableType = 'activity';
 
@@ -73,8 +65,8 @@ class Activity extends Actionable
     public static function getValidationRules(): ?array
     {
         return [
-            'title' => Rules::new()->required()->trim()->maxlen(100),
-            'template' => Rules::new()->required(),
+            'title' => Rules::new()->trim()->required()->maxlen(100),
+            'template' => Rules::new()->trim()->required(),
         ];
     }
 }

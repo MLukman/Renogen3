@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProjectController extends RenoController
 {
-    const entityFields = array('name', 'title', 'icon', 'description', 'approx_deployment_duration');
+    const entityFields = array('name', 'title', 'icon', 'description', 'approx_deployment_duration', 'attachment_file_exts');
 
     /**
      * @Route("/+", name="app_project_create")

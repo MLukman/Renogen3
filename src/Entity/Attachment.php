@@ -16,7 +16,6 @@ class Attachment extends FileLink
     public function __construct(Item $item)
     {
         $this->item = $item;
-        $this->validation_rules['description'] = array('required' => 1, 'trim' => 1);
     }
 
     public function isUsernameAllowed($username, $attribute)
@@ -33,5 +32,12 @@ class Attachment extends FileLink
     public function getProject(): ?Project
     {
         return $this->item->getProject();
+    }
+
+    public static function getValidationRules(): ?array
+    {
+        $from_parent = parent::getValidationRules();
+        $from_parent['description']->required();
+        return $from_parent;
     }
 }

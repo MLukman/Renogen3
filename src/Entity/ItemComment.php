@@ -38,14 +38,6 @@ class ItemComment extends Entity
      */
     public $event;
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'text' => array('trim' => 1, 'required' => 1),
-    );
-
     public function __construct(Item $item)
     {
         $this->item = $item;
@@ -59,7 +51,7 @@ class ItemComment extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'text' => Rules::new()->required()->trim(),
+            'text' => Rules::new()->trim()->required(),
         ];
     }
 }

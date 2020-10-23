@@ -109,18 +109,6 @@ class Item extends Entity
      */
     public $plugin_data = array();
 
-    /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'refnum' => array('trim' => 1, 'maxlen' => 40),
-        'title' => array('trim' => 1, 'required' => 1, 'truncate' => 250, 'unique' => 'deployment'),
-        'category' => array('required' => 1),
-        'modules' => array('required' => 1),
-        'external_url' => array('trim' => 1, 'maxlen' => 2000, 'url' => 1),
-        'external_url_label' => array('trim' => 1, 'truncate' => 30),
-    );
     protected $_statuses;
 
     public function __construct(Deployment $deployment)
@@ -317,7 +305,7 @@ class Item extends Entity
     {
         return [
             'refnum' => Rules::new()->trim()->maxlen(40),
-            'title' => Rules::new()->required()->trim()->truncate(250)->unique('deployment'),
+            'title' => Rules::new()->trim()->required()->truncate(250)->unique('deployment'),
             'category' => Rules::new()->required(),
             'modules' => Rules::new()->required(),
             'external_url' => Rules::new()->trim()->maxlen(2000)->url(),

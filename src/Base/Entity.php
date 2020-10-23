@@ -6,7 +6,6 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\Security\Authorization\SecuredAccessInterface;
 use App\Security\Authorization\SecuredAccessTrait;
-use App\Validation\Rules;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\ORM\Mapping as ORM;
@@ -43,11 +42,9 @@ abstract class Entity implements SecuredAccessInterface
     public $updated_date;
 
     /**
-     * Validation rules
+     * Validation errors if any
      * @var array
      */
-    protected $validation_default = array();
-    protected $validation_rules = array();
     public $errors = array();
 
     /**

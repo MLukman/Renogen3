@@ -62,19 +62,6 @@ class User extends Entity implements UserInterface
     public $userProjects = null;
 
     /**
-     * Validation rules
-     * @var array
-     */
-    protected $validation_rules = array(
-        'username' => array('trim' => 1, 'required' => 1, 'maxlen' => 25, 'unique' => 1,
-            'preg_match' => array('/^[0-9a-zA-Z][0-9a-zA-Z\._-]*$/', 'Username must start with an alphanumerical character and contains only alphanumeric, underscores, dashes and dots')),
-        'shortname' => array('trim' => 1, 'required' => 1, 'truncate' => 100, 'unique' => 1),
-        'email' => array('required' => 1, 'maxlen' => 50, 'unique' => 1, 'email' => 1),
-        'auth' => array('required' => 1),
-        'roles' => array('required' => 1),
-    );
-
-    /**
      * A visual identifier that represents this user.
      *
      * @see UserInterface
@@ -210,10 +197,10 @@ class User extends Entity implements UserInterface
     public static function getValidationRules(): ?array
     {
         return [
-            'username' => Rules::new()->required()->trim()->unique()->maxlen(25)
+            'username' => Rules::new()->trim()->required()->unique()->maxlen(25)
                 ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z\._-]*$/', 'Username must start with an alphanumerical character and contains only alphanumeric, underscores, dashes and dots'),
-            'shortname' => Rules::new()->required()->trim()->unique()->truncate(100),
-            'email' => Rules::new()->required()->trim()->unique()->maxlen(50)->email(),
+            'shortname' => Rules::new()->trim()->required()->unique()->truncate(100),
+            'email' => Rules::new()->trim()->required()->unique()->maxlen(50)->email(),
             'auth' => Rules::new()->required(),
             'roles' => Rules::new()->required(),
         ];

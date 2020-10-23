@@ -18,6 +18,8 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Project extends Entity
 {
+    const DEFAULT_ATTACHMENT_FILE_EXTS = ".png,.jpg,.jpeg,.gif,.tif,.tiff,.bmp,.eps,.pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.rtf";
+
     /**
      * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
      */
@@ -117,19 +119,10 @@ class Project extends Entity
     public $approx_deployment_duration = 6;
 
     /**
-     * Validation rules
-     * @var array
+     * Comma-delimited list of acceptable file extensions for deployment item attachments.
+     * @ORM\Column(type="string", length=255, options={"default":Project::DEFAULT_ATTACHMENT_FILE_EXTS})
      */
-    protected $validation_rules = array(
-        'name' => array('required' => 1, 'unique' => true, 'maxlen' => 30,
-            'preg_match' => array('/^[0-9a-zA-Z][0-9a-zA-Z_-]*$/', 'Project name must start with an alphanumerical character'),
-            'invalidvalues' => array('login', 'admin', 'archived', 'register')),
-        'title' => array('required' => 1, 'unique' => true, 'maxlen' => 100),
-        'categories' => array('required' => 1),
-        'modules' => array('required' => 1),
-        'icon' => array('trim' => 1, 'maxlen' => 30),
-    );
-    protected $validation_default = array('trim' => 1);
+    public $attachment_file_exts;
 
     const ITEM_STATUS_INIT = 'Documentation';
     const ITEM_STATUS_REVIEW = 'Review';
@@ -396,13 +389,14 @@ class Project extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'name' => Rules::new()->required()->unique()->maxlen(30)
+            'name' => Rules::new()->trim()->required()->unique()->maxlen(30)
                 ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z_-]*$/', 'Project name can only contains alphanumeric, dashes and undercores, and it must start with an alphanumerical character')
                 ->invalidvalues(['login', 'admin', 'archived', 'register']),
-            'title' => Rules::new()->required()->unique()->maxlen(100),
-            'categories' => Rules::new()->required(),
-            'modules' => Rules::new()->required(),
+            'title' => Rules::new()->trim()->required()->unique()->maxlen(100),
+            'categories' => Rules::new()->trim()->required(),
+            'modules' => Rules::new()->trim()->required(),
             'icon' => Rules::new()->trim()->maxlen(30),
+            'attachment_file_exts' => Rules::new()->trim()->maxlen(255)->default(static::DEFAULT_ATTACHMENT_FILE_EXTS)
         ];
     }
 

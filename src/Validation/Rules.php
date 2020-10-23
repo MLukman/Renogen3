@@ -109,6 +109,17 @@ class Rules implements \ArrayAccess
         return $this;
     }
 
+    /**
+     * Default value to set if the value is empty.
+     * @param type $default
+     * @return $this
+     */
+    public function default($default)
+    {
+        $this->rules['default'] = $default;
+        return $this;
+    }
+
     public function callback(\Closure $callback)
     {
         if (!isset($this->rules['callbacks'])) {
