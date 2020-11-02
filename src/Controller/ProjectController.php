@@ -12,7 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProjectController extends RenoController
 {
-    const entityFields = array('name', 'title', 'icon', 'description', 'approx_deployment_duration', 'attachment_file_exts');
+    const entityFields = array('name', 'title', 'icon', 'description', 'approx_deployment_duration',
+        'attachment_file_exts');
 
     /**
      * @Route("/+", name="app_project_create")
@@ -209,21 +210,21 @@ class ProjectController extends RenoController
                     'status' => Project::ITEM_STATUS_REJECTED,
                 ]
             ],
-            'item_completed' => [
-                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
+            'checklist_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\User u WITH cl.created_by = u GROUP BY u',
+            'checklist_updated' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\ChecklistUpdate clu WITH clu.checklist = cl JOIN \App\Entity\User u WITH clu.created_by = u GROUP BY u',
+            'activity_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Activity a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u',
+            'activity_completed' => [
+                'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\RunItem a JOIN \App\Entity\Deployment d WITH d.project = :project AND a.deployment = d JOIN \App\Entity\User u WITH a.updated_by = u WHERE a.status = :status GROUP BY u ',
                 [
                     'status' => Project::ITEM_STATUS_COMPLETED,
                 ]
             ],
-            'item_failed' => [
-                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
+            'activity_failed' => [
+                'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\RunItem a JOIN \App\Entity\Deployment d WITH d.project = :project AND a.deployment = d JOIN \App\Entity\User u WITH a.updated_by = u WHERE a.status = :status GROUP BY u ',
                 [
                     'status' => Project::ITEM_STATUS_FAILED,
                 ]
             ],
-            'checklist_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\User u WITH cl.created_by = u GROUP BY u',
-            'checklist_updated' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\ChecklistUpdate clu WITH clu.checklist = cl JOIN \App\Entity\User u WITH clu.created_by = u GROUP BY u',
-            'activity_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Activity a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u',
             'attachment_uploaded' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Attachment a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u',
         ];
 
