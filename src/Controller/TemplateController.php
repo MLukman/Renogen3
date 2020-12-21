@@ -198,6 +198,21 @@ class TemplateController extends RenoController
                             $this->ds->commit();
                         }
                         $this->ds->commit($template);
+
+                        // Fix: re-order templates to ensure unique order
+                        $qb = $this->ds->em()->createQueryBuilder()
+                            ->select('e')
+                            ->from('\App\Entity\Template', 'e')
+                            ->where('e.project = :p')
+                            ->setParameter('p', $template->project)
+                            ->orderBy('e.priority', 'ASC')
+                            ->addOrderBy('e.created_date', 'DESC');
+                        $prio = 0;
+                        foreach ($qb->getQuery()->getResult() as $atemplate) {
+                            $prio++;
+                            $atemplate->priority = $prio;
+                        }
+                        $this->ds->commit();
                         $this->addFlash('info', "Template '$template->title' has been successfully saved");
                         return $this->nav->redirectForEntity('app_template_edit', $template);
                     } else {

@@ -76,7 +76,7 @@ class ChecklistController extends RenoController
                     }
                     $errors = array();
                     $fields = static::entityFields;
-                    if ($checklist->created_by && !$checklist->isRoleAllowed('edit_title')) {
+                    if ($checklist->created_by && !$this->security->isGranted('edit_title', $checklist)) {
                         $fields = array_diff($fields, array('title'));
                     }
                     if ($ds->prepareValidateEntity($checklist, $fields, $post)) {

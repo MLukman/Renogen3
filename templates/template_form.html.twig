@@ -87,7 +87,7 @@
             </div>
         {% endif %}
 
-        <div class="ui {% if is_existing %}bottom attached tab segment active{% endif %}" data-tab="edit">
+        <div{% if is_existing %} class="ui bottom attached tab active segment" data-tab="edit"{% endif %}>
             <form method="POST">
                 <div class="ui form">
                     <div class="ui required field grey basic segment">
@@ -165,8 +165,8 @@
                 {{ actform.activityConfigForm(template, sample.activity|default(null), sample.errors|default(null)) }}
             </div>
         </div>
-    {% endif %}
 
-{{ _self.timestamps(template) }}
+        {{ _self.timestamps(template) }}
+    {% endif %}
 
 {% endblock %}

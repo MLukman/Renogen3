@@ -48,7 +48,7 @@ class HomeController extends RenoController
         foreach ($contexts['projects_with_access'] as $project) {
             $project_role = null;
             foreach ($roles as $role) {
-                if (true /* $this->security->isGranted($roles, $project) */) {
+                if ($this->security->isGranted($role, $project)) {
                     $project_role = $role;
                 }
             }
@@ -80,6 +80,7 @@ class HomeController extends RenoController
                                 $d['items'][] = $item;
                             }
                             break;
+
                         case Project::ITEM_STATUS_READY :
                             if ($project_role == 'execute') {
                                 foreach ($item->activities as $activity) {
