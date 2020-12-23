@@ -92,7 +92,10 @@ class Template extends Entity
     {
         return [
             'class' => Rules::new()->required(),
-            'title' => Rules::new()->trim()->required()->unique('project')->maxlen(100),
+            'title' => Rules::new()->trim()->required()->unique(array(
+                'project',
+                'disabled' => 0
+            ))->maxlen(100),
         ];
     }
 

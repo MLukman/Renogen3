@@ -10,9 +10,10 @@
                 {% if p.type == 'dropdown' %}
                     <select id="{{pid}}" name="parameters[{{param}}][{{p.id}}]" class="ui search dropdown">
                         <option value="">-- Please select --</option>
-                        {% for v in p.details|split('\n') %}
+                        {% set options = p.details|split('\n') %}
+                        {% for v in options %}
                             {% set val = v|trim %}
-                            <option value="{{val}}" {% if val == paramval[p.id]|default(null) %}selected="selected"{% endif %}>{{val}}</option>
+                            <option value="{{val}}" {% if val == paramval[p.id]|default(null) or options|length == 1 %}selected="selected"{% endif %}>{{val}}</option>
                         {% endfor %}
                     </select>
                 {% elseif p.type == 'multiselect' %}

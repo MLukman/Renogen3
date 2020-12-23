@@ -50,7 +50,7 @@ class TemplateController extends RenoController
             $project_obj = $this->ds->fetchProject($project);
             $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
             $this->addEntityCrumb($project_obj);
-            //$this->addCrumb('Activity templates', $this->nav->entityPath('template_list', $project_obj), 'clipboard');
+            $this->addCrumb('Activity templates', $this->nav->entityPath('app_template_list', $project_obj), 'clipboard');
             $this->addCreateCrumb('Create activity template', $this->nav->entityPath('app_template_create', $project_obj));
             $template = null;
             if (($copyfrom = $request->query->get('copy')) && ($copytmpl = $this->ds->fetchTemplate($copyfrom))) {

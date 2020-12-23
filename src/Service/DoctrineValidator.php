@@ -38,21 +38,33 @@ class DoctrineValidator
                     // require uniqueness among all records with same value of a particular column
                     $rules['unique'] = array($rules['unique']);
                 }
+                $unique_messages = array();
+                $skip = false;
                 if (is_array($rules['unique'])) {
                     // require uniqueness among all records with same value of particular list of columns
-                    foreach ($rules['unique'] as $group_field) {
-                        $criteria = $criteria->andWhere(new Comparison($group_field, '=', $entity->$group_field));
+                    foreach ($rules['unique'] as $among_key => $among_value) {
+                        if (is_int($among_key)) {
+                            $criteria = $criteria->andWhere(new Comparison($among_value, '=', $entity->$among_value));
+                            $unique_messages[] = $among_value;
+                        } elseif ($entity->$among_key == $among_value) {
+                            $criteria = $criteria->andWhere(new Comparison($among_key, '=', $among_value));
+                            $unique_messages[] = "($among_key = $among_value)";
+                        } else {
+                            $skip = true;
+                        }
                     }
                 }
-                $list = $this->em->getRepository(get_class($entity))->matching($criteria);
-                foreach ($list as $item) {
-                    if ($item != $entity) {
-                        $error = 'Value must be unique';
-                        if (is_array($rules['unique'])) {
-                            $error .= ' for each '.implode(' + ', $rules['unique']);
+                if (!$skip) {
+                    $list = $this->em->getRepository(get_class($entity))->matching($criteria);
+                    foreach ($list as $item) {
+                        if ($item != $entity) {
+                            $error = 'Value must be unique';
+                            if (!empty($unique_messages)) {
+                                $error .= ' for each '.implode(' + ', $unique_messages);
+                            }
+                            $errors[$field][] = $error;
+                            break;
                         }
-                        $errors[$field][] = $error;
-                        break;
                     }
                 }
             }
