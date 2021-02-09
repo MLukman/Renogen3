@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Base\Entity;
+use MLukman\MultiAuthBundle\Identity\MultiAuthUserCredentialInterface;
+use MLukman\MultiAuthBundle\Identity\MultiAuthUserInterface;
 use App\Validation\Rules;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -11,7 +13,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * @ORM\Entity(repositoryClass=\App\Repository\UserRepository::class) @ORM\Table(name="users")
  */
-class User extends Entity implements UserInterface
+class User extends Entity implements UserInterface, MultiAuthUserInterface
 {
     /**
      * @ORM\Id
@@ -60,6 +62,12 @@ class User extends Entity implements UserInterface
      * @var ArrayCollection|UserProject[]
      */
     public $userProjects = null;
+
+    /**
+     * @ORM\OneToMany(targetEntity="UserCredential", mappedBy="user", indexBy="driver_id", orphanRemoval=true)
+     * @var ArrayCollection|UserCredential[]
+     */
+    public $userCredentials = null;
 
     /**
      * A visual identifier that represents this user.
@@ -204,5 +212,31 @@ class User extends Entity implements UserInterface
             'auth' => Rules::new()->required(),
             'roles' => Rules::new()->required(),
         ];
+    }
+
+    public function addCredentials(string $driver_id,
+                                   MultiAuthUserCredentialInterface $credential): void
+    {
+        $this->userCredentials->add($credential);
+    }
+
+    public function getCredentials(): \ArrayAccess
+    {
+        return $this->userCredentials;
+    }
+
+    public function getFullname(): string
+    {
+        return $this->getShortname();
+    }
+
+    public function setFullname(string $fullname): void
+    {
+        $this->setShortname($fullname);
+    }
+
+    public function getCredentialByDriverId(string $driver_id): MultiAuthUserCredentialInterface
+    {
+        return $this->userCredentials[$driver_id] ?? null;
     }
 }

@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity @ORM\Table(name="auth_drivers")
  */
-class AuthDriver extends Entity
+class AuthDriver extends Entity implements \MLukman\MultiAuthBundle\DriverInstance
 {
     /**
      * @ORM\Id @ORM\Column(type="string")
@@ -64,5 +64,30 @@ class AuthDriver extends Entity
             'class' => Rules::new()->trim()->required(),
             'registration_explanation' => Rules::new()->trim(),
         ];
+    }
+
+    public function getClass(): \MLukman\MultiAuthBundle\DriverClass
+    {
+        return new $this->class($this->parameters ?: array(), $this);
+    }
+
+    public function getId(): string
+    {
+        return $this->name;
+    }
+
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
+
+    public function setParameters(array $parameters): void
+    {
+        $this->parameters = $parameters;
+    }
+
+    public function getTitle(): string
+    {
+        return $this->title;
     }
 }

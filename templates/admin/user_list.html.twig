@@ -65,7 +65,9 @@
                         {% if user.blocked %}
                             <div class="ui red label">Blocked</div>
                         {% else %}
-                            <div class="ui label">{{user.auth}}</div>
+                            {% for cred in user.getCredentials() %}
+                                <div class="ui label">{{cred.driver_id}}</div>
+                            {% endfor %}
                         {% endif %}
                     </td>
                     <td class="ui center aligned">{{'ROLE_ADMIN' in user.roles ? 'Y':'N'}}</td>

@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
@@ -19,12 +18,11 @@ class SecurityController extends RenoController
     use TargetPathTrait;
 
     /**
-     * @Route("/login/{username}", name="app_login", priority=10)
+     * @Route("/login/{driver}", name="app_login", priority=10, defaults={"driver"=null})
      */
     public function login(AuthenticationUtils $authenticationUtils,
                           DataStore $ds, SessionInterface $session,
-                          UserPasswordEncoderInterface $passwordEncoder,
-                          Request $request, $username = null): Response
+                          Request $request, $driver): Response
     {
         $this->title = 'Login';
         if ($this->getUser()) {
@@ -44,9 +42,10 @@ class SecurityController extends RenoController
             $user->created_by = $user;
             $user->created_date = new \DateTime();
             $ds->commit($user);
-            return $this->redirectToRoute('app_login', array('username' => $user->username));
+            return $this->redirectToRoute('app_login', ['username' => $user->username]);
         }
 
+        $username = $request->query->get('username');
         $message = array();
         if (($error = $authenticationUtils->getLastAuthenticationError())) {
             $message['text'] = $error->getMessage();

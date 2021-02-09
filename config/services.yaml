@@ -39,3 +39,5 @@ services:
             - { name: 'doctrine.event_subscriber' }
 
     Symfony\Component\HttpKernel\Profiler\Profiler: '@profiler'
+    
+    MLukman\MultiAuthBundle\MultiAuthAdapterInterface: '@App\Service\MultiAuthAdapter'

@@ -25,29 +25,32 @@ class AuthController extends RenoController
     /**
      * @Route("/!/auth/+", name="app_admin_auth_create", priority=10)
      */
-    public function create(Request $request)
+    public function create(\MLukman\MultiAuthBundle\Service\MultiAuth $multiauth,
+                           Request $request)
     {
         $this->requireAdminRole();
         $this->title = 'Create Authentication';
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
         $this->addCreateCrumb('Create new authentication', $this->nav->path('app_admin_auth_create'));
-        return $this->edit_or_create(new AuthDriver(), $request->request);
+        return $this->edit_or_create($multiauth, new AuthDriver(), $request->request);
     }
 
     /**
      * @Route("/!/auth/{driver}", name="app_admin_auth_edit", priority=10)
      */
-    public function edit(Request $request, $driver)
+    public function edit(\MLukman\MultiAuthBundle\Service\MultiAuth $multiauth,
+                         Request $request, $driver)
     {
         $this->requireAdminRole();
         $this->title = "Edit '$driver' Authentication";
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
         $this->addEditCrumb($this->nav->path('app_admin_auth_edit', array('driver' => $driver)));
         $auth = $this->ds->queryOne('\App\Entity\AuthDriver', $driver);
-        return $this->edit_or_create($auth, $request->request);
+        return $this->edit_or_create($multiauth, $auth, $request->request);
     }
 
-    protected function edit_or_create(AuthDriver $auth, ParameterBag $post)
+    protected function edit_or_create(\MLukman\MultiAuthBundle\Service\MultiAuth $multiauth,
+                                      AuthDriver $auth, ParameterBag $post)
     {
         $errors = array();
         $ds = $this->ds;
@@ -85,7 +88,7 @@ class AuthController extends RenoController
         }
         return $this->render('admin/auth_form.html.twig', array(
                 'auth' => $auth,
-                'classes' => $this->ds->getAuthClassNames(),
+                'classes' => $multiauth->getDriverClassNames(),
                 'paramConfigs' => ($auth->class ? call_user_func(array($auth->class,
                     'getParamConfigs')) : null),
                 'errors' => $errors,

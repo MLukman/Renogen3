@@ -18,45 +18,79 @@
             <a style="display: block; padding: 1em 0;" href="{{ path('app_home') }}">
                 <img src="{{ nav.basePath }}{{ controller.appLogo }}" />
             </a>
-            <form action="{{ path('app_login') }}" method="post">
-                <div class="ui form">
-                    {% if message|default(null) %}
-                        {% if message.negative %}
-                            <div class="ui negative inverted message"><i class="ui exclamation triangle icon"></i> {{message.text}}</div>
-                        {% else %}
-                            <div class="ui positive message"><i class="ui info icon"></i> {{message.text}}</div>
-                        {% endif %}
-                    {% else %}
-                        Renogen is a release management approval & tracking platform
-                    {% endif %}
-                    <div class="ui big basic segment">
-                        <div class="required field">
-                            <div class="ui left icon input">
-                                <input type="text" name="username" placeholder="Username" value="{{ last_username|default(null) }}" {% if not last_username %}autofocus{% endif %} />
-                                <i class="ui user icon"></i>
-                            </div>
-                        </div>
-                        <div class="required field">
-                            <div class="ui left icon input">
-                                <input type="password" name="password" placeholder="Password" value="" {% if last_username %}autofocus{% endif %} />
-                                <i class="ui key icon"></i>
-                            </div>
-                        </div>
-                        <div class="field center aligned">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
-                            <input type="hidden" name="last_page" value="{{ last_page }}" />
-                            <button class="ui big black button" type="submit"><i class="ui unlock icon"></i> Login</button>
-                            {% if self_register and not last_username %}
-                                <div class="ui horizontal divider">
-                                    Or
+            {% if message|default(null) %}
+                {% if message.negative %}
+                    <div class="ui negative inverted message"><i class="ui exclamation triangle icon"></i> {{message.text}}</div>
+                {% else %}
+                    <div class="ui positive message"><i class="ui info icon"></i> {{message.text}}</div>
+                {% endif %}
+            {% else %}
+                Renogen is a release management approval & tracking platform
+            {% endif %}
+            {% set form_drivers = multiauth.getLoginFormDrivers() %}
+            {% set oauth2_drivers = multiauth.getLoginOAuth2Drivers() %}
+            <div class="ui big basic segment">
+                {% if form_drivers|length > 0 %}
+                    <div class="ui form">
+                        <form action="{{ path('app_login') }}" method="post">
+                            <div class="required field">
+                                <div class="ui left icon input">
+                                    <input type="text" name="username" placeholder="Username" value="{{ last_username|default(null) }}" {% if not last_username %}autofocus{% endif %} />
+                                    <i class="ui user icon"></i>
                                 </div>
-                                <a class="ui big silver button" href="{{ path('app_register',[],true) }}"><i class="ui sign in alternate icon"></i> Register</a>
+                            </div>
+                            <div class="required field">
+                                <div class="ui left icon input">
+                                    <input type="password" name="password" placeholder="Password" value="" {% if last_username %}autofocus{% endif %} />
+                                    <i class="ui key icon"></i>
+                                </div>
+                            </div>
+                            {% if form_drivers|length == 1 %}
+                                <input type="hidden" name="driver" value="{{ form_drivers[0].value }}" />
+                            {% else %}
+                                <div class="required field">
+                                    <select name="driver" class="ui fluid plain dropdown">
+                                        {% for param in form_drivers %}
+                                            <option value="{{param.value}}">{{param.label}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             {% endif %}
-                        </div>
+                            <div class="field center aligned">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
+                                <input type="hidden" name="last_page" value="{{ last_page }}" />
+                                <button class="ui big black button" type="submit" name="method" value="form"><i class="ui unlock icon"></i> Login</button>
+                            </div>
+                        </form>
                     </div>
-                </div>
-            </form>
+                {% endif %}
+                {% if form_drivers|length > 0 and oauth2_drivers|length > 0 %}
+                    <div class="ui horizontal divider">
+                        Or
+                    </div>
+                {% endif %}
+                {% if oauth2_drivers|length > 0 %}
+                    <div class="ui center aligned">
+                        <h3 class="ui inverted header">Login using third party provider:</h3>
+                        {% for driver in oauth2_drivers %}
+                            <form action="{{ path('app_login', {driver:driver.id}) }}" method="post" style="display:inline;">
+                                <input type="hidden" name="driver" value="github" />
+                                <button class="ui big black button" type="submit" name="method" value="oauth" style="margin-bottom:0.5em">
+                                    <i class="openid icon"></i> {{ driver.name }}
+                                </button>
+                            </form>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if self_register and not last_username %}
+                    <div class="ui horizontal divider">
+                        Or
+                    </div>
+                    <a class="ui big silver button" href="{{ path('app_register',[],true) }}"><i class="ui sign in alternate icon"></i> Register</a>
+                {% endif %}
+            </div>
             {{ bottom_message }}
         </div>
     </div>
+</div>
 {% endblock %}

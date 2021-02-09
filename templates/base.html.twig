@@ -169,7 +169,8 @@
                 $('.ui.dropdown.action-nothing').dropdown({
                     action: 'nothing'
                 });
-                $('.ui.dropdown:not(.action-nothing)').dropdown({
+                $('.ui.dropdown .simple').dropdown();
+                $('.ui.dropdown:not(.action-nothing):not(.simple)').dropdown({
                     fullTextSearch: true,
                     clearable: true
                 });

@@ -52,6 +52,7 @@ class UsersController extends RenoController
     protected function edit_or_create(User $user, ParameterBag $post)
     {
         $errors = array();
+        $is_new_user = empty($user->created_date);
         if ($post->count() > 0) {
             switch ($post->get('_action')) {
                 case 'Block':
@@ -70,9 +71,11 @@ class UsersController extends RenoController
                     $this->addFlash("info", "User '$user->username' has been deleted");
                     return $this->nav->redirectRoute('app_admin_users');
                 case 'Reset Password':
-                    $res = $this->ds->getAuthDriver($user->auth)->driverClass()->resetPassword($user);
+                    $driver = $post->get('driver');
+                    $cred = $user->getCredentials()[$driver];
+                    $res = $this->ds->getAuthDriver($driver)->getClass()->resetPassword($cred);
                     if ($res) {
-                        $this->ds->commit($user);
+                        $this->ds->commit($cred);
                         $this->addFlash('info', $res);
                     }
                     return $this->nav->redirectForEntity('app_admin_users_edit', $user);
@@ -81,6 +84,7 @@ class UsersController extends RenoController
             if (!$post->has('roles')) {
                 $post->set('roles', array());
             }
+
             if ($this->ds->prepareValidateEntity($user, array('auth', 'username',
                     'shortname',
                     'email', 'roles'), $post)) {
@@ -105,6 +109,9 @@ class UsersController extends RenoController
                         continue;
                     }
                 }
+                if ($is_new_user) {
+                    
+                }
                 $this->ds->commit();
                 $this->addFlash("info", "User '$user->username' has been saved");
                 return $this->nav->redirectForEntity('app_admin_users_edit', $user);
@@ -114,7 +121,7 @@ class UsersController extends RenoController
         }
 
         $has_contrib = false;
-        if ($user->created_date) {
+        if (!$is_new_user) {
             $entities = array(
                 'Activity',
                 'ActivityFile',

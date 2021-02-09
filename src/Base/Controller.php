@@ -4,6 +4,7 @@ namespace App\Base;
 
 use App\Service\DataStore;
 use App\Service\NavigationFactory;
+use MLukman\MultiAuthBundle\Service\MultiAuth;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Security;
@@ -44,12 +45,13 @@ abstract class Controller extends AbstractController
     protected $security;
 
     public function __construct(NavigationFactory $nav, Security $security,
-                                DataStore $ds)
+                                DataStore $ds, MultiAuth $multiAuth)
     {
         $this->basectx['controller'] = $this;
         $this->basectx['nav'] = $this->nav = $nav;
         $this->basectx['security'] = $this->security = $security;
         $this->basectx['ds'] = $this->ds = $ds;
+        $this->basectx['multiauth'] = $multiAuth;
         $this->basectx['errors'] = array();
         $this->basectx['crumbs'] = array();
         if (empty($this->title)) {

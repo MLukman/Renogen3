@@ -133,6 +133,23 @@ class DataStore
 
     /**
      *
+     * @param string $entity
+     * @param array $criteria
+     * @return int
+     */
+    public function count($entity, Array $criteria = array())
+    {
+        $qb = $this->em->getRepository($entity)->createQueryBuilder('e')
+            ->select('COUNT(1)');
+        foreach ($criteria as $field => $value) {
+            $qb->andWhere("e.$field > :$field")
+                ->setParameter($field, $value);
+        }
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     *
      * @param type $entity
      * @param array $criteria
      * @param array $sort
