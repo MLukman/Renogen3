@@ -4,26 +4,23 @@ namespace MLukman\MultiAuthBundle\DriverClass;
 
 use MLukman\MultiAuthBundle\Authenticator\Driver\FormDriverInterface;
 use MLukman\MultiAuthBundle\DriverClass;
-use MLukman\MultiAuthBundle\DriverInstance;
 use MLukman\MultiAuthBundle\Identity\MultiAuthUserCredentialInterface;
 use MLukman\MultiAuthBundle\MultiAuthAdapterInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class Internal extends DriverClass implements FormDriverInterface
 {
 
     public function authenticate(array $credentials,
                                  MultiAuthUserCredentialInterface $user_credential,
-                                 UserPasswordEncoderInterface $passwordEncoder,
-                                 DriverInstance $driver,
-                                 MultiAuthAdapterInterface $adapter): bool
+                                 MultiAuthAdapterInterface $adapter,
+                                 UserPasswordEncoderInterface $passwordEncoder): bool
     {
         $securityUser = $adapter->getSecurityUser($user_credential->getUser());
         if (empty($user_credential->getCredentialValue())) {
-            $user_credential->setCredentialValue($passwordEncoder->encodePassword($securityUser, $credentials['password']));
+            $user_credential->setCredentialValue($this->encodePassword($passwordEncoder, $securityUser, $credentials['password']));
             $adapter->saveUserCredential($user_credential);
             return true;
         }
@@ -33,6 +30,12 @@ class Internal extends DriverClass implements FormDriverInterface
         }
 
         throw new CustomUserMessageAuthenticationException('Invalid credentials');
+    }
+
+    public function encodePassword(UserPasswordEncoderInterface $passwordEncoder,
+                                   UserInterface $securityUser, string $password): string
+    {
+        return $passwordEncoder->encodePassword($securityUser, $password);
     }
 
     public function prepareNewUser(MultiAuthUserCredentialInterface $user_credential)
@@ -47,7 +50,7 @@ class Internal extends DriverClass implements FormDriverInterface
 
     public static function getParamConfigs(): array
     {
-        return array();
+        return [];
     }
 
     public static function getTitle(): string
@@ -68,17 +71,12 @@ class Internal extends DriverClass implements FormDriverInterface
 
     public function getLoginDisplay(): array
     {
-        return array(
+        return [
             'type' => 'form',
-            'params' => array(
+            'params' => [
                 'label' => $this->instance->getTitle(),
                 'value' => $this->instance->getId(),
-            ),
-        );
-    }
-
-    public function handleRequest(Request $request): ?Response
-    {
-        return null;
+            ],
+        ];
     }
 }

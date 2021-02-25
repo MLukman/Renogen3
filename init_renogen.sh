@@ -6,7 +6,7 @@ fi
 
 if [ -n "$TZ" ]; then
   ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
-  echo $TZ > /etc/timezon
+  echo $TZ > /etc/timezone
   echo "date.timezone=$TZ" > /usr/local/etc/php/conf.d/timezone.ini
 fi
 
@@ -23,5 +23,8 @@ bin/console doctrine:migrations:migrate --no-interaction || echo No migrations n
 # Patch item status from 'Test Review' to 'Review'
 bin/console doctrine:query:dql "UPDATE \App\Entity\Item i SET i.status = 'Review' WHERE i.status = 'Test Review'" -q
 bin/console doctrine:query:dql "UPDATE \App\Entity\ItemStatusLog i SET i.status = 'Review' WHERE i.status = 'Test Review'" -q
+
+# Call special migration code
+bin/console app:migrate --no-interaction
 
 chown -R www-data:www-data var

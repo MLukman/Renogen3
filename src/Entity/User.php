@@ -43,7 +43,7 @@ class User extends Entity implements UserInterface, MultiAuthUserInterface
     protected $password = '';
 
     /**
-     * @ORM\Column(type="string", length=64)
+     * @ORM\Column(type="string", length=64, nullable=true)
      */
     protected $auth;
 
@@ -209,7 +209,7 @@ class User extends Entity implements UserInterface, MultiAuthUserInterface
                 ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z\._-]*$/', 'Username must start with an alphanumerical character and contains only alphanumeric, underscores, dashes and dots'),
             'shortname' => Rules::new()->trim()->required()->unique()->truncate(100),
             'email' => Rules::new()->trim()->required()->unique()->maxlen(50)->email(),
-            'auth' => Rules::new()->required(),
+            //'auth' => Rules::new()->required(),
             'roles' => Rules::new()->required(),
         ];
     }

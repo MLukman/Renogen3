@@ -2,7 +2,10 @@
 
 namespace MLukman\MultiAuthBundle\Identity;
 
-interface MultiAuthUserInterface
+use ArrayAccess;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+interface MultiAuthUserInterface extends UserInterface
 {
 
     public function getUsername(): string;
@@ -11,7 +14,7 @@ interface MultiAuthUserInterface
 
     public function setFullname(string $fullname): void;
 
-    public function getCredentials(): \ArrayAccess;
+    public function getCredentials(): ArrayAccess;
 
     public function addCredentials(string $driver_id,
                                    MultiAuthUserCredentialInterface $credential): void;

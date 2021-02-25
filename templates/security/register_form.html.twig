@@ -20,27 +20,36 @@
 
     <form method="POST">
         <div class="ui form">
-            {%  if not user.auth %}
+            {%  if auth is not defined %}
                 <div class="ui required field basic segment">
                     <label class="ui top attached large label">Authentication Method</label>
                     <p>Please choose from the following authentication methods:</p>
-                    <div class="inline fields">
-                        {% for auth in auths %}
-                            <div class="field">
-                                <div class="ui radio checkbox">
-                                    <input id="auth-{{auth.name}}" type="radio" name="auth" value="{{auth.name}}" />
-                                    <label for="auth-{{auth.name}}">{{auth.title}}</label>
+                    <div class="ui basic segment">
+                        <div class="ui very relaxed divided list">
+                            {% for auth in auths %}
+                                <div class="ui item">
+                                    <div class="content">
+                                        <div class="ui radio checkbox">
+                                            <input id="auth-{{auth.name}}" type="radio" name="auth" value="{{auth.name}}" />
+                                            <label for="auth-{{auth.name}}">
+                                                <h3 class="ui header">    
+                                                    {{auth.title}}
+                                                </h3>
+                                                {{ auth.description }}
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
+                        {{ _self.fieldError(errors|default([]), 'auth') }}
                     </div>
-                    {{ _self.fieldError(errors|default([]), 'auth') }}
                 </div>
                 <div class="ui field">
                     <input type="submit" class="ui submit primary button" name="_action" value="Next Step" />
                 </div>
-            {% else %}
-                <input type="hidden" name="auth" value="{{auth.name}}" />
+            {% elseif credential['username'] is empty or credential['value'] is empty or errors['username'] is defined %}
+                <input type="hidden" name="driver" value="{{auth.name}}" />
                 {% if auth.registration_explanation %}
                     <div class="ui basic field segment">
                         <label class="ui top attached large label">Instruction</label>
@@ -49,9 +58,36 @@
                 {% endif %}
                 <div class="ui required field basic segment">
                     <label class="ui top attached large label">User Name</label>
-                    <input placeholder="User name (max 25 alphanumeric, underscores, dashes and dots only, and must start with an alphanumerical character)" type="text" name="username" value="{{user.username|default(null)}}" />
+                    <input placeholder="User name (max 25 alphanumeric, underscores, dashes and dots only, and must start with an alphanumerical character)" type="text" name="username" value="{{credential['username']|default(null)}}" />
                     {{ _self.fieldError(errors|default([]), 'username') }}
                 </div>
+                {% if credential['value'] is empty %}
+                    <div class="ui required field basic segment">
+                        <label class="ui top attached large label">Password</label>
+                        <div class="ui action input">
+                            <input type="password" name="credential" />
+                            <button class="ui right labeled icon button" onclick="var inp = $('input', $(this).parent());
+                                    var ispwd = (inp.attr('type') === 'password');
+                                    inp.attr('type', ispwd ? 'text' : 'password');
+                                    $('i', this).attr('class', ispwd ? 'eye slash icon' : 'eye icon');
+                                    $('span', this).text((ispwd ? 'Hide' : 'Show') + ' password');
+                                    return false;">
+                                <i class="eye icon"></i>
+                                <span>Show password</span>
+                            </button>
+                        </div>
+                        {{ _self.fieldError(errors|default([]), 'credential') }}
+                    </div>
+                {% else %}
+                    <input type="hidden" name="credential" value="{{credential['value']}}" />
+                {% endif %}
+                <div class="ui field">
+                    <input type="submit" class="ui submit primary button" name="_action" value="Next Step" />
+                </div>
+            {% else %}
+                <input type="hidden" name="driver" value="{{auth.name}}" />
+                <input type="hidden" name="username" value="{{credential['username']}}" />
+                <input type="hidden" name="credential" value="{{credential['value']}}" />
                 <div class="ui field required basic segment">
                     <label class="ui top attached large label">Short Name</label>
                     <input placeholder="Short name (max 100 characters)" type="text" name="shortname" value="{{user.shortname|default(null)}}" />
@@ -72,7 +108,7 @@
                 <div class="ui field">
                     <input type="submit" class="ui submit primary button" name="_action" value="Proceed to register" />
                 </div>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </form>
 {% endblock %}

@@ -12,17 +12,22 @@ use Doctrine\ORM\Mapping as ORM;
 class AuthDriver extends Entity implements \MLukman\MultiAuthBundle\DriverInstance
 {
     /**
-     * @ORM\Id @ORM\Column(type="string")
+     * @ORM\Id @ORM\Column(type="string", length=30)
      */
     public $name;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", length=100)
      */
     public $title;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", length=255)
+     */
+    public $description;
+
+    /**
+     * @ORM\Column(type="string", length=255)
      */
     public $class;
 
@@ -59,8 +64,9 @@ class AuthDriver extends Entity implements \MLukman\MultiAuthBundle\DriverInstan
     public static function getValidationRules(): ?array
     {
         return [
-            'name' => Rules::new()->trim()->required()->unique(),
-            'title' => Rules::new()->trim()->required()->unique(),
+            'name' => Rules::new()->trim()->required()->unique()->maxlen(30),
+            'title' => Rules::new()->trim()->required()->unique()->maxlen(100),
+            'description' => Rules::new()->trim()->required()->truncate(255),
             'class' => Rules::new()->trim()->required(),
             'registration_explanation' => Rules::new()->trim(),
         ];

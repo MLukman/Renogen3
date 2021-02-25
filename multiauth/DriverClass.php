@@ -6,7 +6,7 @@ use MLukman\MultiAuthBundle\Identity\MultiAuthUserCredentialInterface;
 
 abstract class DriverClass
 {
-    protected $params = array();
+    protected $params = [];
 
     /** #var DriverInstance */
     protected $instance = null;

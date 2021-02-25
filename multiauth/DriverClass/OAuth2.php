@@ -13,34 +13,50 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
 
     public function getLoginDisplay(): array
     {
-        return array(
+        return [
             'type' => 'oauth2',
-            'params' => array(
+            'params' => [
                 'id' => $this->instance->getId(),
                 'name' => $this->instance->getTitle(),
-            ),
-        );
+            ],
+        ];
     }
 
     public static function checkParams(array $params)
     {
+        $errors = [];
+        $param_configs = [];
+        foreach (self::getParamConfigs() as $p) {
+            $param_configs[$p[0]] = $p;
+        }
+        $required = ['authorize_url', 'token_url', 'userinfo_url', 'client_id',
+            'client_secret', 'scope', 'username_field'];
 
+        foreach ($required as $r) {
+            if (!isset($params[$r]) || empty($params[$r])) {
+                $errors[$r] = $param_configs[$r][1].' is required';
+            } elseif (substr($r, -4) == '_url' && (!filter_var($params[$r], FILTER_VALIDATE_URL)
+                || !in_array(strtok($params[$r], ':'), ['http', 'https']))) {
+                $errors[$r] = $param_configs[$r][1]." must be a valid URL";
+            }
+        }
+        return (empty($errors) ? null : $errors);
     }
 
     public static function getParamConfigs(): array
     {
-        return array(
-            array('authorize_url', 'Authorize URL', 'The OAuth2.0 provider authorize URL (e.g. login page)'),
-            array('token_url', 'Token URL', 'The OAuth2.0 provider token exchange URL (code -> access token)'),
-            array('userinfo_url', 'Userinfo URL', 'The OAuth2.0 provider get user info URL'),
-            array('client_id', 'Client Id', 'Client Id'),
-            array('client_secret', 'Client Secret', 'Client Secret'),
-            array('scope', 'Requested Scope(s)', 'Space-delimited list of scopes (refer provider manual)'),
-            array('username_field', 'Username Field', 'The field of inside responses of user info calls that refers to the username'),
-            array('shortname_field', 'Short Name Field', 'The field of inside responses of user info calls that refers to the short name'),
-            array('fullname_field', 'Full Name Field', 'The field of inside responses of user info calls that refers to the full name'),
-            array('email_field', 'Email Field', 'The field of inside responses of user info calls that refers to the email address'),
-        );
+        return [
+            ['authorize_url', 'Authorize URL', 'The OAuth2.0 provider authorize URL (e.g. login page)'],
+            ['token_url', 'Token URL', 'The OAuth2.0 provider token exchange URL (code -> access token)'],
+            ['userinfo_url', 'Userinfo URL', 'The OAuth2.0 provider get user info URL'],
+            ['client_id', 'Client Id', 'Client Id'],
+            ['client_secret', 'Client Secret', 'Client Secret'],
+            ['scope', 'Requested Scope(s)', 'Space-delimited list of scopes (refer provider manual)'],
+            ['username_field', 'Username Field', 'The field of inside responses of user info calls that refers to the username'],
+            ['shortname_field', 'Short Name Field', 'The field of inside responses of user info calls that refers to the short name'],
+            ['fullname_field', 'Full Name Field', 'The field of inside responses of user info calls that refers to the full name'],
+            ['email_field', 'Email Field', 'The field of inside responses of user info calls that refers to the email address'],
+        ];
     }
 
     public static function getTitle(): string
@@ -50,29 +66,25 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
 
     public function redirectToAuthorize(string $redirect_uri): RedirectResponse
     {
-        return new RedirectResponse($this->params['authorize_url']."?".http_build_query(array(
+        return new RedirectResponse($this->params['authorize_url']."?".http_build_query([
                 'client_id' => $this->params['client_id'],
                 'response_type' => 'code',
                 'scope' => $this->params['scope'],
                 'redirect_uri' => $redirect_uri,
-        )));
+        ]));
     }
 
     public function fetchAccessToken(HttpClientInterface $httpClient,
                                      string $code, string $redirect_uri): ?string
     {
         try {
-            $token_response = $httpClient->request('POST', $this->params['token_url']."?".http_build_query(array(
+            $token_response = $httpClient->request('POST', $this->params['token_url']."?".http_build_query([
                         'client_id' => $this->params['client_id'],
                         'client_secret' => $this->params['client_secret'],
                         'grant_type' => 'authorization_code',
                         'code' => $code,
                         'redirect_uri' => $redirect_uri,
-                    )), array(
-                    'headers' => array(
-                        'Accept' => 'application/json'
-                    )
-                ))->toArray();
+                    ]), ['headers' => ['Accept' => 'application/json']])->toArray();
         } catch (\Exception $ex) {
 
         }
@@ -83,21 +95,22 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
                                   string $access_token): array
     {
         try {
-            $user_response = $httpClient->request('GET', $this->params['userinfo_url'], array(
-                    'headers' => array(
+            $user_response = $httpClient->request('GET', $this->params['userinfo_url'], [
+                    'headers' => [
                         'Authorization' => "Bearer $access_token",
                         'Accept' => 'application/json',
-                    )
-                ))->toArray();
+                    ]
+                ])->toArray();
         } catch (\Exception $ex) {
 
         }
 
-        $user_info = array();
-        foreach (array('username', 'shortname', 'fullname', 'email') as $field) {
+        $user_info = [];
+        foreach (['username', 'shortname', 'fullname', 'email'] as $field) {
             $user_info[$field] = $this->params["{$field}_field"] ? ($user_response[$this->params["{$field}_field"]]
                     ?? null) : null;
         }
+        $user_info['raw'] = $user_response;
 
         return $user_info;
     }
@@ -109,7 +122,6 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
 
     public function resetPassword(MultiAuthUserCredentialInterface $user_credential)
     {
-
+        
     }
-
 }

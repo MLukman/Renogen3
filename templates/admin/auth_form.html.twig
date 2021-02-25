@@ -51,8 +51,13 @@
             </div>
             <div class="ui required field basic segment">
                 <label class="ui top attached large label">Title</label>
-                <input placeholder="User-friendly title to refer to the authentication source" type="text" name="title" value="{{auth.title|default(auth.class)}}" />
+                <input placeholder="User-friendly title to refer to the authentication method (max 30 chars)" type="text" name="title" value="{{auth.title|default(auth.class)}}" />
                 {{ _self.fieldError(errors|default([]), 'title') }}
+            </div>
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Description</label>
+                <input placeholder="Brief description of the authentication method (max 100 chars)" type="text" name="description" value="{{auth.description|default(null)}}" />
+                {{ _self.fieldError(errors|default([]), 'description') }}
             </div>
             <div class="ui field basic segment">
                 <label class="ui top attached large label">Allow self registration?</label>

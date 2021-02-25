@@ -68,7 +68,7 @@ class AuthController extends RenoController
             if (!$post->has('parameters')) {
                 $post->set('parameters', array());
             }
-            $attributes = array('title', 'parameters', 'allow_self_registration',
+            $attributes = array('title', 'description', 'parameters', 'allow_self_registration',
                 'registration_explanation');
             if (!$auth->created_date) {
                 $attributes[] = 'name';

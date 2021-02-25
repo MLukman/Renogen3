@@ -45,8 +45,9 @@ trait EntryPointTrait
         return new RedirectResponse($url);
     }
 
-    protected function getLoginUrl(): string
+    protected function getLoginUrl(array $params = [],
+                                   int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH): string
     {
-        return $this->urlGenerator->generate($this->login_route);
+        return $this->urlGenerator->generate($this->login_route, $params, $referenceType);
     }
 }

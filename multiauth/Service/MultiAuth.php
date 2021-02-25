@@ -48,7 +48,7 @@ class MultiAuth
     private function loadAllDrivers(): array
     {
         if (!$this->all_drivers) {
-            $this->all_drivers = array();
+            $this->all_drivers = [];
             foreach ($this->persistence->loadAllDriverInstances() as $driver) {
                 if ($driver instanceof DriverInstance) {
                     $this->all_drivers[$driver->getId()] = $driver;
@@ -66,7 +66,7 @@ class MultiAuth
 
     public function getLoginFormDrivers(): array
     {
-        $form_drivers = array();
+        $form_drivers = [];
         foreach ($this->loadAllDrivers() as $driver) {
             /** @var DriverInstance $driver */
             $login_param = $driver->getClass()->getLoginDisplay();
@@ -79,7 +79,7 @@ class MultiAuth
 
     public function getLoginOAuth2Drivers(): array
     {
-        $oauth2_drivers = array();
+        $oauth2_drivers = [];
         foreach ($this->loadAllDrivers() as $driver) {
             /** @var DriverInstance $driver */
             $login_param = $driver->getClass()->getLoginDisplay();

@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\ActivityTemplate\BaseClass;
 use App\Auth\Driver;
-use App\Auth\Driver\Password;
 use App\Base\Entity;
 use App\Entity\Activity;
 use App\Entity\Attachment;
@@ -20,6 +19,7 @@ use App\Entity\User;
 use App\Exception\NoResultException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use MLukman\MultiAuthBundle\DriverClass\Internal;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Security\Core\Security;
@@ -524,7 +524,8 @@ class DataStore
         if (empty($this->em->getRepository('\App\Entity\AuthDriver')->find('password'))) {
             $auth_password = new AuthDriver('password');
             $auth_password->title = 'Internal User Database';
-            $auth_password->class = Password::class;
+            $auth_password->description = 'Login using internal user database managed by Renogen';
+            $auth_password->class = Internal::class;
             $this->em->persist($auth_password);
             $this->em->flush();
         }

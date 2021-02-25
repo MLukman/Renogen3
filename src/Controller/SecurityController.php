@@ -3,14 +3,23 @@
 namespace App\Controller;
 
 use App\Base\RenoController;
+use App\Entity\AuthDriver;
 use App\Entity\User;
+use App\Entity\UserCredential;
 use App\Service\DataStore;
+use MLukman\MultiAuthBundle\Authenticator\Driver\FormDriverInterface;
+use MLukman\MultiAuthBundle\Authenticator\Driver\OAuth2DriverInterface;
+use MLukman\MultiAuthBundle\Authenticator\FormGuardAuthenticator;
+use MLukman\MultiAuthBundle\Authenticator\OAuth2GuardAuthenticator;
+use ReCaptcha\ReCaptcha;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Guard\GuardAuthenticatorHandler;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class SecurityController extends RenoController
 {
@@ -85,15 +94,9 @@ class SecurityController extends RenoController
     public function register(Request $request, DataStore $ds): Response
     {
         $this->title = 'Register';
-        $recaptcha_keys = array(
-            'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
-            'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
-        );
-
-        $post = $request->request;
         $selected_auth = null;
-        $auths = $ds->queryMany('\App\Entity\AuthDriver', array(
-            'allow_self_registration' => 1));
+        $auths = $ds->queryMany('\App\Entity\AuthDriver', ['allow_self_registration' => 1], [
+            'created_date' => 'ASC']);
 
         if (count($auths) == 0) {
             throw new \Exception("Self-registration is disabled");
@@ -104,6 +107,7 @@ class SecurityController extends RenoController
             $selected_auth = $auths[0];
         }
 
+        $post = $request->request;
         if ($post->has('auth')) {
             foreach ($auths as $auth) {
                 if ($post->get('auth') == $auth->name) {
@@ -113,9 +117,13 @@ class SecurityController extends RenoController
             }
         }
 
+        if ($selected_auth) {
+            return $this->redirectToRoute('app_register_driver', ['driver' => $selected_auth->getId()]);
+        }
+
         if ($post->get('_action') == 'Proceed to register') {
             if (!empty($recaptcha_keys['secretkey'])) {
-                $recaptcha = new \ReCaptcha\ReCaptcha($recaptcha_keys['secretkey']);
+                $recaptcha = new ReCaptcha($recaptcha_keys['secretkey']);
                 $resp = $recaptcha->verify($post->get('g-recaptcha-response'));
                 if (!$resp->isSuccess()) {
                     $user->errors['recaptcha'] = 'Invalid response: '.join(", ", $resp->getErrorCodes());
@@ -143,7 +151,102 @@ class SecurityController extends RenoController
 
         return $this->render('security/register_form.html.twig', [
                 'auths' => $auths,
-                'auth' => $selected_auth,
+        ]);
+    }
+
+    /**
+     * @Route("/register/{driver}", name="app_register_driver", priority=10)
+     */
+    public function register_driver(HttpClientInterface $httpClient,
+                                    GuardAuthenticatorHandler $guardHandler,
+                                    OAuth2GuardAuthenticator $oauth2auth,
+                                    FormGuardAuthenticator $formauth,
+                                    Request $request, DataStore $ds, $driver): Response
+    {
+        /** @var AuthDriver $auth */
+        $auth = $ds->queryOne('\App\Entity\AuthDriver', ['name' => $driver, 'allow_self_registration' => 1]);
+        if (!$auth) {
+            return $this->redirectToRoute('app_register');
+        }
+        $authClass = $auth->getClass();
+        $post = $request->request;
+        $user = new User();
+        $credential = [
+            'username' => null,
+            'value' => null,
+        ];
+        $recaptcha_keys = array(
+            'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
+            'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
+        );
+
+        if ($post->has('username')) {
+            $credential['username'] = $post->get('username');
+            $credential['value'] = $post->get('credential');
+        } elseif ($authClass instanceof OAuth2DriverInterface) {
+            $redirect_uri = $request->getUri();
+            if (!($code = $request->query->get('code'))) {
+                return $auth->getClass()->redirectToAuthorize($redirect_uri);
+            }
+            $access_token = $authClass->fetchAccessToken($httpClient, $code, $redirect_uri);
+            if (!$access_token) {
+                $this->addFlash('error', "Unable to authenticate with {$auth->title}. Please try again.");
+                return $this->redirectToRoute('app_register');
+            }
+            $user_info = $authClass->fetchUserInfo($httpClient, $access_token);
+            $credential['username'] = $user_info['username'];
+            $credential['value'] = $user_info['username'];
+            $user->setShortname($user_info['username']);
+            $user->setEmail($user_info['email']);
+            if ($ds->queryOne('\App\Entity\UserCredential', ['driver_id' => $driver,
+                    'credential_value' => $credential['value']])) {
+                $this->addFlash('error', "You have previously registered using the same {$auth->title} account. Please login instead.");
+                return $this->redirectToRoute('app_register');
+            }
+        }
+
+        if ($credential['username'] && $ds->queryOne('\App\Entity\User', $credential['username'])) {
+            $user->errors['username'] = ['Must be unique'];
+        }
+
+        if ($post->get('_action') == 'Proceed to register') {
+            if (!empty($recaptcha_keys['secretkey'])) {
+                $recaptcha = new ReCaptcha($recaptcha_keys['secretkey']);
+                $resp = $recaptcha->verify($post->get('g-recaptcha-response'));
+                if (!$resp->isSuccess()) {
+                    $user->errors['recaptcha'] = 'Invalid response: '.join(", ", $resp->getErrorCodes());
+                }
+            }
+
+            $user->roles = array('ROLE_USER');
+            $ds->prepareValidateEntity($user, array('username', 'shortname',
+                'email'), $post);
+            if ($ds->prepareValidateEntity($user, array(), $post)) {
+                $user->password = '';
+                $user->created_by = $user;
+                $user->created_date = new \DateTime();
+                $ds->commit($user);
+                $usercred = new UserCredential();
+                $usercred->setUser($user);
+                $usercred->setDriverId($driver);
+                if ($authClass instanceof FormDriverInterface) {
+                    $credential['value'] = $formauth->encodePasswordUsingDriver($authClass, $user, $credential['value']);
+                }
+                $usercred->setCredentialValue($credential['value']);
+                $ds->commit($usercred);
+
+                if ($authClass instanceof OAuth2DriverInterface) {
+                    $guardHandler->authenticateUserAndHandleSuccess($user, $request, $oauth2auth, 'main');
+                    return $this->redirectToRoute('app_home');
+                }
+                return $this->redirectToRoute('app_login', array('username' => $user->username));
+            }
+        }
+
+        $this->title = 'Register';
+        return $this->render('security/register_form.html.twig', [
+                'auth' => $auth,
+                'credential' => $credential,
                 'user' => $user,
                 'errors' => $user->errors,
                 'recaptcha' => $recaptcha_keys,

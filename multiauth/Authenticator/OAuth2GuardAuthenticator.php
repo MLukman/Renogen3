@@ -6,6 +6,8 @@ use App\Entity\UserCredential;
 use MLukman\MultiAuthBundle\Authenticator\Driver\OAuth2DriverInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
@@ -13,11 +15,33 @@ use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
 {
 
     use TargetPathTrait;
+    /** @var HttpClientInterface */
+    protected $httpClient;
+
+    /** @var RouterInterface */
+    protected $router;
+
+    /**
+     * @required
+     */
+    public function setHttpClient(HttpClientInterface $httpClient)
+    {
+        $this->httpClient = $httpClient;
+    }
+
+    /**
+     * @required
+     */
+    public function setRouter(RouterInterface $router)
+    {
+        $this->router = $router;
+    }
 
     public function supports(Request $request): bool
     {
@@ -62,7 +86,7 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
             /** @var UserCredential $cred */
             if ($cred->credential_value == $oauth2_user['username']) {
                 $this->logUserSuccessfulLogin($cred);
-                return $cred->user;
+                return $cred->getUser();
             }
         }
 
@@ -78,7 +102,10 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
                                             TokenInterface $token,
                                             string $providerKey)
     {
-        $this->saveTargetPath($this->session, $providerKey, $this->session->get('redirect_after_login'));
+        $redirect = $this->session->get('redirect_after_login');
+        if ($redirect) {
+            $this->saveTargetPath($this->session, $providerKey, $redirect);
+        }
         return null;
     }
 
@@ -105,6 +132,6 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
 
     protected function getRedirectUri($driver_id)
     {
-        return 'http://localhost/Renogen3/public/login/'.$driver_id;
+        return $this->getLoginUrl(['driver' => $driver_id], UrlGeneratorInterface::ABSOLUTE_URL);
     }
 }
