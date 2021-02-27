@@ -5,8 +5,3 @@ controllers:
 kernel:
     resource: ../../src/Kernel.php
     type: annotation
-
-multi_auth:
-    resource: "@MultiAuthBundle/Controller/"
-    type: annotation
-    

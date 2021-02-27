@@ -29,8 +29,8 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
         foreach (self::getParamConfigs() as $p) {
             $param_configs[$p[0]] = $p;
         }
-        $required = ['authorize_url', 'token_url', 'userinfo_url', 'client_id',
-            'client_secret', 'scope', 'username_field'];
+        $required = ['authorize_url', 'userinfo_url', 'client_id',
+            'scope', 'username_field'];
 
         foreach ($required as $r) {
             if (!isset($params[$r]) || empty($params[$r])) {
@@ -46,13 +46,13 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
     public static function getParamConfigs(): array
     {
         return [
-            ['authorize_url', 'Authorize URL', 'The OAuth2.0 provider authorize URL (e.g. login page)'],
+            ['authorize_url', 'Authorize URL *', 'The OAuth2.0 provider authorize URL (e.g. login page)'],
             ['token_url', 'Token URL', 'The OAuth2.0 provider token exchange URL (code -> access token)'],
-            ['userinfo_url', 'Userinfo URL', 'The OAuth2.0 provider get user info URL'],
-            ['client_id', 'Client Id', 'Client Id'],
+            ['userinfo_url', 'Userinfo URL *', 'The OAuth2.0 provider get user info URL'],
+            ['client_id', 'Client Id *', 'Client Id'],
             ['client_secret', 'Client Secret', 'Client Secret'],
-            ['scope', 'Requested Scope(s)', 'Space-delimited list of scopes (refer provider manual)'],
-            ['username_field', 'Username Field', 'The field of inside responses of user info calls that refers to the username'],
+            ['scope', 'Requested Scope(s) *', 'Space-delimited list of scopes (refer provider manual)'],
+            ['username_field', 'Username Field *', 'The field of inside responses of user info calls that refers to the username'],
             ['shortname_field', 'Short Name Field', 'The field of inside responses of user info calls that refers to the short name'],
             ['fullname_field', 'Full Name Field', 'The field of inside responses of user info calls that refers to the full name'],
             ['email_field', 'Email Field', 'The field of inside responses of user info calls that refers to the email address'],
@@ -61,30 +61,46 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
 
     public static function getTitle(): string
     {
-
+        return 'OAuth2.0 Provider';
     }
 
     public function redirectToAuthorize(string $redirect_uri): RedirectResponse
     {
-        return new RedirectResponse($this->params['authorize_url']."?".http_build_query([
+        $params = [];
+        $authorize_url = $this->params['authorize_url'];
+        if (($qpos = strpos($authorize_url, '?')) !== false) {
+            parse_str(substr($authorize_url, $qpos + 1), $params);
+            $authorize_url = substr($authorize_url, 0, $qpos);
+        }
+
+        $params['response_type'] = (!empty($this->params['client_secret']) ?
+            'code' : 'token');
+
+        return new RedirectResponse($authorize_url."?".http_build_query(array_merge($params, [
                 'client_id' => $this->params['client_id'],
-                'response_type' => 'code',
                 'scope' => $this->params['scope'],
                 'redirect_uri' => $redirect_uri,
-        ]));
+        ])));
     }
 
     public function fetchAccessToken(HttpClientInterface $httpClient,
                                      string $code, string $redirect_uri): ?string
     {
         try {
-            $token_response = $httpClient->request('POST', $this->params['token_url']."?".http_build_query([
+            $params = [];
+            $token_url = $this->params['token_url'];
+            if (($qpos = strpos($token_url, '?')) !== false) {
+                parse_str(substr($token_url, $qpos + 1), $params);
+                $token_url = substr($token_url, 0, $qpos);
+            }
+
+            $token_response = $httpClient->request('POST', $token_url."?".http_build_query(array_merge($params, [
                         'client_id' => $this->params['client_id'],
                         'client_secret' => $this->params['client_secret'],
                         'grant_type' => 'authorization_code',
                         'code' => $code,
                         'redirect_uri' => $redirect_uri,
-                    ]), ['headers' => ['Accept' => 'application/json']])->toArray();
+                    ])), ['headers' => ['Accept' => 'application/json']])->toArray();
         } catch (\Exception $ex) {
 
         }

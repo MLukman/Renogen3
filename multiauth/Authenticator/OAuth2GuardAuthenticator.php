@@ -50,8 +50,7 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
 
     public function getCredentials(Request $request)
     {
-        $code = $request->query->get('code');
-        if (empty($code)) {
+        if ($request->query->count() === 0) {
             return [
                 'stage' => 'INIT',
                 'driver' => $request->attributes->get('driver'),
@@ -60,7 +59,7 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
         return [
             'stage' => 'HAS_CODE',
             'driver' => $request->attributes->get('driver'),
-            'code' => $code,
+            'query' => $request->query->all(),
         ];
     }
 
@@ -72,9 +71,18 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
 
         $access_token = null;
         $driver = $this->multiauth->getAdapter()->loadDriverInstance($credentials['driver']);
+        if (!$driver) {
+            return new RedirectResponse($this->getLoginUrl());
+        }
         $driverClass = $driver->getClass();
         if ($driverClass instanceof OAuth2DriverInterface) {
-            $access_token = $driverClass->fetchAccessToken($this->httpClient, $credentials['code'], $this->getRedirectUri($credentials['driver']));
+            if (isset($credentials['query']['token'])) {
+                // implicit flow
+                $access_token = $credentials['query']['token'];
+            } elseif (isset($credentials['query']['code'])) {
+                // auth token flow
+                $access_token = $driverClass->fetchAccessToken($this->httpClient, $credentials['query']['code'], $this->getRedirectUri($credentials['driver']));
+            }
         }
 
         if (empty($access_token)) {
@@ -115,6 +123,9 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
         if ($exception->getCode() == 401) {
             $driver_id = $request->attributes->get('driver');
             $driver = $this->multiauth->getAdapter()->loadDriverInstance($driver_id);
+            if (!$driver) {
+                return new RedirectResponse($this->getLoginUrl());
+            }
             $driverClass = $driver->getClass();
             if ($driverClass instanceof OAuth2DriverInterface) {
                 return $driverClass->redirectToAuthorize($this->getRedirectUri($driver_id));
