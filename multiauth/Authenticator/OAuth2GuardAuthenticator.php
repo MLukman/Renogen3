@@ -59,6 +59,7 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
         return [
             'stage' => 'HAS_CODE',
             'driver' => $request->attributes->get('driver'),
+            'request' => $request,
             'query' => $request->query->all(),
         ];
     }
@@ -76,13 +77,11 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
         }
         $driverClass = $driver->getClass();
         if ($driverClass instanceof OAuth2DriverInterface) {
-            if (isset($credentials['query']['token'])) {
-                // implicit flow
-                $access_token = $credentials['query']['token'];
-            } elseif (isset($credentials['query']['code'])) {
-                // auth token flow
-                $access_token = $driverClass->fetchAccessToken($this->httpClient, $credentials['query']['code'], $this->getRedirectUri($credentials['driver']));
-            }
+            $access_token = $driverClass->handleRedirectRequest(
+                $credentials['request'],
+                $this->session,
+                $this->httpClient,
+                $this->getRedirectUri($credentials['driver']));
         }
 
         if (empty($access_token)) {
@@ -128,7 +127,7 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
             }
             $driverClass = $driver->getClass();
             if ($driverClass instanceof OAuth2DriverInterface) {
-                return $driverClass->redirectToAuthorize($this->getRedirectUri($driver_id));
+                return $driverClass->redirectToAuthorize($this->getRedirectUri($driver_id), $this->session);
             }
         }
         $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);

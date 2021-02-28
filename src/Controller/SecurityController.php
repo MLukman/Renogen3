@@ -102,7 +102,6 @@ class SecurityController extends RenoController
             throw new \Exception("Self-registration is disabled");
         }
 
-        $user = new User();
         if (count($auths) == 1) {
             $selected_auth = $auths[0];
         }
@@ -121,34 +120,6 @@ class SecurityController extends RenoController
             return $this->redirectToRoute('app_register_driver', ['driver' => $selected_auth->getId()]);
         }
 
-        if ($post->get('_action') == 'Proceed to register') {
-            if (!empty($recaptcha_keys['secretkey'])) {
-                $recaptcha = new ReCaptcha($recaptcha_keys['secretkey']);
-                $resp = $recaptcha->verify($post->get('g-recaptcha-response'));
-                if (!$resp->isSuccess()) {
-                    $user->errors['recaptcha'] = 'Invalid response: '.join(", ", $resp->getErrorCodes());
-                }
-            }
-
-            $user->roles = array('ROLE_USER');
-            $ds->prepareValidateEntity($user, array('auth', 'username', 'shortname',
-                'email'), $post);
-            if ($ds->queryOne('\App\Entity\User', $user->username)) {
-                $user->errors['username'] = ['Must be unique'];
-            }
-            if ($ds->prepareValidateEntity($user, array(), $post)) {
-                $user->password = '';
-                $user->created_by = $user;
-                $user->created_date = new \DateTime();
-                $ds->commit($user);
-                return $this->redirectToRoute('app_login', array('username' => $user->username));
-            }
-        }
-
-        if ($selected_auth) {
-            $user->auth = $selected_auth->name;
-        }
-
         return $this->render('security/register_form.html.twig', [
                 'auths' => $auths,
         ]);
@@ -161,7 +132,8 @@ class SecurityController extends RenoController
                                     GuardAuthenticatorHandler $guardHandler,
                                     OAuth2GuardAuthenticator $oauth2auth,
                                     FormGuardAuthenticator $formauth,
-                                    Request $request, DataStore $ds, $driver): Response
+                                    SessionInterface $session, Request $request,
+                                    DataStore $ds, $driver): Response
     {
         /** @var AuthDriver $auth */
         $auth = $ds->queryOne('\App\Entity\AuthDriver', ['name' => $driver, 'allow_self_registration' => 1]);
@@ -175,33 +147,33 @@ class SecurityController extends RenoController
             'username' => null,
             'value' => null,
         ];
-        $recaptcha_keys = array(
-            'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
-            'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
-        );
 
         if ($post->has('username')) {
             $credential['username'] = $post->get('username');
             $credential['value'] = $post->get('credential');
         } elseif ($authClass instanceof OAuth2DriverInterface) {
-            $redirect_uri = $request->getUri();
-            if (!($code = $request->query->get('code'))) {
-                return $auth->getClass()->redirectToAuthorize($redirect_uri);
-            }
-            $access_token = $authClass->fetchAccessToken($httpClient, $code, $redirect_uri);
-            if (!$access_token) {
-                $this->addFlash('error', "Unable to authenticate with {$auth->title}. Please try again.");
-                return $this->redirectToRoute('app_register');
+            if (empty($access_token = $session->get("register.${driver}.token"))) {
+                $redirect_uri = $request->getUri();
+                if ($request->query->count() === 0) {
+                    return $authClass->redirectToAuthorize($redirect_uri, $session);
+                }
+                if (!($access_token = $authClass->handleRedirectRequest($request, $session, $httpClient, $redirect_uri))) {
+                    $this->addFlash('error', "Unable to authenticate with {$auth->title}. Please try again.");
+                    return $this->redirectToRoute('app_register');
+                }
+                $session->set("register.${driver}.token", $access_token);
+                return $this->redirectToRoute('app_register_driver', ['driver' => $driver]);
             }
             $user_info = $authClass->fetchUserInfo($httpClient, $access_token);
             $credential['username'] = $user_info['username'];
             $credential['value'] = $user_info['username'];
             $user->setShortname($user_info['username']);
             $user->setEmail($user_info['email']);
-            if ($ds->queryOne('\App\Entity\UserCredential', ['driver_id' => $driver,
-                    'credential_value' => $credential['value']])) {
-                $this->addFlash('error', "You have previously registered using the same {$auth->title} account. Please login instead.");
-                return $this->redirectToRoute('app_register');
+            if (($usercred = $ds->queryOne('\App\Entity\UserCredential', ['driver_id' => $driver,
+                'credential_value' => $credential['value']]))) {
+                $this->addFlash('error', "You have previously registered using the same {$auth->title} account. You have been logged in instead.");
+                $guardHandler->authenticateUserAndHandleSuccess($usercred->getUser(), $request, $oauth2auth, 'main');
+                return $this->redirectToRoute('app_home');
             }
         }
 
@@ -209,6 +181,10 @@ class SecurityController extends RenoController
             $user->errors['username'] = ['Must be unique'];
         }
 
+        $recaptcha_keys = [
+            'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
+            'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
+        ];
         if ($post->get('_action') == 'Proceed to register') {
             if (!empty($recaptcha_keys['secretkey'])) {
                 $recaptcha = new ReCaptcha($recaptcha_keys['secretkey']);

@@ -6,6 +6,8 @@ use MLukman\MultiAuthBundle\Authenticator\Driver\OAuth2DriverInterface;
 use MLukman\MultiAuthBundle\DriverClass;
 use MLukman\MultiAuthBundle\Identity\MultiAuthUserCredentialInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class OAuth2 extends DriverClass implements OAuth2DriverInterface
@@ -64,7 +66,8 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
         return 'OAuth2.0 Provider';
     }
 
-    public function redirectToAuthorize(string $redirect_uri): RedirectResponse
+    public function redirectToAuthorize(string $redirect_uri,
+                                        SessionInterface $session): RedirectResponse
     {
         $params = [];
         $authorize_url = $this->params['authorize_url'];
@@ -73,14 +76,40 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
             $authorize_url = substr($authorize_url, 0, $qpos);
         }
 
-        $params['response_type'] = (!empty($this->params['client_secret']) ?
-            'code' : 'token');
+        $params['response_type'] = (!empty($this->params['client_secret']) && !empty($this->params['token_url'])
+                ? 'code' : 'token');
 
+        if (!$session->isStarted()) {
+            $session->start();
+        }
         return new RedirectResponse($authorize_url."?".http_build_query(array_merge($params, [
                 'client_id' => $this->params['client_id'],
                 'scope' => $this->params['scope'],
                 'redirect_uri' => $redirect_uri,
+                'state' => $session->getId(),
         ])));
+    }
+
+    public function handleRedirectRequest(Request $request,
+                                          SessionInterface $session,
+                                          HttpClientInterface $httpClient,
+                                          string $original_redirect_url): ?string
+    {
+        if (!$session->isStarted()) {
+            $session->start();
+        }
+        if ($request->query->get('state') !== $session->getId()) {
+            // reject state param not matching the one provided to authorize_url
+            return null;
+        }
+        if (!empty($token = $request->query->get('token'))) {
+            // implicit flow
+            return $token;
+        }
+        if (!empty($code = $request->query->get('code'))) {
+            // auth token flow
+            return $this->fetchAccessToken($httpClient, $code, $original_redirect_url);
+        }
     }
 
     public function fetchAccessToken(HttpClientInterface $httpClient,
@@ -101,10 +130,10 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
                         'code' => $code,
                         'redirect_uri' => $redirect_uri,
                     ])), ['headers' => ['Accept' => 'application/json']])->toArray();
+            return $token_response['access_token'] ?? null;
         } catch (\Exception $ex) {
-
+            return null;
         }
-        return $token_response['access_token'] ?? null;
     }
 
     public function fetchUserInfo(HttpClientInterface $httpClient,
@@ -117,18 +146,19 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
                         'Accept' => 'application/json',
                     ]
                 ])->toArray();
+
+            $user_info = [
+                'raw' => $user_response,
+            ];
+            foreach (['username', 'shortname', 'fullname', 'email'] as $field) {
+                $user_info[$field] = $this->params["{$field}_field"] ? ($user_response[$this->params["{$field}_field"]]
+                        ?? null) : null;
+            }
+
+            return $user_info;
         } catch (\Exception $ex) {
-
+            return [];
         }
-
-        $user_info = [];
-        foreach (['username', 'shortname', 'fullname', 'email'] as $field) {
-            $user_info[$field] = $this->params["{$field}_field"] ? ($user_response[$this->params["{$field}_field"]]
-                    ?? null) : null;
-        }
-        $user_info['raw'] = $user_response;
-
-        return $user_info;
     }
 
     public function prepareNewUser(MultiAuthUserCredentialInterface $user_credential)
