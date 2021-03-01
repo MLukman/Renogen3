@@ -79,16 +79,15 @@ class OAuth2GuardAuthenticator extends BaseGuardAuthenticator
         if ($driverClass instanceof OAuth2DriverInterface) {
             $access_token = $driverClass->handleRedirectRequest(
                 $credentials['request'],
-                $this->session,
                 $this->httpClient,
-                $this->getRedirectUri($credentials['driver']));
+                $this->session);
         }
 
         if (empty($access_token)) {
             throw new CustomUserMessageAuthenticationException('Unable to authenticate you via the third party identity provider. Please try again.');
         }
 
-        $oauth2_user = $driverClass->fetchUserInfo($this->httpClient, $access_token);
+        $oauth2_user = $driverClass->fetchUserInfo($access_token, $this->httpClient, $this->session);
         foreach ($this->multiauth->getAdapter()->loadAllUserCredentialsForDriverId($credentials['driver']) as $cred) {
             /** @var UserCredential $cred */
             if ($cred->credential_value == $oauth2_user['username']) {

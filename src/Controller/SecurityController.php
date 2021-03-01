@@ -157,14 +157,14 @@ class SecurityController extends RenoController
                 if ($request->query->count() === 0) {
                     return $authClass->redirectToAuthorize($redirect_uri, $session);
                 }
-                if (!($access_token = $authClass->handleRedirectRequest($request, $session, $httpClient, $redirect_uri))) {
+                if (!($access_token = $authClass->handleRedirectRequest($request, $httpClient, $session))) {
                     $this->addFlash('error', "Unable to authenticate with {$auth->title}. Please try again.");
                     return $this->redirectToRoute('app_register');
                 }
                 $session->set("register.${driver}.token", $access_token);
                 return $this->redirectToRoute('app_register_driver', ['driver' => $driver]);
             }
-            $user_info = $authClass->fetchUserInfo($httpClient, $access_token);
+            $user_info = $authClass->fetchUserInfo($access_token, $httpClient, $session);
             $credential['username'] = $user_info['username'];
             $credential['value'] = $user_info['username'];
             $user->setShortname($user_info['username']);

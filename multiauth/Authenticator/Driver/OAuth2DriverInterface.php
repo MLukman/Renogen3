@@ -14,13 +14,14 @@ interface OAuth2DriverInterface
                                         SessionInterface $session): RedirectResponse;
 
     public function handleRedirectRequest(Request $request,
-                                          SessionInterface $session,
                                           HttpClientInterface $httpClient,
-                                          string $original_redirect_url): ?string;
+                                          SessionInterface $session): ?string;
 
-    public function fetchAccessToken(HttpClientInterface $httpClient,
-                                     string $code, string $redirect_uri): ?string;
+    public function fetchAccessToken(string $code,
+                                     HttpClientInterface $httpClient,
+                                     SessionInterface $session): ?string;
 
-    public function fetchUserInfo(HttpClientInterface $httpClient,
-                                  string $access_token): array;
+    public function fetchUserInfo(string $access_token,
+                                  HttpClientInterface $httpClient,
+                                  SessionInterface $session): array;
 }

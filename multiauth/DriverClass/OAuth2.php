@@ -76,12 +76,22 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
             $authorize_url = substr($authorize_url, 0, $qpos);
         }
 
-        $params['response_type'] = (!empty($this->params['client_secret']) && !empty($this->params['token_url'])
-                ? 'code' : 'token');
-
         if (!$session->isStarted()) {
             $session->start();
         }
+
+        $params['response_type'] = (!empty($this->params['token_url']) ? 'code' : 'token');
+
+        if ($params['response_type'] === 'code' && empty($this->params['client_secret'])) {
+            // use PKCE
+            $session->set($this->getPKCESessionKey(), $code_verifier = bin2hex(random_bytes(64)));
+            $params['code_challenge'] = rtrim(strtr(base64_encode(hash('sha256', $code_verifier, true)), '+/', '-_'), '=');
+            $params['code_challenge_method'] = 'S256';
+        } else {
+            $session->remove($this->getPKCESessionKey());
+        }
+
+        $session->set($this->getSessionKey('redirect_uri'), $redirect_uri);
         return new RedirectResponse($authorize_url."?".http_build_query(array_merge($params, [
                 'client_id' => $this->params['client_id'],
                 'scope' => $this->params['scope'],
@@ -91,9 +101,8 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
     }
 
     public function handleRedirectRequest(Request $request,
-                                          SessionInterface $session,
                                           HttpClientInterface $httpClient,
-                                          string $original_redirect_url): ?string
+                                          SessionInterface $session): ?string
     {
         if (!$session->isStarted()) {
             $session->start();
@@ -108,12 +117,13 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
         }
         if (!empty($code = $request->query->get('code'))) {
             // auth token flow
-            return $this->fetchAccessToken($httpClient, $code, $original_redirect_url);
+            return $this->fetchAccessToken($code, $httpClient, $session);
         }
     }
 
-    public function fetchAccessToken(HttpClientInterface $httpClient,
-                                     string $code, string $redirect_uri): ?string
+    public function fetchAccessToken(string $code,
+                                     HttpClientInterface $httpClient,
+                                     SessionInterface $session): ?string
     {
         try {
             $params = [];
@@ -123,12 +133,18 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
                 $token_url = substr($token_url, 0, $qpos);
             }
 
+            if (($code_verifier = $session->get($this->getPKCESessionKey()))) {
+                $params['code_verifier'] = $code_verifier;
+            }
+            if (!empty($this->params['client_secret'])) {
+                $params['client_secret'] = $this->params['client_secret'];
+            }
+
             $token_response = $httpClient->request('POST', $token_url."?".http_build_query(array_merge($params, [
                         'client_id' => $this->params['client_id'],
-                        'client_secret' => $this->params['client_secret'],
                         'grant_type' => 'authorization_code',
                         'code' => $code,
-                        'redirect_uri' => $redirect_uri,
+                        'redirect_uri' => $session->get($this->getSessionKey('redirect_uri')),
                     ])), ['headers' => ['Accept' => 'application/json']])->toArray();
             return $token_response['access_token'] ?? null;
         } catch (\Exception $ex) {
@@ -136,8 +152,9 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
         }
     }
 
-    public function fetchUserInfo(HttpClientInterface $httpClient,
-                                  string $access_token): array
+    public function fetchUserInfo(string $access_token,
+                                  HttpClientInterface $httpClient,
+                                  SessionInterface $session): array
     {
         try {
             $user_response = $httpClient->request('GET', $this->params['userinfo_url'], [
@@ -169,5 +186,15 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
     public function resetPassword(MultiAuthUserCredentialInterface $user_credential)
     {
         
+    }
+
+    protected function getSessionKey(string $suffix): string
+    {
+        return "multiauth.oauth2.".$this->instance->getId().".".$suffix;
+    }
+
+    protected function getPKCESessionKey()
+    {
+        return $this->getSessionKey('pkce');
     }
 }
