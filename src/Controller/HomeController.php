@@ -147,4 +147,21 @@ class HomeController extends RenoController
         $this->addCrumb('About Renogen', $this->nav->path('app_about'), 'help');
         return $this->render('about.html.twig');
     }
+
+    /**
+     * @Route("/fav/{project}/{value}", name="app_fav", priority=10)
+     */
+    public function fav($project, $value)
+    {
+        $project_obj = $this->ds->fetchProject($project);
+        if (!$project_obj) {
+            throw new NotFoundHttpException('Project not found');
+        }
+        if (!($userProject = $project_obj->userProject($this->ds->currentUserEntity()))) {
+            throw new AccessDeniedException('User does not belong to this project');
+        }
+        $userProject->fav = !empty($value);
+        $this->ds->commit($userProject);
+        return new \Symfony\Component\HttpFoundation\JsonResponse();
+    }
 }
