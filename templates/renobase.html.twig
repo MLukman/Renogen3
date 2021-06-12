@@ -20,6 +20,16 @@
 {% endblock %}
 
 {% block footer %}
+    <script>
+        $(function () {
+        $('.deployment-progress').progress({
+        autoSuccess: false,
+                text: {
+                percent: '{value}'
+                }
+        });
+        });
+    </script>
     <span class="ui grey text">
         All timestamps are in {{ "now"|date('e')|replace({'_':' '}) }} timezone ({{ "now"|date('P') }} from GMT).
         All dates use 'dd/mm/yyyy' format.
@@ -247,6 +257,48 @@
         });
         });
     </script>
+{% endmacro %}
+
+{% macro deploymentItemList(deployment, simple) %}
+    {% set item_count = deployment.items.count() %}
+    {% if item_count > 0 %}
+        {% if not simple %}
+            {{ _self.deploymentProgressBars(deployment, true) }}
+        {% endif %}
+        <table class="ui very compact small sortable purple selectable striped table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in deployment.items %}
+                    <tr>
+                        <td>
+                            <a href="{{nav.entityPath('app_item_view',item)}}" class="ui item" style="display:block">
+                                {{item.displayTitle}}
+                            </a>
+                        </td>
+                        <td class="ui collapsing">
+                            {{item.category}}
+                        </td>
+                        <td class="collapsing" data-sort-value="{{ item.deployment.project.item_statuses[item.status].sequence|default(0) }}">
+                            <i class="ui {{item.statusIcon}} icon"></i>{{item.status}}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="meta">
+            <div class="ui basic segment">
+                <i class="ui warning sign icon"></i>
+                This deployment has no deployment item
+            </div>
+        </div>
+    {% endif %}
 {% endmacro %}
 
 {% macro bytesToSize(bytes) %}{% apply spaceless %}

@@ -2,10 +2,20 @@
 
 {% block content %}
     <div class="ui top attached tabular secondary pointing menu">
-        <div class="active item" data-tab="projects">
+        {% if upcoming_deployments_hierarchy %}
+            <div class="active item" data-tab="deployments">
+                <h2 class="ui header">
+                    <span>
+                        <i class="ui calendar check o icon"></i> <span class="hide-on-mobile">Active Deployments</span>
+                        <span class="ui circular large label">{{upcoming_deployments|length}}</span>
+                    </span>
+                </h2>
+            </div>
+        {% endif %}
+        <div class="{% if not upcoming_deployments_hierarchy %}active{% endif %} item" data-tab="projects">
             <h2 class="ui header">
                 <span>
-                    <i class="ui cube icon hide-on-mobile"></i> Projects
+                    <i class="ui cube icon"></i> <span class="hide-on-mobile">Projects</span>
                     <span class="ui circular large label">{{projects_with_access|length}}</span>
                 </span>
             </h2>
@@ -14,7 +24,7 @@
             <div class="item" data-tab="actions">
                 <h2 class="ui header">
                     <span>
-                        <i class="ui warning icon hide-on-mobile"></i> Actions <span class="hide-on-mobile">Needed</span>
+                        <i class="ui warning icon"></i> <span class="hide-on-mobile">Actions Needed</span>
                         <span class="ui circular large label">{{need_actions|length}}</span>
                     </span>
                 </h2>
@@ -22,7 +32,67 @@
         {% endif %}
     </div>
 
-    <div class="ui tab basic segment active" data-tab="projects">
+    {% if upcoming_deployments_hierarchy %}
+        {% set now = 'now'|date('U') %}
+        <div class="ui tab basic segment active" data-tab="deployments">
+            <table class="ui very basic table">
+                <tbody>
+                    {% for dd,do in upcoming_deployments_hierarchy %}
+                        {% for dt,do2 in do %}
+                            <tr>
+                                <td class="ui top aligned collapsing{% if dt <= now %} blink{% endif %}">
+                                    <h3>
+                                        {{ dd|date('d/m/Y') }}
+                                        {{ dt|date('h:i A') }}
+                                    </h3>
+                                    {% if dt > now %}
+                                        {% set difference = date(dt).diff(date(now)) %}
+                                        <div>
+                                            {% if difference.days > 0 %}
+                                                <strong>{{ difference.days }}</strong> day{% if difference.days > 1 %}s{% endif %}
+                                            {% endif %}
+                                            {% if difference.h > 0 %}
+                                                <strong>{{ difference.h }}</strong> hour{% if difference.h > 1 %}s{% endif %}
+                                            {% endif %}
+                                            {% if difference.i > 0 %}
+                                                <strong>{{ difference.i }}</strong> minute{% if difference.i > 1 %}s{% endif %}
+                                            {% endif %}
+                                            left
+                                        </div>
+                                    {% else %}
+                                        <strong>In progress</strong>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for deployment in do2 %}
+                                        <div class="ui red fluid card">
+                                            <div class="content">
+                                                <div class="ui header">
+                                                    <span>
+                                                        {{_self.crumb_project(deployment.project, true)}}
+                                                    </span>
+                                                    &raquo;
+                                                    <span>
+                                                        <i class="calendar check o icon"></i>
+                                                        <a href="{{nav.entityPath('app_deployment_view',deployment)}}">
+                                                            {{ deployment.title }}
+                                                        </a>
+                                                    </span>
+                                                </div>
+                                                {{ _self.deploymentItemList(deployment) }}
+                                            </div>
+                                        </div>
+                                    {%  endfor %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <div class="ui tab basic segment {% if not upcoming_deployments_hierarchy %}active{% endif %}" data-tab="projects">
         {% if projects_with_access|length > 0 %}
             <table class="ui large padded striped sortable purple fluid selectable table">
                 <thead>
@@ -102,7 +172,7 @@
                             onRate: function (value) {
                                 $(this).parent('td').data().sortValue = value;
                                 var url = {{ nav.url('app_fav', {'project':'_PROJECT_', 'value':'_VALUE_'} ) | json_encode | raw }};
-                                url = url.replace('_PROJECT_', $(this).attr('data-project'));
+                                        url = url.replace('_PROJECT_', $(this).attr('data-project'));
                                 url = url.replace('_VALUE_', value);
                                 $.ajax(url);
                                 //console.log(url);
@@ -149,7 +219,7 @@
     </div>
     {% if need_actions %}
         <div class="ui tab basic segment" data-tab="actions">
-            <div class="ui three raised cards yellow">
+            <div class="ui raised cards yellow">
                 {% for d in need_actions %}
                     <div class="ui fluid card" style="background-color: #ffffcc">
                         <div class="ui content">
