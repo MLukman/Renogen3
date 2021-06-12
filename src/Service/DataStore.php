@@ -404,8 +404,9 @@ class DataStore
      * @param ParameterBag $data
      * @return boolean
      */
-    public function prepareValidateEntity(Entity &$entity, Array $fields,
-                                          ParameterBag $data): bool
+    public function prepareValidateEntity(Entity &$entity, array $fields,
+                                          ParameterBag $data,
+                                          array $only_validate_fields = null): bool
     {
         foreach ($fields as $field) {
             if (!$data->has($field)) {
@@ -429,12 +430,17 @@ class DataStore
                 $entity->$field = $field_value;
             }
         }
-        return $this->validateEntity($entity);
+        return $this->validateEntity($entity, $only_validate_fields);
     }
 
-    public function validateEntity(Entity &$entity): bool
+    public function validateEntity(Entity &$entity,
+                                   array $only_validate_fields = null): bool
     {
-        $entity->errors = $this->validator->validate($entity, $entity::getValidationRules(), $entity->errors);
+        $validation_rules = $entity::getValidationRules();
+        if (!empty($only_validate_fields)) {
+            $validation_rules = array_intersect_key($validation_rules, array_fill_keys($only_validate_fields, true));
+        }
+        $entity->errors = $this->validator->validate($entity, $validation_rules, $entity->errors);
         return empty($entity->errors);
     }
 

@@ -39,7 +39,7 @@ class UserCredential extends Entity implements MultiAuthUserCredentialInterface
         return [];
     }
 
-    public function getCredentialValue(): string
+    public function getCredentialValue(): ?string
     {
         return $this->credential_value;
     }

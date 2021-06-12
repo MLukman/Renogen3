@@ -148,10 +148,9 @@ class SecurityController extends RenoController
             'value' => null,
         ];
 
-        if ($post->has('username')) {
-            $credential['username'] = $post->get('username');
-            $credential['value'] = $post->get('credential');
-        } elseif ($authClass instanceof OAuth2DriverInterface) {
+        $credential['username'] = $post->get('username');
+        $credential['value'] = $post->get('credential');
+        if ($authClass instanceof OAuth2DriverInterface) {
             if (empty($access_token = $session->get("register.${driver}.token"))) {
                 $redirect_uri = $request->getUri();
                 if ($request->query->count() === 0) {
@@ -165,7 +164,6 @@ class SecurityController extends RenoController
                 return $this->redirectToRoute('app_register_driver', ['driver' => $driver]);
             }
             $user_info = $authClass->fetchUserInfo($access_token, $httpClient, $session);
-            $credential['username'] = $user_info['username'];
             $credential['value'] = $user_info['username'];
             $user->setShortname($user_info['username']);
             $user->setEmail($user_info['email']);
@@ -177,14 +175,11 @@ class SecurityController extends RenoController
             }
         }
 
-        if ($credential['username'] && $ds->queryOne('\App\Entity\User', $credential['username'])) {
-            $user->errors['username'] = ['Must be unique'];
-        }
-
         $recaptcha_keys = [
             'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
             'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
         ];
+
         if ($post->get('_action') == 'Proceed to register') {
             if (!empty($recaptcha_keys['secretkey'])) {
                 $recaptcha = new ReCaptcha($recaptcha_keys['secretkey']);
@@ -194,10 +189,16 @@ class SecurityController extends RenoController
                 }
             }
 
+            if (empty($credential['value'])) {
+                $user->errors['credential'] = 'Required';
+            }
+
+            // need to set roles first otherwise validate entity will error
             $user->roles = array('ROLE_USER');
-            $ds->prepareValidateEntity($user, array('username', 'shortname',
-                'email'), $post);
-            if ($ds->prepareValidateEntity($user, array(), $post)) {
+
+            // validate entity
+            if ($ds->prepareValidateEntity($user, ['username', 'shortname',
+                    'email'], $post)) {
                 $user->password = '';
                 $user->created_by = $user;
                 $user->created_date = new \DateTime();
@@ -206,22 +207,26 @@ class SecurityController extends RenoController
                 $usercred->setUser($user);
                 $usercred->setDriverId($driver);
                 if ($authClass instanceof FormDriverInterface) {
-                    $credential['value'] = $formauth->encodePasswordUsingDriver($authClass, $user, $credential['value']);
+                    $usercred->setCredentialValue(
+                        $formauth->encodePasswordUsingDriver($authClass, $user, $credential['value']
+                                    ?? ''));
+                } else {
+                    $usercred->setCredentialValue($credential['value']);
                 }
-                $usercred->setCredentialValue($credential['value']);
                 $ds->commit($usercred);
 
                 if ($authClass instanceof OAuth2DriverInterface) {
                     $guardHandler->authenticateUserAndHandleSuccess($user, $request, $oauth2auth, 'main');
                     return $this->redirectToRoute('app_home');
                 }
-                return $this->redirectToRoute('app_login', array('username' => $user->username));
+                return $this->redirectToRoute('app_login', ['username' => $user->username]);
             }
         }
 
         $this->title = 'Register';
         return $this->render('security/register_form.html.twig', [
                 'auth' => $auth,
+                'requirePassword' => $authClass->canResetPassword(),
                 'credential' => $credential,
                 'user' => $user,
                 'errors' => $user->errors,

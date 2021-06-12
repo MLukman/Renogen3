@@ -15,6 +15,7 @@
     {% if errors|default(false) %}
         <div class="ui error message">
             Your input requires your further attention. Please inspect any messages below.
+            <!-- {{ errors | json_encode }} -->
         </div>
     {% endif %}
 
@@ -48,7 +49,7 @@
                 <div class="ui field">
                     <input type="submit" class="ui submit primary button" name="_action" value="Next Step" />
                 </div>
-            {% elseif credential['username'] is empty or credential['value'] is empty or errors['username'] is defined %}
+            {% else %}
                 <input type="hidden" name="driver" value="{{auth.name}}" />
                 {% if auth.registration_explanation %}
                     <div class="ui basic field segment">
@@ -61,7 +62,7 @@
                     <input placeholder="User name (max 25 alphanumeric, underscores, dashes and dots only, and must start with an alphanumerical character)" type="text" name="username" value="{{credential['username']|default(null)}}" />
                     {{ _self.fieldError(errors|default([]), 'username') }}
                 </div>
-                {% if credential['value'] is empty %}
+                {% if requirePassword %}
                     <div class="ui required field basic segment">
                         <label class="ui top attached large label">Password</label>
                         <div class="ui action input">
@@ -81,13 +82,7 @@
                 {% else %}
                     <input type="hidden" name="credential" value="{{credential['value']}}" />
                 {% endif %}
-                <div class="ui field">
-                    <input type="submit" class="ui submit primary button" name="_action" value="Next Step" />
-                </div>
-            {% else %}
                 <input type="hidden" name="driver" value="{{auth.name}}" />
-                <input type="hidden" name="username" value="{{credential['username']}}" />
-                <input type="hidden" name="credential" value="{{credential['value']}}" />
                 <div class="ui field required basic segment">
                     <label class="ui top attached large label">Short Name</label>
                     <input placeholder="Short name (max 100 characters)" type="text" name="shortname" value="{{user.shortname|default(null)}}" />

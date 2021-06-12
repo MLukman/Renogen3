@@ -29,11 +29,10 @@ class DoctrineValidator
             }
             $value = $entity->$field;
             $errors[$field] = (isset($errors[$field]) ? $errors[$field] : []) + static::validateValue($value, $rules);
-            $entity->$field = $value;
 
             // validation: unique
-            if (!empty($entity->$field) && isset($rules['unique']) && $rules['unique']) {
-                $criteria = Criteria::create()->where(new Comparison($field, '=', $entity->$field));
+            if (!empty($value) && isset($rules['unique']) && $rules['unique']) {
+                $criteria = Criteria::create()->where(new Comparison($field, '=', $value));
                 if (is_string($rules['unique'])) {
                     // require uniqueness among all records with same value of a particular column
                     $rules['unique'] = array($rules['unique']);
@@ -70,7 +69,7 @@ class DoctrineValidator
             }
 
             // validation: callback
-            if (!empty($entity->$field) && isset($rules['callbacks']) && is_array($rules['callbacks'])) {
+            if (!empty($value) && isset($rules['callbacks']) && is_array($rules['callbacks'])) {
                 foreach ($rules['callbacks'] as $callback) {
                     try {
                         $callback($entity);

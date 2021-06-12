@@ -50,6 +50,12 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
         return [
             ['authorize_url', 'Authorize URL *', 'The OAuth2.0 provider authorize URL (e.g. login page)'],
             ['token_url', 'Token URL', 'The OAuth2.0 provider token exchange URL (code -> access token)'],
+            ['token_params_method', 'Token Parameters Method', 'Method for sending parameters of token_url',
+                [
+                    'form_urlencoded' => 'URL-Encoded Form',
+                    'query_params' => 'Query Parameters (a.k.a GET Parameters)',
+                    'json_body' => 'JSON Body',
+                ]],
             ['userinfo_url', 'Userinfo URL *', 'The OAuth2.0 provider get user info URL'],
             ['client_id', 'Client Id *', 'Client Id'],
             ['client_secret', 'Client Secret', 'Client Secret'],
@@ -140,12 +146,28 @@ class OAuth2 extends DriverClass implements OAuth2DriverInterface
                 $params['client_secret'] = $this->params['client_secret'];
             }
 
-            $token_response = $httpClient->request('POST', $token_url."?".http_build_query(array_merge($params, [
-                        'client_id' => $this->params['client_id'],
-                        'grant_type' => 'authorization_code',
-                        'code' => $code,
-                        'redirect_uri' => $session->get($this->getSessionKey('redirect_uri')),
-                    ])), ['headers' => ['Accept' => 'application/json']])->toArray();
+            $params = array_merge($params, [
+                'client_id' => $this->params['client_id'],
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'redirect_uri' => $session->get($this->getSessionKey('redirect_uri')),
+            ]);
+            $request_configs = ['headers' => ['Accept' => 'application/json']];
+
+            switch ($this->params['token_params_method']) {
+                case 'query_params':
+                    $token_url = $token_url."?".http_build_query($params);
+                    break;
+                case 'json_body':
+                    $request_configs['body'] = json_encode($params);
+                    break;
+                case 'form_urlencoded':
+                default:
+                    $request_configs['body'] = http_build_query($params);
+                    break;
+            }
+
+            $token_response = $httpClient->request('POST', $token_url, $request_configs)->toArray();
             return $token_response['access_token'] ?? null;
         } catch (\Exception $ex) {
             return null;
