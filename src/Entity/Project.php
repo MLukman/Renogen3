@@ -331,11 +331,17 @@ class Project extends Entity
 
     public function getUserAccess($username)
     {
+        $up = $this->userProject($username);
+        return ($up ? $up->role : null);
+    }
+
+    public function userProject($username)
+    {
         if ($username instanceof User) {
             $username = $username->username;
         }
         return ($this->userProjects->containsKey($username) ?
-            $this->userProjects->get($username)->role : null);
+            $this->userProjects->get($username) : null);
     }
 
     public function isUsernameAllowed($username, $attr = 'view')

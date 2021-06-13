@@ -27,6 +27,8 @@ class HomeController extends RenoController
         }
 
         $contexts = array(
+            'upcoming_deployments' => array(),
+            'upcoming_deployments_hierarchy' => array(),
             'projects_with_access' => array(),
             'projects_no_access' => array(),
             'need_actions' => array(),
@@ -53,6 +55,19 @@ class HomeController extends RenoController
                 }
             }
             foreach ($project->upcoming() as $deployment) {
+                $ddate = clone $deployment->execute_date;
+                $ddate->setTime(0, 0);
+                if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()])) {
+                    $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()]
+                        = array();
+                }
+                if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()])) {
+                    $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()]
+                        = array();
+                }
+                $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()][]
+                    = $deployment;
+                $contexts['upcoming_deployments'][] = $deployment;
                 $d = array(
                     'deployment' => $deployment,
                     'items' => array(),
@@ -116,10 +131,25 @@ class HomeController extends RenoController
             }
         }
 
+        /** SORTING * */
         if (!empty($need_actions)) {
             ksort($need_actions);
             $contexts['need_actions'] = $need_actions;
         }
+        // sort deployments by key = execute_date
+        foreach ($contexts['upcoming_deployments_hierarchy'] as &$deployment_dates) {
+            ksort($deployment_dates);
+        }
+        ksort($contexts['upcoming_deployments_hierarchy']);
+        // sort projects by favorite flags and then by titles
+        usort($contexts['projects_with_access'], function($b, $a) {
+            $a_fav = $a->userProject($this->ds->currentUserEntity())->fav;
+            $b_fav = $b->userProject($this->ds->currentUserEntity())->fav;
+            if ($a_fav == $b_fav) {
+                return strcmp($b->title, $a->title);
+            }
+            return $a_fav - $b_fav;
+        });
 
         return $this->render('home.html.twig', $contexts);
     }
@@ -146,5 +176,22 @@ class HomeController extends RenoController
         $this->title = 'About';
         $this->addCrumb('About Renogen', $this->nav->path('app_about'), 'help');
         return $this->render('about.html.twig');
+    }
+
+    /**
+     * @Route("/fav/{project}/{value}", name="app_fav", priority=10)
+     */
+    public function fav($project, $value)
+    {
+        $project_obj = $this->ds->fetchProject($project);
+        if (!$project_obj) {
+            throw new NotFoundHttpException('Project not found');
+        }
+        if (!($userProject = $project_obj->userProject($this->ds->currentUserEntity()))) {
+            throw new AccessDeniedException('User does not belong to this project');
+        }
+        $userProject->fav = !empty($value);
+        $this->ds->commit($userProject);
+        return new \Symfony\Component\HttpFoundation\JsonResponse();
     }
 }

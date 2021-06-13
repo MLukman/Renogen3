@@ -46,7 +46,8 @@
         <div class="active item" data-tab="upcoming">
             <h2 class="ui header">
                 <span>
-                    <i class="ui clock outline icon hide-on-mobile"></i>Upcoming <span class="hide-on-mobile">Deployments <span class="ui circular large label">{{ project.upcoming().count() }}</span></span> 
+                    <i class="ui clock outline icon"></i><span class="hide-on-mobile">Upcoming Deployments</span>
+                    <span class="ui circular large label">{{ project.upcoming().count() }}</span> 
                 </span>
             </h2>
         </div>
@@ -54,7 +55,8 @@
             <div class="item" data-tab="requests">
                 <h2 class="ui header">
                     <span>
-                        <i class="ui calendar plus outline icon hide-on-mobile"></i><span class="hide-on-mobile">Deployment</span> Requests <span class="ui circular large label hide-on-mobile">{{ project.upcomingDeploymentRequests().count() }}</span>
+                        <i class="ui calendar plus outline icon"></i><span class="hide-on-mobile">Deployment Requests</span>
+                        <span class="ui circular large label">{{ project.upcomingDeploymentRequests().count() }}</span>
                     </span>
                 </h2>
             </div>
@@ -63,7 +65,7 @@
             <div class="item" data-tab="past">
                 <h2 class="ui header">
                     <span>
-                        <i class="ui history icon hide-on-mobile"></i>Past <span class="hide-on-mobile">Deployments</span> 
+                        <i class="ui history icon"></i><span class="hide-on-mobile">Past Deployments</span> 
                     </span>
                 </h2>
             </div>
@@ -177,7 +179,7 @@
         {% for deployment in deployments %}
             <div class="ui purple card">
                 <div class="content">
-                    <a class="ui header" href="{{nav.entityPath('app_deployment_view',deployment)}}">
+                    <a class="ui header" href="{{nav.entityPath('app_deployment_view',deployment)}}" title="{{ deployment.description }}">
                         <span class="ui right floated{% if deployment.isRunning() %} blink{% endif %}">
                             {{ _self.displayDateTime(deployment.execute_date) }}
                         </span>
@@ -186,60 +188,7 @@
                             {{ deployment.title }}
                         </div>
                     </a>
-                    {#% if deployment.description %}
-                        <div class="ui description">
-                            {{deployment.description|nl2br}}
-                        </div>
-                    {% endif %#}
-                    {% set item_count = deployment.items.count() %}
-                    {% if item_count > 0 %}
-                        {% if not simple %}
-                            {{ _self.deploymentProgressBars(deployment, true) }}
-                        {% endif %}
-                        <table class="ui very compact small sortable purple selectable striped table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Category</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in deployment.items %}
-                                    <tr>
-                                        <td>
-                                            <a href="{{nav.entityPath('app_item_view',item)}}" class="ui item" style="display:block">
-                                                {{item.displayTitle}}
-                                            </a>
-                                        </td>
-                                        <td class="ui collapsing">
-                                            {{item.category}}
-                                        </td>
-                                        <td class="collapsing" data-sort-value="{{ item.deployment.project.item_statuses[item.status].sequence|default(0) }}">
-                                            <i class="ui {{item.statusIcon}} icon"></i>{{item.status}}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <div class="meta">
-                            <div class="ui basic segment">
-                                <i class="ui warning sign icon"></i>
-                                This deployment has no deployment item
-                            </div>
-                        </div>
-                    {% endif %}
-                    <script>
-                        $(function () {
-                            $('.deployment-progress').progress({
-                                autoSuccess: false,
-                                text: {
-                                    percent: '{value}'
-                                }
-                            });
-                        });
-                    </script>
+                    {{ _self.deploymentItemList(deployment, simple) }}
                 </div>
             </div>
         {% endfor %}

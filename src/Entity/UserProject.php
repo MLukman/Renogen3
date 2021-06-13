@@ -29,6 +29,11 @@ class UserProject extends Entity
      */
     public $role;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    public $fav = 0;
+
     public function __construct(Project $project, User $user)
     {
         $this->project = $project;
