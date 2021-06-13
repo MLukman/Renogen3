@@ -420,4 +420,9 @@ class Project extends Entity
     {
         return $this->deployments->count() == 0;
     }
+
+    public function starCount(): int
+    {
+        return $this->userProjects->matching(Criteria::create()->where(Criteria::expr()->gt('fav', 0)))->count();
+    }
 }

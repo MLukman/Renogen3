@@ -4,7 +4,10 @@ namespace App\Controller;
 
 use App\Base\RenoController;
 use App\Entity\Project;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class HomeController extends RenoController
 {
@@ -44,6 +47,16 @@ class HomeController extends RenoController
                 $contexts['projects_no_access'][] = $project;
             }
         }
+
+        // sort projects by favorite flags and then by titles
+        usort($contexts['projects_with_access'], function($b, $a) {
+            $a_fav = $a->userProject($this->ds->currentUserEntity())->fav;
+            $b_fav = $b->userProject($this->ds->currentUserEntity())->fav;
+            if ($a_fav == $b_fav) {
+                return strcmp($b->title, $a->title);
+            }
+            return $a_fav - $b_fav;
+        });
 
         // Need actions
         $need_actions = array();
@@ -141,15 +154,6 @@ class HomeController extends RenoController
             ksort($deployment_dates);
         }
         ksort($contexts['upcoming_deployments_hierarchy']);
-        // sort projects by favorite flags and then by titles
-        usort($contexts['projects_with_access'], function($b, $a) {
-            $a_fav = $a->userProject($this->ds->currentUserEntity())->fav;
-            $b_fav = $b->userProject($this->ds->currentUserEntity())->fav;
-            if ($a_fav == $b_fav) {
-                return strcmp($b->title, $a->title);
-            }
-            return $a_fav - $b_fav;
-        });
 
         return $this->render('home.html.twig', $contexts);
     }
@@ -179,7 +183,7 @@ class HomeController extends RenoController
     }
 
     /**
-     * @Route("/fav/{project}/{value}", name="app_fav", priority=10)
+     * @Route("/$fav/{project}/{value}", name="app_fav", priority=10)
      */
     public function fav($project, $value)
     {
@@ -192,6 +196,7 @@ class HomeController extends RenoController
         }
         $userProject->fav = !empty($value);
         $this->ds->commit($userProject);
-        return new \Symfony\Component\HttpFoundation\JsonResponse();
+        $this->ds->reloadEntity($project_obj);
+        return new JsonResponse($project_obj->starCount());
     }
 }

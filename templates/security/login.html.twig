@@ -18,7 +18,7 @@
             <a style="display: block; padding: 1em 0;" href="{{ path('app_home') }}">
                 <img src="{{ nav.basePath }}{{ controller.appLogo }}" />
             </a>
-            <form action="{{ path('app_login') }}" method="post">
+            <form action="{{ path('app_login') }}" method="post" onsubmit="javascript:$('#login_button').prop('disabled', true);">
                 <div class="ui form">
                     {% if message|default(null) %}
                         {% if message.negative %}
@@ -45,7 +45,7 @@
                         <div class="field center aligned">
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
                             <input type="hidden" name="last_page" value="{{ last_page }}" />
-                            <button class="ui big black button" type="submit"><i class="ui unlock icon"></i> Login</button>
+                            <button id="login_button" class="ui big black button" type="submit"><i class="ui unlock icon"></i> Login</button>
                             {% if can_reset_password %}
                                 <div>
                                     <a href="{{ path('app_resetpwd') }}" class="ui orange tertiary button">Forgot username/password?</a>

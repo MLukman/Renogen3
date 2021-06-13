@@ -17,6 +17,27 @@
         <span>
             <i class="ui {{project.icon}} icon" title="Project"></i>{{project.title}}
         </span>
+        {% set isfav = project.userProject(ds.currentUserEntity()).fav|default(0) %}
+        <span class="ui basic circular label">
+            <div class="ui yellow rating favorite-project" data-rating="{{ isfav }}" data-project="{{project.name}}"></div>
+            <span id="star-count">{{ project.starCount() }}</span>
+        </span>
+        <script>
+            $('.ui.favorite-project')
+                    .rating({
+                        clearable: true,
+                        maxRating: 1,
+                        onRate: function (value) {
+                            var url = {{ nav.url('app_fav', {'project':'_PROJECT_', 'value':'_VALUE_'} ) | json_encode | raw }};
+                                    url = url.replace('_PROJECT_', $(this).attr('data-project'));
+                            url = url.replace('_VALUE_', value);
+                            $.ajax(url).done(function (ret) {
+                                $('#star-count').text(ret);
+                            });
+                            //console.log(url);
+                        }
+                    });
+        </script>
         {% if is_project_admin %}
             <div class="ui right floated buttons no-print">
                 <a class="ui button" href="{{nav.entityPath('app_project_edit',project)}}"><i class="ui pencil icon"></i>Edit</a>
