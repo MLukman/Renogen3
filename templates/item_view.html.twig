@@ -144,7 +144,7 @@
                 {% if item.activities|length > 0 %}
                     <thead>
                         <tr>
-                            <th class="ui collapsing">#</th>
+                            <th style="width:3em">#</th>
                             <th>
                                 <a style="float:right" href="#" title="Open all" onclick="activitiesOpenClose(true);
                                         return false"><i class="ui folder open icon"></i></a>
@@ -160,7 +160,7 @@
                     {% for activity in item.activities %}
                         {% set description = activity.template.templateClass(ds).describeActivityAsArray(activity) %}
                         <tr style="position:relative">
-                            <td class="ui top aligned collapsing">{{loop.index}}</td>
+                            <td class="ui top aligned">{{loop.index}}</td>
                             <td class="ui top aligned" style="position:relative; overflow: auto; max-width: inherit;">
                                 <div class="ui fluid activities accordion">
                                     <div class="title active" style="padding:0">

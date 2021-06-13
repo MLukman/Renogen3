@@ -46,6 +46,11 @@
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
                             <input type="hidden" name="last_page" value="{{ last_page }}" />
                             <button class="ui big black button" type="submit"><i class="ui unlock icon"></i> Login</button>
+                            {% if can_reset_password %}
+                                <div>
+                                    <a href="{{ path('app_resetpwd') }}" class="ui orange tertiary button">Forgot username/password?</a>
+                                </div>
+                            {% endif %}
                             {% if self_register and not last_username %}
                                 <div class="ui horizontal divider">
                                     Or

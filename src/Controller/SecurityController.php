@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Base\RenoController;
 use App\Entity\User;
 use App\Service\DataStore;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
@@ -19,12 +21,12 @@ class SecurityController extends RenoController
     use TargetPathTrait;
 
     /**
-     * @Route("/login/{username}", name="app_login", priority=10)
+     * @Route("/login/{reset_code}", name="app_login", priority=10)
      */
     public function login(AuthenticationUtils $authenticationUtils,
                           DataStore $ds, SessionInterface $session,
                           UserPasswordEncoderInterface $passwordEncoder,
-                          Request $request, $username = null): Response
+                          Request $request, $reset_code = null): Response
     {
         $this->title = 'Login';
         if ($this->getUser()) {
@@ -43,17 +45,29 @@ class SecurityController extends RenoController
             $user->password = '';
             $user->created_by = $user;
             $user->created_date = new \DateTime();
+            $this->updateResetCode($user);
             $ds->commit($user);
-            return $this->redirectToRoute('app_login', array('username' => $user->username));
+            return $this->redirectToRoute('app_login', array('reset_code' => $user->reset_code));
         }
 
         $message = array();
+        $username = '';
         if (($error = $authenticationUtils->getLastAuthenticationError())) {
             $message['text'] = $error->getMessage();
             $message['negative'] = true;
-        } elseif (!empty($username)) {
-            $message['text'] = 'You have been successfully registered. Please login now to set your password.';
-            $message['negative'] = false;
+        } elseif (!empty($reset_code) && $request->request->count() == 0) {
+            $reset_user = $ds->queryOne('\App\Entity\User', ['reset_code' => $reset_code]);
+            if ($reset_user) {
+                $username = $reset_user->username;
+                $reset_user->setPassword('');
+                $reset_user->setResetCode('');
+                $ds->commit($reset_user);
+                $message['text'] = 'Please login now to set your password.';
+                $message['negative'] = false;
+            } else {
+                $message['text'] = 'Invalid password reset code';
+                $message['negative'] = true;
+            }
         }
 
         $lastUsername = $authenticationUtils->getLastUsername();
@@ -69,6 +83,7 @@ class SecurityController extends RenoController
                 'bottom_message' => ($usersCount < 2 ? '' : "There are ${usersCount} users who logged in within the last ${count_last} minutes"),
                 'self_register' => (count($ds->queryMany('\App\Entity\AuthDriver', array(
                         'allow_self_registration' => 1))) > 0),
+                'can_reset_password' => $this->canResetPassword(),
         ]);
     }
 
@@ -133,8 +148,9 @@ class SecurityController extends RenoController
                 $user->password = '';
                 $user->created_by = $user;
                 $user->created_date = new \DateTime();
+                $this->updateResetCode($user);
                 $ds->commit($user);
-                return $this->redirectToRoute('app_login', array('username' => $user->username));
+                return $this->redirectToRoute('app_login', ['reset_code' => $user->reset_code]);
             }
         }
 
@@ -149,5 +165,78 @@ class SecurityController extends RenoController
                 'errors' => $user->errors,
                 'recaptcha' => $recaptcha_keys,
         ]);
+    }
+
+    /**
+     * @Route("/login/resetpwd/", name="app_resetpwd", priority=100)
+     */
+    public function resetpwd(Request $request, MailerInterface $mailer)
+    {
+        if (!$this->canResetPassword()) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $recaptcha_keys = array(
+            'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
+            'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
+        );
+
+        $post = $request->request;
+        $errors = [];
+        $reset_email = '';
+        if ($post->count() > 0) {
+            if (!empty($recaptcha_keys['secretkey'])) {
+                $recaptcha = new \ReCaptcha\ReCaptcha($recaptcha_keys['secretkey']);
+                $resp = $recaptcha->verify($post->get('g-recaptcha-response'));
+                if (!$resp->isSuccess()) {
+                    $errors['recaptcha'] = 'Invalid response: '.join(", ", $resp->getErrorCodes());
+                }
+            }
+            if (empty($post->get('email'))) {
+                $errors['email'] = 'Required';
+            } else {
+                $reset_email = $post->get('email');
+                $reset_user = $this->ds->queryOne('\\App\\Entity\\User', ['email' => $reset_email]);
+                if (!$reset_user) {
+                    $errors['email'] = 'Not found';
+                }
+            }
+
+            if (empty($errors)) {
+                $this->updateResetCode($reset_user);
+                $this->ds->commit($reset_user);
+                $reset_url = $this->nav->url('app_login', ['reset_code' => $reset_user->reset_code]);
+                $email = (new TemplatedEmail())
+                    ->from('tm.unifi.dev@gmail.com')
+                    ->to($reset_email)
+                    ->subject("Hello {$reset_user->shortname}! It seems that you forgot your Renogen's password?")
+                    ->htmlTemplate('security/resetpwd_email.html.twig')
+                    ->context([
+                    'reset_user' => $reset_user,
+                    'reset_url' => $reset_url,
+                ]);
+                $mailer->send($email);
+                return $this->renderMessagePage(
+                        "Reset password link has been emailed!",
+                        "Renogen has sent you an email with the link to reset your password.\nPlease check you email inbox.",
+                );
+            }
+        }
+
+        return $this->render('security/resetpwd_form.html.twig', [
+                'email' => $reset_email,
+                'errors' => $errors,
+                'recaptcha' => $recaptcha_keys,
+        ]);
+    }
+
+    private function canResetPassword()
+    {
+        return !empty($_ENV['MAILER_DSN']);
+    }
+
+    private function updateResetCode(User $user)
+    {
+        $user->setResetCode(md5($user->getEmail().':'.time()));
     }
 }

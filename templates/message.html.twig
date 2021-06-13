@@ -1,0 +1,20 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <div class="ui basic segment">
+
+        <h1 class="ui header">
+            <i class="ui info circle icon"></i>
+            {{message.title}}
+        </h1>
+
+        <div class="ui error large message">
+            {{message.text|nl2br}}
+        </div>
+
+        {% if button.text %}
+            <a href="{{ button.link }}" class="ui primary button">{{ button.text }}</a>
+        {% endif %}
+
+    </div>
+{% endblock %}

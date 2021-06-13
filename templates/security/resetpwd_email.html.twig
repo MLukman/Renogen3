@@ -1,0 +1,14 @@
+<h1>Hello {{ reset_user.shortname }}!</h1>
+
+<p>
+    It seems that you forgot your username/password.
+</p>
+
+<p>
+    Worry not! Your username is <code>{{ reset_user.username }}</code>.
+</p>
+
+<p>
+    To reset your password, however, you need to go to this page @ 
+    <a href="{{ reset_url }}">{{ reset_url }}</a>.
+</p>

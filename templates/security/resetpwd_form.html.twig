@@ -1,0 +1,39 @@
+{% extends "renobase.html.twig" %}
+
+{% block head %}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %}
+
+{% block content %}
+    <h1 class="ui header">
+        <span>
+            <i class="ui user icon"></i>
+            Reset password
+        </span>
+    </h1>
+
+    {% if errors|default(false) %}
+        <div class="ui error message">
+            Your input requires your further attention. Please inspect any messages below.
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="ui form">
+            <div class="ui required field basic segment">
+                <label class="ui top attached large label">Email</label>
+                <input type="text" name="email" value="{{email|default(null)}}" placeholder="Please enter the email address that you used to register with Renogen"/>
+                {{ _self.fieldError(errors|default([]), 'email') }}
+            </div>
+            {% if recaptcha['sitekey'] %}
+                <div class="ui required field basic segment">
+                    <label class="ui top attached large label">Human Verification</label>
+                    <div class="g-recaptcha" data-sitekey="{{ recaptcha['sitekey'] }}"></div>
+                    {{ _self.fieldError(errors|default([]), 'recaptcha') }}
+                </div>
+            {% endif %}
+            <div class="ui field">
+                <input type="submit" class="ui submit primary button" name="_action" value="Send me a reset password email" />
+            </div>
+    </form>
+{% endblock %}

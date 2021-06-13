@@ -56,6 +56,11 @@ class User extends Entity implements UserInterface
     protected $last_login;
 
     /**
+     * @ORM\Column(type="string", length=32, nullable=true)
+     */
+    protected $reset_code;
+
+    /**
      * @ORM\OneToMany(targetEntity="UserProject", mappedBy="user", orphanRemoval=true)
      * @var ArrayCollection|UserProject[]
      */
@@ -192,6 +197,17 @@ class User extends Entity implements UserInterface
     public function getName()
     {
         return $this->shortname ?: $this->username;
+    }
+
+    public function getResetCode()
+    {
+        return $this->reset_code;
+    }
+
+    public function setResetCode($reset_code)
+    {
+        $this->reset_code = $reset_code;
+        return $this;
     }
 
     public static function getValidationRules(): ?array

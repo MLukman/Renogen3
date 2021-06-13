@@ -101,4 +101,19 @@ abstract class RenoController extends Controller
             throw new AccessDeniedHttpException($message, null, 403);
         }
     }
+
+    protected function renderMessagePage($title, $text, $button_text = '',
+                                         $button_link = 'javascript:window.history.go(-1)')
+    {
+        return $this->render('message.html.twig', [
+                'message' => [
+                    'title' => $title,
+                    'text' => $text,
+                ],
+                'button' => [
+                    'text' => $button_text,
+                    'link' => $button_link,
+                ],
+        ]);
+    }
 }
