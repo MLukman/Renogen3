@@ -12,8 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class DeploymentController extends RenoController
 {
-    const entityFields = array('execute_date', 'title', 'description', 'external_url',
-        'external_url_label');
+    const entityFields = array('execute_date', 'title', 'description', 'duration',
+        'external_url', 'external_url_label');
 
     /**
      * @Route("/{project}/+", name="app_deployment_create", priority=10)

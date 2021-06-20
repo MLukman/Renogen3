@@ -64,11 +64,12 @@
                         <div id="deployment_duration_slider" class="ui labeled ticked slider"></div>
                         <input id="deployment_duration_input" type="hidden" value="{{ project.approx_deployment_duration|abs }}" name="approx_deployment_duration" />
                     </div>
-                    Approximation of how long will a deployment normally be running. This is to determine which deployment is currently running and make it blink. Set 0 to disable this feature.
+                    Approximation of how long will a deployment normally be running. This is to determine which deployment is currently running and make it blink.
                 </div>
                 <script>
                     $(function () {
                         $('#deployment_duration_slider').slider({
+                            min: 1,
                             max: 12,
                             smooth: true,
                             start: {{ project.approx_deployment_duration|abs }},

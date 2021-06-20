@@ -19,7 +19,7 @@
         </span>
         {% set isfav = project.userProject(ds.currentUserEntity()).fav|default(0) %}
         <span class="ui basic circular label">
-            <div class="ui yellow rating favorite-project" data-rating="{{ isfav }}" data-project="{{project.name}}"></div>
+            <div class="ui yellow rating favorite-project" data-rating="{{ isfav }}" data-project="{{project.name}}" title="Favourite Project"></div>
             <span id="star-count">{{ project.starCount() }}</span>
         </span>
         <script>

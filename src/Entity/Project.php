@@ -207,35 +207,37 @@ class Project extends Entity
     public function upcoming()
     {
         return $this->cached('upcoming', function() {
-                return static::filterUpcomingDateOnly($this->deployments, 'execute_date', $this->approx_deployment_duration);
+                return static::filterUpcomingDateOnly($this->deployments, 'execute_date', 'end_date');
             });
     }
 
     /**
      * Filters the provided collection for date_field that has upcoming dates only. Unless $strict is true, it will also fall back to those within same day or even those after yesterday's 6PM if result is empty.
      * @param Selectable $collection The collection to filter from
-     * @param string $date_field The name of the field that contains the date to compare with
-     * @param bool $strict Set true to only filter > now. Default to false, where it will fall back to > 12am today or even > 6pm yesterday
+     * @param string $date_field The name of the field that contains the start date time
+     * @param string $end_date_field The name of the field that contains the end date time
      * @param int $limit Limit to this number of results. Default to 0, which means no limit
      * @return Selectable the filtered collection sorted by the ascending order of the date field
      */
     static public function filterUpcomingDateOnly(Selectable $collection,
-                                                  $date_field, $lookback = 0,
+                                                  $date_field,
+                                                  $end_date_field = null,
                                                   $limit = 0): Selectable
     {
         $compare_dates = [];
-        if ($lookback > 0) {
+        $now = date_create();
+        if (!empty($end_date_field)) {
             // find out if there is ongoing deployment (the latest one between now and previous $lookback hours)
             $ongoing = $collection->matching(Criteria::create()
-                    ->where(new Comparison($date_field, '>=', date_create("- $lookback hours")))
-                    ->andWhere(new Comparison($date_field, '<=', date_create()))
+                    ->where(new Comparison("$end_date_field", '>=', $now))
+                    ->andWhere(new Comparison($date_field, '<=', $now))
                     ->orderBy([$date_field => 'DESC'])
                     ->setMaxResults(1));
             if ($ongoing->count() > 0) {
                 $compare_dates[] = $ongoing->get(0)->execute_date;
             }
         }
-        $compare_dates[] = date_create();
+        $compare_dates[] = $now;
         $upcoming = [];
         foreach ($compare_dates as $compare) {
             $criteria = Criteria::create()

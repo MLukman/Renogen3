@@ -12,8 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class DeploymentRequestController extends RenoController
 {
-    const entityFields = array('execute_date', 'title', 'description', 'external_url',
-        'external_url_label');
+    const entityFields = array('execute_date', 'title', 'description', 'duration',
+        'external_url', 'external_url_label');
 
     /**
      * @Route("/{project}/+request/", name="app_deployment_request_create", priority=10)
@@ -22,7 +22,7 @@ class DeploymentRequestController extends RenoController
     {
         try {
             $project_obj = $this->ds->fetchProject($project);
-            $this->checkAccess(['entry','approval'], $project_obj);
+            $this->checkAccess(['entry', 'approval'], $project_obj);
             $this->addEntityCrumb($project_obj);
             $this->addCreateCrumb('Request for deployment', $this->nav->entityPath('app_deployment_request_create', $project_obj));
             return $this->edit_or_create(new DeploymentRequest($project_obj), $request->request);
@@ -68,6 +68,7 @@ class DeploymentRequestController extends RenoController
             $deployment->title = $deployment_request_obj->title;
             $deployment->execute_date = $deployment_request_obj->execute_date;
             $deployment->description = $deployment_request_obj->description;
+            $deployment->duration = $deployment_request_obj->duration;
             $deployment->external_url = $deployment_request_obj->external_url;
             $deployment->external_url_label = $deployment_request_obj->external_url_label;
             $deployment_request_obj->deployment = $deployment;

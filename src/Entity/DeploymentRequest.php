@@ -44,6 +44,12 @@ class DeploymentRequest extends Entity
     public $execute_date;
 
     /**
+     * How many hours this deployment will take. Will be used to determine if deployment is ongoing.
+     * @ORM\Column(type="integer")
+     */
+    public $duration = 0;
+
+    /**
      * @ORM\Column(type="string", length=30)
      */
     public $status = 'New';
@@ -68,6 +74,7 @@ class DeploymentRequest extends Entity
     public function __construct(Project $project)
     {
         $this->project = $project;
+        $this->duration = $this->project->approx_deployment_duration;
     }
 
     public function getProject(): ?Project

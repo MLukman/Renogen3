@@ -45,7 +45,7 @@ class NavigationFactory
      * @param array $params
      * @return string The url
      */
-    public function url($route, array $params = array(), $anchor = null)
+    public function url($route = 'app_home', array $params = array(), $anchor = null)
     {
         return $this->urlgen->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_URL)
             .($anchor ? "#$anchor" : '');

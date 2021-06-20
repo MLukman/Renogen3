@@ -1,14 +1,15 @@
-<h1>Hello {{ reset_user.shortname }}!</h1>
-
-<p>
-    It seems that you forgot your username/password.
-</p>
-
-<p>
-    Worry not! Your username is <code>{{ reset_user.username }}</code>.
-</p>
-
-<p>
-    To reset your password, however, you need to go to this page @ 
-    <a href="{{ reset_url }}">{{ reset_url }}</a>.
-</p>
+<center>
+    <h1>Hello {{ reset_user.shortname }}!</h1>
+    <h2>
+        It seems that you forgot your username/password to {{ base_url }}.
+    </h2>
+    <h3>
+        Your username is <u>{{ reset_user.username }}</u>.
+    </h3>
+    <h3>
+        As for your password, however, it needs to be reset. Please go to the following URL to do that.
+    </h3>
+    <blockquote style="border: 1px solid silver; border-radius: 5px; padding: 1em; color: #000; background-color: #ffffcc">
+        <a href="{{ reset_url }}">{{ reset_url }}</a>.
+    </blockquote>
+</center>

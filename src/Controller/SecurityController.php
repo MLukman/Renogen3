@@ -207,14 +207,22 @@ class SecurityController extends RenoController
                 $this->ds->commit($reset_user);
                 $reset_url = $this->nav->url('app_login', ['reset_code' => $reset_user->reset_code]);
                 $email = (new TemplatedEmail())
-                    ->from('tm.unifi.dev@gmail.com')
                     ->to($reset_email)
                     ->subject("Hello {$reset_user->shortname}! It seems that you forgot your Renogen's password?")
                     ->htmlTemplate('security/resetpwd_email.html.twig')
+                    ->text("To reset your Renogen password, go to $reset_url.")
                     ->context([
                     'reset_user' => $reset_user,
                     'reset_url' => $reset_url,
+                    'base_url' => $this->nav->url(),
                 ]);
+                if ($_ENV['MAILER_FROM']) {
+                    $mailer_from = $_ENV['MAILER_FROM'];
+                    if (!preg_match('/^([^<]*) <([^>]+)>$/', $mailer_from)) {
+                        $mailer_from = "Renogen <$mailer_from>";
+                    }
+                    $email->from($mailer_from);
+                }
                 $mailer->send($email);
                 return $this->renderMessagePage(
                         "Reset password link has been emailed!",

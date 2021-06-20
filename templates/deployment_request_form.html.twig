@@ -32,6 +32,29 @@
                 <textarea name="description" rows="3">{{deployment_request.description|default(null)}}</textarea>
                 {{ _self.fieldError(errors|default([]), 'description') }}
             </div>
+            <div class="ui field basic segment">
+                <label class="ui top attached large label">Duration</label>
+                <div>
+                    <div class="ui field basic segment">
+                        <div id="deployment_duration_slider" class="ui labeled ticked slider"></div>
+                        <input id="deployment_duration_input" type="hidden" value="{{ deployment_request.duration|abs }}" name="duration" />
+                    </div>
+                    How long (in hours) this deployment will be running.
+                </div>
+                <script>
+                    $(function () {
+                        $('#deployment_duration_slider').slider({
+                            min: 1,
+                            max: 12,
+                            smooth: true,
+                            start: {{ deployment_request.duration|abs }},
+                            onChange: function (v) {
+                                $('#deployment_duration_input').val(v);
+                            }
+                        });
+                    });
+                </script>
+            </div>
             <div class="ui basic segment stackable grid">
                 <div class="ui ten wide column field">
                     <label class="ui top attached large label">External URL</label>

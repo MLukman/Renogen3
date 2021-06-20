@@ -44,6 +44,7 @@
                                     <h3>
                                         {{ dd|date('d/m/Y') }}
                                         {{ dt|date('h:i A') }}
+                                        ({{ dt|date('l') }})
                                     </h3>
                                     {% if dt > now %}
                                         {% set difference = date(dt).diff(date(now)) %}
@@ -71,7 +72,7 @@
                                                     <span>
                                                         {{_self.crumb_project(deployment.project, true)}}
                                                         {% if deployment.project.userProject(ds.currentUserEntity()).fav %}
-                                                            <i class="ui yellow star icon"></i>
+                                                            <i class="ui yellow star icon" style="cursor:auto"></i>
                                                         {% endif %}
                                                     </span>
                                                     &raquo;
@@ -112,7 +113,7 @@
                         <tr>
                             {% set isfav = project.userProject(ds.currentUserEntity()).fav|default(0) %}
                             <td class="ui collapsing" data-sort-value="{{ isfav }}">
-                                <div class="ui yellow rating favorite-project" data-rating="{{ isfav }}" data-project="{{project.name}}"></div>
+                                <div class="ui yellow rating favorite-project" data-rating="{{ isfav }}" data-project="{{project.name}}" title="Favourite Project"></div>
                             </td>
                             <td data-sort-value="{{ project.title }}">
                                 <a href="{{nav.entityPath('app_project_view', project)}}" title="{{project.description}}">

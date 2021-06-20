@@ -54,6 +54,19 @@ class Deployment extends Entity
     public $external_url_label;
 
     /**
+     * How many hours this deployment will take. Will be used to determine if deployment is ongoing.
+     * @ORM\Column(type="integer")
+     */
+    public $duration = 0;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     * @var \DateTime
+     * Will be dynamically calculated when loaded
+     */
+    public $end_date;
+
+    /**
      * @ORM\OneToMany(targetEntity="Item", mappedBy="deployment", indexBy="id", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var ArrayCollection|Item[]
      */
@@ -78,12 +91,12 @@ class Deployment extends Entity
      * @var array
      */
     public $plugin_data = array();
-
     protected $_caches = [];
 
     public function __construct(Project $project)
     {
         $this->project = $project;
+        $this->duration = $this->project->approx_deployment_duration;
         $this->items = new ArrayCollection();
         $this->runitems = new ArrayCollection();
         $this->checklists = new ArrayCollection();
@@ -109,7 +122,8 @@ class Deployment extends Entity
 
     public function isActive()
     {
-        return !$this->project->archived && ($this->execute_date >= date_create(sprintf("-%d hours", $this->project->approx_deployment_duration)));
+        return !$this->project->archived && ($this->execute_date >= date_create(sprintf("-%d hours",
+                    $this->duration ?: $this->project->approx_deployment_duration)));
     }
 
     public function isRunning()
@@ -204,5 +218,12 @@ class Deployment extends Entity
     public function isSafeToDelete(): bool
     {
         return $this->items->count() == 0 && $this->checklists->count() == 0;
+    }
+
+    /** @ORM\PostLoad @ORM\PrePersist @ORM\PreUpdate */
+    public function populateEndDate()
+    {
+        $hour = $this->duration ?: $this->project->approx_deployment_duration;
+        $this->end_date = (clone $this->execute_date)->add(new \DateInterval("PT{$hour}H"));
     }
 }
