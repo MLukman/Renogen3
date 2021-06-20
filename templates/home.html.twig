@@ -175,7 +175,7 @@
                             maxRating: 1,
                             onRate: function (value) {
                                 $(this).parent('td').data().sortValue = value;
-                                var url = {{ nav.url('app_fav', {'project':'_PROJECT_', 'value':'_VALUE_'} ) | json_encode | raw }};
+                                var url = {{ nav.url('app_ajax_fav', {'project':'_PROJECT_', 'value':'_VALUE_'} ) | json_encode | raw }};
                                         url = url.replace('_PROJECT_', $(this).attr('data-project'));
                                 url = url.replace('_VALUE_', value);
                                 $.ajax(url);

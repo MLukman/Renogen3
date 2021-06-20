@@ -4,10 +4,7 @@ namespace App\Controller;
 
 use App\Base\RenoController;
 use App\Entity\Project;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class HomeController extends RenoController
 {
@@ -159,7 +156,7 @@ class HomeController extends RenoController
     }
 
     /**
-     * @Route("/archived", name="app_archived", priority=10)
+     * @Route("/_archived", name="app_archived", priority=10)
      */
     public function archived()
     {
@@ -173,30 +170,12 @@ class HomeController extends RenoController
     }
 
     /**
-     * @Route("/about", name="app_about", priority=10)
+     * @Route("/_about", name="app_about", priority=10)
      */
     public function about()
     {
         $this->title = 'About';
         $this->addCrumb('About Renogen', $this->nav->path('app_about'), 'help');
         return $this->render('about.html.twig');
-    }
-
-    /**
-     * @Route("/$fav/{project}/{value}", name="app_fav", priority=10)
-     */
-    public function fav($project, $value)
-    {
-        $project_obj = $this->ds->fetchProject($project);
-        if (!$project_obj) {
-            throw new NotFoundHttpException('Project not found');
-        }
-        if (!($userProject = $project_obj->userProject($this->ds->currentUserEntity()))) {
-            throw new AccessDeniedException('User does not belong to this project');
-        }
-        $userProject->fav = !empty($value);
-        $this->ds->commit($userProject);
-        $this->ds->reloadEntity($project_obj);
-        return new JsonResponse($project_obj->starCount());
     }
 }

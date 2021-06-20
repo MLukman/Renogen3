@@ -21,7 +21,7 @@ class SecurityController extends RenoController
     use TargetPathTrait;
 
     /**
-     * @Route("/login/{reset_code}", name="app_login", priority=10)
+     * @Route("/_login/{reset_code}", name="app_login", priority=10)
      */
     public function login(AuthenticationUtils $authenticationUtils,
                           DataStore $ds, SessionInterface $session,
@@ -88,7 +88,7 @@ class SecurityController extends RenoController
     }
 
     /**
-     * @Route("/logout", name="app_logout", priority=10)
+     * @Route("/_logout", name="app_logout", priority=10)
      */
     public function logout()
     {
@@ -96,7 +96,7 @@ class SecurityController extends RenoController
     }
 
     /**
-     * @Route("/register", name="app_register", priority=10)
+     * @Route("/_register", name="app_register", priority=10)
      */
     public function register(Request $request, DataStore $ds): Response
     {
@@ -168,7 +168,7 @@ class SecurityController extends RenoController
     }
 
     /**
-     * @Route("/login/resetpwd/", name="app_resetpwd", priority=100)
+     * @Route("/_login/resetpwd/", name="app_resetpwd", priority=100)
      */
     public function resetpwd(Request $request, MailerInterface $mailer)
     {

@@ -408,8 +408,7 @@ class Project extends Entity
     {
         return [
             'name' => Rules::new()->trim()->required()->unique()->maxlen(30)
-                ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z_-]*$/', 'Project name can only contains alphanumeric, dashes and undercores, and it must start with an alphanumerical character')
-                ->invalidvalues(['login', 'admin', 'archived', 'register']),
+                ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z_-]*$/', 'Project name can only contains alphanumeric, dashes and undercores, and it must start with an alphanumerical character'),
             'title' => Rules::new()->trim()->required()->unique()->maxlen(100),
             'categories' => Rules::new()->trim()->required(),
             'modules' => Rules::new()->trim()->required(),
