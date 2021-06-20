@@ -43,7 +43,7 @@
     {% endif %}
 
     {% if class_instance is not defined %}
-        <form method="POST" class="ui basic segment">
+        <form method="POST" class="ui basic segment" onsubmit="javascript:form_disabler(this)">
             <div class="ui form">
                 <div class="ui required field basic segment">
                     <label class="ui top attached large label">Category</label>
@@ -65,7 +65,7 @@
                 </div>
             </div>
         </form>
-        <form method="POST" class="ui basic segment" enctype="multipart/form-data">
+        <form method="POST" class="ui basic segment" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
             <div class="ui form">
                 <div class="ui field basic segment">
                     <label class="ui top attached large label">Import from exported activity template</label>

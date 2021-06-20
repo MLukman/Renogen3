@@ -190,6 +190,11 @@
                 mermaid.initialize({startOnLoad: false});
                 markdownParseMermaid('body');
             });
+
+            function form_disabler(form) {
+                setTimeout(() => $('*[type=submit]', form).attr('disabled', 'disabled'), 0);
+                $(form).submit(() => event.preventDefault());
+            }
         </script>
         {% for js in extra_js|default([]) %}<script src="{{js}}"></script>{% endfor %}
         {% for css in extra_css|default([]) %}<link rel="stylesheet" type="text/css" href="{{css}}" />{% endfor %}

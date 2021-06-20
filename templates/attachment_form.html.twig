@@ -20,7 +20,7 @@
     {% endif %}
     <!-- debug errors: {{errors|default(null)|json_encode}} -->
 
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
         <div class="ui form">
             <div class="ui required field basic segment">
                 <label class="ui top attached large label">Upload File</label>

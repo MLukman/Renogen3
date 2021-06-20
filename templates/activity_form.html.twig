@@ -26,7 +26,7 @@
         </div>
     {% endif %}
 
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
         <div class="ui form">
             {% if activity.template is empty %}
                 <div class="ui required field basic segment">

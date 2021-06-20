@@ -17,7 +17,7 @@
         </div>
     {% endif %}
 
-    <form method="POST">
+    <form method="POST" onsubmit="javascript:form_disabler(this)">
         <div class="ui form">
             <div class="ui field basic segment">
                 <label class="ui top attached large label">Reference Number</label>
@@ -90,7 +90,7 @@
         <h2 class="ui header">Move to another deployment</h2>
         <p>It is possible for a deployment item to be moved to another upcoming deployment.</p>
 
-        <form method="POST">
+        <form method="POST" onsubmit="javascript:form_disabler(this)">
             <div class="ui form">
                 <div class="ui required field basic segment">
                     <label class="ui top attached large label">Deployment</label>

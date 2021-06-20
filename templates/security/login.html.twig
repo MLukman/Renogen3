@@ -18,7 +18,7 @@
             <a style="display: block; padding: 1em 0;" href="{{ path('app_home') }}">
                 <img src="{{ nav.basePath }}{{ controller.appLogo }}" />
             </a>
-            <form action="{{ path('app_login') }}" method="post" onsubmit="javascript:$('#login_button').prop('disabled', true);">
+            <form action="{{ path('app_login') }}" method="post" onsubmit="javascript:form_disabler(this)">
                 <div class="ui form">
                     {% if message|default(null) %}
                         {% if message.negative %}

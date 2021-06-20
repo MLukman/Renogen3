@@ -300,7 +300,7 @@
                         <em>No comments yet</em>
                     {% endfor %}
                     {% if commentable %}
-                        <form class="ui center aligned form basic segment no-print" method="POST" action="{{nav.entityPath('app_item_comment_add',item)}}">
+                        <form class="ui center aligned form basic segment no-print" method="POST" action="{{nav.entityPath('app_item_comment_add',item)}}" onsubmit="javascript:form_disabler(this)">
                             <h4 class="ui horizontal divider header">
                                 Add comment
                             </h4>
