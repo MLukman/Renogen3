@@ -75,7 +75,16 @@
                             {% for p in paramConfigs %}
                                 <div class="ui field">
                                     <label for="param-{{p[0]}}">{{p[1]}}</label>
-                                    <input id="param-{{p[0]}}" placeholder="{{p[2]}}" type="text" name="parameters[{{p[0]}}]" value="{{auth.parameters[p[0]]|default(p[3]|default(null))}}" />
+                                    {% if p[3]|default(null) is iterable %}
+                                        <select id="param-{{p[0]}}" name="parameters[{{p[0]}}]">
+                                            {% for v,l in p[3] %}
+                                                {% set val = (v matches '/^\\d+$/') ? l : v %}
+                                                <option value="{{ val }}" {% if auth.parameters[p[0]]|default(null) == val %}selected="selected"{% endif %}>{{ l }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}
+                                        <input id="param-{{p[0]}}" placeholder="{{p[2]}}" type="text" name="parameters[{{p[0]}}]" value="{{auth.parameters[p[0]]|default(p[3]|default(null))}}" />
+                                    {% endif %}
                                     {{ _self.fieldError(errors.parameters|default([]), p[0]) }}
                                 </div>
                             {% endfor %}

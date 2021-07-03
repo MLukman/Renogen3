@@ -65,7 +65,8 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% for deployment in do2 %}
+                                    {% for d in do2 %}
+                                        {% set deployment = d.deployment %}
                                         <div class="ui red fluid card">
                                             <div class="content">
                                                 <div class="ui header">
@@ -86,7 +87,7 @@
                                                 {{ _self.deploymentItemList(deployment) }}
                                             </div>
                                         </div>
-                                    {%  endfor %}
+                                    {% endfor %}
                                 </td>
                             {% endfor %}
                         </tr>

@@ -1,0 +1,71 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <div class="ui basic huge segment">
+
+{% apply markdown|raw %}
+{% verbatim %}
+
+# About Renogen
+
+Renogen is a release management approval & tracking platform developed by [Muhammad Lukman Nasaruddin](mailto:lukman.nasaruddin@tm.com.my).
+
+It allows developers to request approval from the system environment owners for the releases of developed enhancements as well as for system environment administrators to execute the steps needed to release the enhancements.
+
+## Common flow
+
+```mermaid
+graph TB
+req([Developer requests deployment window])-->crt
+crt([Owner creates deployment window])-->item
+item([Developer registers deployment items & specifies deployment activities])-->rev
+rev([Reviewer reviews deployment items])-->appr
+appr([Owner approves deployment items])-->exec
+exec([System Admin executes deployment activities])-->complete([Complete])
+```
+
+## Concepts
+
+### Project
+
+A project represents a group of developers, quality assurance team, system owners, system admins etc working to release enhancements onto a specific system environment.
+
+### Deployment
+
+A deployment represents a scheduled date and time to release the enhancements.
+
+### Deployment Item
+
+A deployment item represents an enhancement that to be released onto the system environment.
+
+### Activity
+
+An activity represent a step that needs to be execute to release an enhancement.
+
+### Activity Template
+
+An activity template is a template created at the project level that allows creation of activities using a configuration form.
+
+### Checklist
+
+A checklist is a list of tasks created at a deployment level to allow the project users to coordinate related tasks related to the deployment apart from the execution of the activities.
+
+## Technologies
+
+Renogen was proudly built using the following technologies: 
+
+- PHP 7
+- Symfony 5
+- Doctrine ORM
+- MySQL
+- Twig
+- Fomantic-UI
+- jQuery
+
+The source code of Renogen is available at https://github.com/MLukman/Renogen3
+
+{% endverbatim %}
+{% endapply %}
+
+    </div>
+{% endblock %}

@@ -65,19 +65,6 @@ class HomeController extends RenoController
                 }
             }
             foreach ($project->upcoming() as $deployment) {
-                $ddate = clone $deployment->execute_date;
-                $ddate->setTime(0, 0);
-                if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()])) {
-                    $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()]
-                        = array();
-                }
-                if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()])) {
-                    $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()]
-                        = array();
-                }
-                $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()][]
-                    = $deployment;
-                $contexts['upcoming_deployments'][] = $deployment;
                 $d = array(
                     'deployment' => $deployment,
                     'items' => array(),
@@ -138,6 +125,20 @@ class HomeController extends RenoController
                     $k = $deployment->execute_date->getTimestamp()."-".$project->name;
                     $need_actions[$k] = $d;
                 }
+
+                $ddate = clone $deployment->execute_date;
+                $ddate->setTime(0, 0);
+                if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()])) {
+                    $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()]
+                        = array();
+                }
+                if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()])) {
+                    $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()]
+                        = array();
+                }
+                $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()][]
+                    = $d;
+                $contexts['upcoming_deployments'][] = $d;
             }
         }
 

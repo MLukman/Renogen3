@@ -9,9 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * @ORM\Entity(repositoryClass=\App\Repository\UserRepository::class) @ORM\Table(name="users")
+ * @ORM\Entity @ORM\Table(name="users")
  */
-class User extends Entity implements UserInterface
+class User extends Entity
 {
     /**
      * @ORM\Id
@@ -41,7 +41,7 @@ class User extends Entity implements UserInterface
     protected $password = '';
 
     /**
-     * @ORM\Column(type="string", length=64)
+     * @ORM\Column(type="string", length=64, nullable=true)
      */
     protected $auth;
 
@@ -56,21 +56,23 @@ class User extends Entity implements UserInterface
     protected $last_login;
 
     /**
-     * @ORM\Column(type="string", length=32, nullable=true)
-     */
-    protected $reset_code;
-
-    /**
      * @ORM\OneToMany(targetEntity="UserProject", mappedBy="user", orphanRemoval=true)
      * @var ArrayCollection|UserProject[]
      */
     public $userProjects = null;
 
     /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
+     * @ORM\OneToMany(targetEntity="UserAuthentication", mappedBy="user", orphanRemoval=true, indexBy="driver_id")
+     * @var ArrayCollection|UserAuthentication[]
      */
+    public $authentications = null;
+
+    public function __construct()
+    {
+        $this->userProjects = new ArrayCollection();
+        $this->authentications = new ArrayCollection();
+    }
+
     public function getUsername(): string
     {
         return (string) $this->username;
@@ -98,7 +100,6 @@ class User extends Entity implements UserInterface
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
-
         return $this;
     }
 
@@ -113,25 +114,7 @@ class User extends Entity implements UserInterface
     public function setPassword(string $password): self
     {
         $this->password = $password;
-
         return $this;
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function getSalt()
-    {
-        // not needed when using the "bcrypt" algorithm in security.yaml
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function eraseCredentials()
-    {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
     }
 
     public function getShortname()
@@ -199,17 +182,6 @@ class User extends Entity implements UserInterface
         return $this->shortname ?: $this->username;
     }
 
-    public function getResetCode()
-    {
-        return $this->reset_code;
-    }
-
-    public function setResetCode($reset_code)
-    {
-        $this->reset_code = $reset_code;
-        return $this;
-    }
-
     public static function getValidationRules(): ?array
     {
         return [
@@ -217,7 +189,6 @@ class User extends Entity implements UserInterface
                 ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z\._-]*$/', 'Username must start with an alphanumerical character and contains only alphanumeric, underscores, dashes and dots'),
             'shortname' => Rules::new()->trim()->required()->unique()->truncate(100),
             'email' => Rules::new()->trim()->required()->unique()->maxlen(50)->email(),
-            'auth' => Rules::new()->required(),
             'roles' => Rules::new()->required(),
         ];
     }

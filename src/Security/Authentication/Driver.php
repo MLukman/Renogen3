@@ -1,21 +1,24 @@
 <?php
 
-namespace App\Auth;
+namespace App\Security\Authentication;
 
 use App\Entity\AuthDriver;
 use App\Entity\User;
+use App\Entity\UserAuthentication;
 use App\Service\DataStore;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 abstract class Driver
 {
     protected $params = array();
+    protected $instance;
 
-    public function __construct(array $params)
+    public function __construct(array $params, AuthDriver $instance)
     {
         if (!empty($this->checkParams($params))) {
             throw new \Exception('Invalid parameters');
         }
+        $this->instance = $instance;
         $this->params = $params;
     }
 
@@ -38,7 +41,8 @@ abstract class Driver
      */
     abstract static public function checkParams(array $params);
 
-    abstract public function authenticate(Credentials $credentials, User $user,
+    abstract public function authenticate(Credentials $credentials,
+                                          UserAuthentication $user,
                                           UserPasswordEncoderInterface $passwordEncoder,
                                           AuthDriver $driver, DataStore $ds): bool;
 
@@ -46,7 +50,7 @@ abstract class Driver
      * Prepare a newly created user record before saving
      * @param User $user The instance of user record
      */
-    abstract public function prepareNewUser(User $user);
+    abstract public function prepareNewUser(UserAuthentication $user_auth);
 
     /**
      * Can this driver support resetting password?
@@ -62,7 +66,7 @@ abstract class Driver
      * @param User $user
      * @return string|null Success message. Null if failed.
      */
-    public function resetPassword(User $user)
+    public function resetPassword(UserAuthentication $user_auth)
     {
         
     }

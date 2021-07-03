@@ -2,7 +2,6 @@
 
 namespace App\Security\Authorization;
 
-use App\Security\Authorization\SubjectPrefixVoter;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 

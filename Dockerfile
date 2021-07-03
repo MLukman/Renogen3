@@ -8,12 +8,12 @@ RUN apt-get update && apt-get install -y libldap2-dev libonig-dev libicu-dev wge
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ARG APCU_VERSION=5.1.18
+ARG APCU_VERSION=5.1.20
 RUN pecl install apcu-${APCU_VERSION} \
     && docker-php-ext-enable apcu \
     && pecl clear-cache \
     && a2enmod rewrite \
-    && wget -O /usr/local/bin/dumb-init --no-verbose https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 \
+    && wget -O /usr/local/bin/dumb-init --no-verbose https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 \
     && chmod +x /usr/local/bin/dumb-init
 
 RUN echo 'TLS_REQCERT never' >> /etc/ldap/ldap.conf \

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Base\Entity;
+use App\Security\Authentication\Driver;
 use App\Validation\Rules;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -46,9 +47,9 @@ class AuthDriver extends Entity
         $this->name = $name;
     }
 
-    public function driverClass(): \App\Auth\Driver
+    public function driverClass(): Driver
     {
-        return new $this->class($this->parameters ?: array());
+        return new $this->class($this->parameters ?: array(), $this);
     }
 
     public function getProject(): ?Project

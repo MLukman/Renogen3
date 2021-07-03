@@ -20,27 +20,18 @@
 
     <form method="POST" onsubmit="javascript:form_disabler(this)">
         <div class="ui form">
-            {%  if not user.auth %}
+            {%  if not auth %}
                 <div class="ui required field basic segment">
                     <label class="ui top attached large label">Authentication Method</label>
                     <p>Please choose from the following authentication methods:</p>
                     <div class="inline fields">
-                        {% for auth in auths %}
-                            <div class="field">
-                                <div class="ui radio checkbox">
-                                    <input id="auth-{{auth.name}}" type="radio" name="auth" value="{{auth.name}}" />
-                                    <label for="auth-{{auth.name}}">{{auth.title}}</label>
-                                </div>
-                            </div>
+                        {% for _auth in auths %}
+                            <a class="ui button" href="{{ nav.path('app_register', { 'driver':_auth.name }) }}">{{_auth.title}}</a>
                         {% endfor %}
                     </div>
                     {{ _self.fieldError(errors|default([]), 'auth') }}
                 </div>
-                <div class="ui field">
-                    <input type="submit" class="ui submit primary button" name="_action" value="Next Step" />
-                </div>
             {% else %}
-                <input type="hidden" name="auth" value="{{auth.name}}" />
                 {% if auth.registration_explanation %}
                     <div class="ui basic field segment">
                         <label class="ui top attached large label">Instruction</label>

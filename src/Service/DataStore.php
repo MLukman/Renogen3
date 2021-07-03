@@ -3,8 +3,6 @@
 namespace App\Service;
 
 use App\ActivityTemplate\BaseClass;
-use App\Auth\Driver;
-use App\Auth\Driver\Password;
 use App\Base\Entity;
 use App\Entity\Activity;
 use App\Entity\Attachment;
@@ -18,6 +16,7 @@ use App\Entity\Project;
 use App\Entity\Template;
 use App\Entity\User;
 use App\Exception\NoResultException;
+use App\Security\Authentication\Driver\Password;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -129,6 +128,23 @@ class DataStore
     {
         $repo = $this->em->getRepository($entity);
         return $repo->findBy($criteria, $sort);
+    }
+
+    /**
+     *
+     * @param string $entity
+     * @param array $criteria
+     * @return int
+     */
+    public function count($entity, Array $criteria = array())
+    {
+        $qb = $this->em->getRepository($entity)->createQueryBuilder('e')
+            ->select('COUNT(1)');
+        foreach ($criteria as $field => $value) {
+            $qb->andWhere("e.$field > :$field")
+                ->setParameter($field, $value);
+        }
+        return $qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -497,6 +513,11 @@ class DataStore
         $this->overrideUser = $user;
     }
 
+    public function getUserAuthentication(array $criteria)
+    {
+        return $this->queryOne('\\App\\Entity\\UserAuthentication', $criteria);
+    }
+
     /**
      *
      * @param string $classId
@@ -516,12 +537,15 @@ class DataStore
 
     public function getAuthClassNames()
     {
-        $globPath = __DIR__.'/../Auth/Driver/*.php';
+        $globPath = __DIR__.'/../Security/Authentication/Driver/*.php';
         $authClassNames = $this->cache->get('authClasses', function(ItemInterface $item) use($globPath) {
             $au = [];
             foreach (glob($globPath) as $fn) {
                 $shortName = basename($fn, '.php');
-                $className = 'App\Auth\Driver\\'.$shortName;
+                if ($shortName == 'Password') {
+                    continue;
+                }
+                $className = 'App\\Security\\Authentication\Driver\\'.$shortName;
                 $classId = strtolower($shortName);
                 $au[$classId] = $className;
             }

@@ -70,9 +70,11 @@ class UsersController extends RenoController
                     $this->addFlash("info", "User '$user->username' has been deleted");
                     return $this->nav->redirectRoute('app_admin_users');
                 case 'Reset Password':
-                    $res = $this->ds->getAuthDriver($user->auth)->driverClass()->resetPassword($user);
+                    $driver = $post->get('driver');
+                    $user_auth = $user->authentications[$driver];
+                    $res = $this->ds->getAuthDriver($driver)->driverClass()->resetPassword($user_auth);
                     if ($res) {
-                        $this->ds->commit($user);
+                        $this->ds->commit($user_auth);
                         $this->addFlash('info', $res);
                     }
                     return $this->nav->redirectForEntity('app_admin_users_edit', $user);
@@ -81,10 +83,15 @@ class UsersController extends RenoController
             if (!$post->has('roles')) {
                 $post->set('roles', array());
             }
-            if ($this->ds->prepareValidateEntity($user, array('auth', 'username',
+            if ($this->ds->prepareValidateEntity($user, array('username',
                     'shortname',
                     'email', 'roles'), $post)) {
                 $this->ds->commit($user);
+                if (($auth = $post->get('auth')) && !isset($user->authentications[$auth])) {
+                    $user_auth = new \App\Entity\UserAuthentication($user);
+                    $user_auth->driver_id = $auth;
+                    $this->ds->commit($user_auth);
+                }
                 foreach ($post->get('project_role', array()) as $project_name => $role) {
                     try {
                         $project = $this->ds->fetchProject($project_name);
