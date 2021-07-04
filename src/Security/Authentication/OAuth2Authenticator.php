@@ -2,28 +2,29 @@
 
 namespace App\Security\Authentication;
 
+use App\Entity\AuthDriver;
 use App\Security\Authentication\Driver\OAuth2;
 use App\Service\DataStore;
 use App\Service\NavigationFactory;
-use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Core\Security;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
+use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class OAuth2GuardAuthenticator extends AbstractGuardAuthenticator
+class OAuth2Authenticator extends AbstractAuthenticator
 {
 
     use TargetPathTrait;
@@ -40,9 +41,6 @@ class OAuth2GuardAuthenticator extends AbstractGuardAuthenticator
     /** @var CsrfTokenManagerInterface */
     private $csrfTokenManager;
 
-    /** @var UserPasswordEncoderInterface */
-    protected $passwordEncoder;
-
     /** @var NavigationFactory */
     private $nav;
 
@@ -51,14 +49,12 @@ class OAuth2GuardAuthenticator extends AbstractGuardAuthenticator
 
     public function __construct(EntityManagerInterface $entityManager,
                                 CsrfTokenManagerInterface $csrfTokenManager,
-                                UserPasswordEncoderInterface $passwordEncoder,
                                 NavigationFactory $nav, DataStore $ds,
                                 HttpClientInterface $httpClient,
                                 RouterInterface $router)
     {
         $this->entityManager = $entityManager;
         $this->csrfTokenManager = $csrfTokenManager;
-        $this->passwordEncoder = $passwordEncoder;
         $this->nav = $nav;
         $this->ds = $ds;
         $this->httpClient = $httpClient;
@@ -71,49 +67,20 @@ class OAuth2GuardAuthenticator extends AbstractGuardAuthenticator
             && !empty($request->attributes->get('driver'));
     }
 
-    public function getCredentials(Request $request)
+    public function authenticate(Request $request): PassportInterface
     {
-        if ($request->query->count() === 0) {
-            return [
-                'stage' => 'INIT',
-                'driver' => $request->attributes->get('driver'),
-            ];
-        }
-        return [
-            'stage' => 'HAS_CODE',
-            'driver' => $request->attributes->get('driver'),
-            'request' => $request,
-            'query' => $request->query->all(),
-        ];
-    }
-
-    public function getUser($credentials, UserProviderInterface $userProvider)
-    {
-        if ($credentials['stage'] == 'INIT') {
-            throw new AuthenticationException('', 401);
+        $driver_id = $request->attributes->get('driver');
+        $authDriver = $this->ds->getAuthDriver($driver_id);
+        if (!$authDriver) {
+            throw new CustomUserMessageAuthenticationException('Invalid login method detected.');
         }
 
-        $access_token = null;
-        $driver = $this->ds->getAuthDriver($credentials['driver']);
-        if (!$driver) {
-            return new RedirectResponse($this->getLoginUrl());
-        }
-
-        $driverClass = $driver->driverClass();
-        if ($driverClass instanceof OAuth2) {
-            $access_token = $driverClass->handleRedirectRequest(
-                $credentials['request'],
-                $this->httpClient,
-                $this->session);
-        }
-
-        if (empty($access_token)) {
+        if (!($oauth2_user = $this->process($request, $authDriver, $this->getRedirectUri($authDriver->name)))) {
             throw new CustomUserMessageAuthenticationException('Unable to authenticate you via the third party identity provider. Please try again.');
         }
 
-        $oauth2_user = $driverClass->fetchUserInfo($access_token, $this->httpClient, $this->session);
         $user_auth = $this->ds->getUserAuthentication([
-            'driver_id' => $driver->name,
+            'driver_id' => $authDriver->name,
             'credential' => $oauth2_user['username']
         ]);
         if ($user_auth) {
@@ -122,23 +89,21 @@ class OAuth2GuardAuthenticator extends AbstractGuardAuthenticator
             } else {
                 $welcome = sprintf('Welcome to Renogen, %s.', $user_auth->user->getName());
             }
-            $this->session->getFlashBag()->add('persistent', $welcome);
-            $user_auth->user->last_login = new DateTime();
+            $request->getSession()->getFlashBag()->add('persistent', $welcome);
+            $user_auth->user->last_login = new \DateTime();
             $this->ds->commit($user_auth->user);
-            return $user_auth;
+            return new SelfValidatingPassport(
+                new UserBadge($user_auth->username, function($id) use ($user_auth) {
+                    return $user_auth;
+                }));
         }
 
         throw new CustomUserMessageAuthenticationException('Please register first');
     }
 
-    public function checkCredentials($credentials, UserInterface $user): bool
-    {
-        return true;
-    }
-
     public function onAuthenticationSuccess(Request $request,
                                             TokenInterface $token,
-                                            string $providerKey)
+                                            string $providerKey): ?Response
     {
         $redirect = $request->getSession()->get('redirect_after_login');
         if ($redirect) {
@@ -149,31 +114,38 @@ class OAuth2GuardAuthenticator extends AbstractGuardAuthenticator
     }
 
     public function onAuthenticationFailure(Request $request,
-                                            AuthenticationException $exception)
+                                            AuthenticationException $exception): ?Response
     {
-        if ($exception->getCode() == 401) {
-            $driver_id = $request->attributes->get('driver');
-            $authDriver = $this->ds->getAuthDriver($driver_id);
-            if (!$authDriver) {
-                return new RedirectResponse($this->getLoginUrl());
-            }
-            $driverClass = $authDriver->driverClass();
-            if ($driverClass instanceof OAuth2) {
-                return $driverClass->redirectToAuthorize($this->getRedirectUri($driver_id), $this->session);
-            }
+        if ($exception instanceof OAuth2RedirectionRequiredException) {
+            return $exception->generateRedirectResponse();
         }
         $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
-        $request->getSession()->set(Security::LAST_USERNAME, $request->get('username'));
         return new RedirectResponse($this->getLoginUrl());
-    }
-
-    public function supportsRememberMe(): bool
-    {
-        return true;
     }
 
     protected function getRedirectUri($driver_id)
     {
         return $this->urlGenerator->generate('app_login_oauth2', ['driver' => $driver_id], UrlGeneratorInterface::ABSOLUTE_URL);
+    }
+
+    public function process(Request $request, AuthDriver $authDriver,
+                            $redirect_uri): ?array
+    {
+        $driverClass = $authDriver->driverClass();
+        if (!($driverClass instanceof OAuth2)) {
+            return null;
+        }
+        // fresh request -> redirect to OAuth2 provider
+        if ($request->query->count() === 0) {
+            throw new OAuth2RedirectionRequiredException(
+                $driverClass->generateRedirectToAuthorizeURL($redirect_uri, $request->getSession()));
+        }
+
+        // coming from OAuth2 provider
+        if (empty($access_token = $driverClass->handleRedirectRequest($request, $this->httpClient, $request->getSession()))) {
+            return null;
+        }
+
+        return $driverClass->fetchUserInfo($access_token, $this->httpClient, $request->getSession());
     }
 }

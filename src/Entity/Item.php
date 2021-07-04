@@ -23,7 +23,7 @@ class Item extends Entity
     public $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Deployment", inversedBy="items")
+     * @ORM\ManyToOne(targetEntity="Deployment", inversedBy="items", fetch="EAGER")
      * @ORM\JoinColumn(name="deployment_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Deployment
      */

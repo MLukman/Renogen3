@@ -6,7 +6,8 @@ use App\Base\RenoController;
 use App\Entity\User;
 use App\Entity\UserAuthentication;
 use App\Security\Authentication\Driver\OAuth2;
-use App\Security\Authentication\OAuth2GuardAuthenticator;
+use App\Security\Authentication\OAuth2Authenticator;
+use App\Security\Authentication\OAuth2RedirectionRequiredException;
 use App\Service\DataStore;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,9 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Symfony\Component\Security\Guard\GuardAuthenticatorHandler;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -28,14 +28,11 @@ class SecurityController extends RenoController
     /**
      * @Route("/_login/oauth2/{driver}", name="app_login_oauth2", priority=20)
      */
-    public function loginOAuth2(AuthenticationUtils $authenticationUtils,
-                                DataStore $ds, SessionInterface $session,
-                                UserPasswordEncoderInterface $passwordEncoder,
-                                Request $request, $driver): Response
+    public function loginOAuth2(Request $request): Response
     {
         if ($this->getUser()) {
             return $this->redirect($request->request->get('last_page') ?:
-                    $this->getTargetPath($session, 'main') ?:
+                    $this->getTargetPath($request->getSession(), 'main') ?:
                     $this->nav->path('app_home'));
         }
         return $this->redirectToRoute('app_login');
@@ -46,7 +43,6 @@ class SecurityController extends RenoController
      */
     public function login(AuthenticationUtils $authenticationUtils,
                           DataStore $ds, SessionInterface $session,
-                          UserPasswordEncoderInterface $passwordEncoder,
                           Request $request, $reset_code = null): Response
     {
         $this->title = 'Login';
@@ -78,7 +74,7 @@ class SecurityController extends RenoController
             $message['text'] = $error->getMessage();
             $message['negative'] = true;
         } elseif (!empty($reset_code) && $request->request->count() == 0) {
-            $reset_user = $ds->queryOne('\App\Entity\UserAuthentication', ['reset_code' => $reset_code]);
+            $reset_user = $ds->getUserAuthentication(['reset_code' => $reset_code]);
             if ($reset_user) {
                 $username = $reset_user->username;
                 $reset_user->credential = '';
@@ -101,12 +97,12 @@ class SecurityController extends RenoController
         return $this->render('security/login.html.twig', [
                 'last_username' => $username ?: $lastUsername,
                 'message' => $message,
-                'oauth2_drivers' => $ds->em()->getRepository('\App\Entity\AuthDriver')->findBy([
+                'oauth2_drivers' => $ds->queryMany('\App\Entity\AuthDriver', [
                     'class' => 'App\Security\Authentication\Driver\OAuth2']),
                 'last_page' => $request->request->get('last_page') ?: $this->getTargetPath($session, 'main'),
                 'bottom_message' => ($usersCount < 2 ? '' : "There are ${usersCount} users who logged in within the last ${count_last} minutes"),
-                'self_register' => (count($ds->queryMany('\App\Entity\AuthDriver', array(
-                        'allow_self_registration' => 1))) > 0),
+                'self_register' => ($ds->count(
+                    '\App\Entity\AuthDriver', ['allow_self_registration' => 1]) > 0),
                 'can_reset_password' => $this->canResetPassword(),
         ]);
     }
@@ -123,10 +119,9 @@ class SecurityController extends RenoController
      * @Route("/_register/{driver}", name="app_register", priority=10)
      */
     public function register(HttpClientInterface $httpClient,
-                             SessionInterface $session,
-                             GuardAuthenticatorHandler $guardHandler,
-                             OAuth2GuardAuthenticator $oauth2auth,
-                             Request $request, DataStore $ds, $driver = null): Response
+                             UserAuthenticatorInterface $authenticator,
+                             OAuth2Authenticator $oauth2auth, Request $request,
+                             DataStore $ds, $driver = null): Response
     {
         $auths = $ds->queryMany('\App\Entity\AuthDriver', ['allow_self_registration' => 1]);
         if (count($auths) == 0) {
@@ -141,94 +136,100 @@ class SecurityController extends RenoController
 
         $user = new User();
         $user_auth = new UserAuthentication($user);
-        $selected_auth = null;
+        $authDriver = null;
         $post = $request->request;
+        $session = $request->getSession();
 
-        if (!$driver && count($auths) == 1) {
-            return $this->redirectToRoute('app_register', [
-                    'driver' => $auths[0]->name
-            ]);
+        if (!$driver) {
+            if (count($auths) == 1) {
+                return $this->redirectToRoute('app_register', [
+                        'driver' => $auths[0]->name
+                ]);
+            } else {
+                return $this->render('security/register_form.html.twig', [
+                        'auths' => $auths,
+                ]);
+            }
         }
 
-        if ($driver) {
-            foreach ($auths as $auth) {
-                if ($driver == $auth->name) {
-                    $selected_auth = $auth;
-                    break;
-                }
+        foreach ($auths as $auth) {
+            if ($driver == $auth->name) {
+                $authDriver = $auth;
+                break;
             }
-            if (!$selected_auth) {
-                return $this->redirectToRoute('app_register');
+        }
+        if (!$authDriver) {
+            return $this->redirectToRoute('app_register');
+        }
+
+        $user_auth->driver_id = $driver;
+        $authClass = $authDriver->driverClass();
+        if ($authClass instanceof OAuth2) {
+            if (empty($user_info = $session->get("register.${driver}.userinfo"))) {
+                try {
+                    if (!($user_info = $oauth2auth->process($request, $authDriver, $request->getUri()))) {
+                        throw new \Exception('Unable to authenticate you via the third party identity provider. Please try again.');
+                    }
+                } catch (OAuth2RedirectionRequiredException $ex) {
+                    return $ex->generateRedirectResponse();
+                }
+                $session->set("register.${driver}.userinfo", $user_info);
+                return $this->redirectToRoute('app_register', ['driver' => $driver]);
             }
-
-            $user_auth->driver_id = $driver;
-            $authClass = $selected_auth->driverClass();
-            if ($authClass instanceof OAuth2) {
-                if (empty($access_token = $session->get("register.${driver}.token"))) {
-                    $redirect_uri = $request->getUri();
-                    if ($request->query->count() === 0) {
-                        return $authClass->redirectToAuthorize($redirect_uri, $session);
-                    }
-                    if (!($access_token = $authClass->handleRedirectRequest($request, $httpClient, $session))) {
-                        $this->addFlash('error', "Unable to authenticate with {$auth->title}. Please try again.");
-                        return $this->redirectToRoute('app_register');
-                    }
-                    $session->set("register.${driver}.token", $access_token);
-                    return $this->redirectToRoute('app_register', ['driver' => $driver]);
-                }
-                $user_info = $authClass->fetchUserInfo($access_token, $httpClient, $session);
-                if (($existing = $ds->getUserAuthentication(['driver_id' => $driver,
-                    'credential' => $user_info['username']]))) {
-                    $this->addFlash('error', "You have previously registered using the same {$auth->title} account. You have been logged in instead.");
-                    $guardHandler->authenticateUserAndHandleSuccess($existing, $request, $oauth2auth, 'main');
-                    return $this->redirectAfterAuthenticate($request, $session);
-                }
-
-                $user->setUsername($user_info['username']);
-                $user->setShortname($user_info['shortname']);
-                $user->setEmail($user_info['email']);
-                $user_auth->setPassword($user_info['username']);
+            if (($existing = $ds->getUserAuthentication(['driver_id' => $driver,
+                'credential' => $user_info['username']]))) {
+                $this->addFlash('error', "You have previously registered using the same {$auth->title} account. You have been logged in instead.");
+                $authenticator->authenticateUser($existing, $oauth2auth, $request);
+                $session->remove("register.${driver}.userinfo");
+                return $this->redirectAfterAuthenticate($request);
             }
 
-            if ($post->get('_action') == 'Proceed to register') {
-                if (!empty($recaptcha_keys['secretkey'])) {
-                    $recaptcha = new \ReCaptcha\ReCaptcha($recaptcha_keys['secretkey']);
-                    $resp = $recaptcha->verify($post->get('g-recaptcha-response'));
-                    if (!$resp->isSuccess()) {
-                        $user->errors['recaptcha'] = 'Invalid response: '.join(", ", $resp->getErrorCodes());
-                    }
+            $user->setUsername($user_info['username']);
+            $user->setShortname($user_info['shortname']);
+            $user->setEmail($user_info['email']);
+            $user_auth->setPassword($user_info['username']);
+        }
+
+        if ($post->get('_action') == 'Proceed to register') {
+            if (!empty($recaptcha_keys['secretkey'])) {
+                $recaptcha = new \ReCaptcha\ReCaptcha($recaptcha_keys['secretkey']);
+                $resp = $recaptcha->verify($post->get('g-recaptcha-response'));
+                if (!$resp->isSuccess()) {
+                    $user->errors['recaptcha'] = 'Invalid response: '.join(", ", $resp->getErrorCodes());
                 }
+            }
 
-                $user->roles = array('ROLE_USER');
-                if ($ds->prepareValidateEntity($user, array('username', 'shortname',
-                        'email'), $post)) {
-                    $user->created_by = $user;
-                    $user->created_date = new \DateTime();
-                    $user_auth->created_by = $user;
-                    $user_auth->created_date = new \DateTime();
+            $user->roles = array('ROLE_USER');
+            if ($ds->prepareValidateEntity($user, array('username', 'shortname',
+                    'email'), $post)) {
+                $user->created_by = $user;
+                $user->created_date = new \DateTime();
+                $user->last_login = new \DateTime();
+                $user_auth->created_by = $user;
+                $user_auth->created_date = new \DateTime();
 
-                    $redirectTo = $this->redirectToRoute('app_home');
-                    if ($authClass instanceof OAuth2) {
-                        $ds->commit($user);
-                        $ds->commit($user_auth);
-                        return $guardHandler->authenticateUserAndHandleSuccess(
-                                $ds->getUserAuthentication([
-                                    'driver_id' => $driver, 'username' => $user->getUsername()
-                                ]),
-                                $request, $oauth2auth, 'main');
-                    } else {
-                        $this->updateResetCode($user_auth);
-                        $ds->commit($user);
-                        $ds->commit($user_auth);
-                        return $this->redirectToRoute('app_login', ['reset_code' => $user_auth->reset_code]);
-                    }
+                if ($authClass instanceof OAuth2) {
+                    $ds->commit($user);
+                    $ds->commit($user_auth);
+                    $authenticator->authenticateUser($ds->getUserAuthentication([
+                            'driver_id' => $driver, 'username' => $user->getUsername()
+                        ]), $oauth2auth, $request);
+                    $welcome = sprintf('Welcome to Renogen, %s.', $user->getName());
+                    $session->getFlashBag()->add('persistent', $welcome);
+                    $session->remove("register.${driver}.userinfo");
+                    return $this->redirectAfterAuthenticate($request);
+                } else {
+                    $this->updateResetCode($user_auth);
+                    $ds->commit($user);
+                    $ds->commit($user_auth);
+                    return $this->redirectToRoute('app_login', ['reset_code' => $user_auth->reset_code]);
                 }
             }
         }
 
         return $this->render('security/register_form.html.twig', [
                 'auths' => $auths,
-                'auth' => $selected_auth,
+                'auth' => $authDriver,
                 'user' => $user,
                 'errors' => $user->errors,
                 'recaptcha' => $recaptcha_keys,
@@ -316,12 +317,11 @@ class SecurityController extends RenoController
         $user_auth->setResetCode(md5($user_auth->user->getEmail().':'.time()));
     }
 
-    private function redirectAfterAuthenticate(Request $request,
-                                               SessionInterface $session)
+    private function redirectAfterAuthenticate(Request $request)
     {
         return $this->redirect(
                 $request->request->get('last_page') ?:
-                $this->getTargetPath($session, 'main') ?:
+                $this->getTargetPath($request->getSession(), 'main') ?:
                 $this->nav->path('app_home'));
     }
 }

@@ -64,7 +64,7 @@ class NavigationFactory
 
     public function getBasePath()
     {
-        return $this->requestStack->getMasterRequest()->getBasePath();
+        return $this->requestStack->getMainRequest()->getBasePath();
     }
 
     /**
@@ -156,7 +156,7 @@ class NavigationFactory
                                   $anchor = null)
     {
         return new RedirectResponse($route ? $this->path($route, $params, $anchor)
-                : $this->requestStack->getMasterRequest()->getUri());
+                : $this->requestStack->getMainRequest()->getUri());
     }
 
     /**

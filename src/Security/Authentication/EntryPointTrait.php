@@ -16,9 +16,6 @@ trait EntryPointTrait
     /** @var UrlGeneratorInterface */
     protected $urlGenerator;
 
-    /** @var SessionInterface */
-    protected $session;
-
     /**
      * @required
      */
@@ -27,19 +24,11 @@ trait EntryPointTrait
         $this->urlGenerator = $urlGenerator;
     }
 
-    /**
-     * @required
-     */
-    public function setSession(SessionInterface $session): void
-    {
-        $this->session = $session;
-    }
-
     public function start(Request $request,
                           AuthenticationException $authException = null): Response
     {
         if ($this->login_route !== $request->attributes->get('_route')) {
-            $this->session->set('redirect_after_login', $request->getUri());
+            $request->getSession()->set('redirect_after_login', $request->getUri());
         }
         $url = $this->getLoginUrl();
         return new RedirectResponse($url);

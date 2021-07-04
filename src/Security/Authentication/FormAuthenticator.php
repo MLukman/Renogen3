@@ -6,20 +6,22 @@ use App\Service\DataStore;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
 use Symfony\Component\Security\Core\Security;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
+use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
-class FormGuardAuthenticator extends AbstractGuardAuthenticator
+class FormAuthenticator extends AbstractAuthenticator
 {
 
     use TargetPathTrait;
@@ -33,7 +35,7 @@ class FormGuardAuthenticator extends AbstractGuardAuthenticator
     /** @var CsrfTokenManagerInterface */
     private $csrfTokenManager;
 
-    /** @var UserPasswordEncoderInterface */
+    /** @var UserPasswordHasherInterface */
     protected $passwordEncoder;
 
     /** @var DataStore */
@@ -41,7 +43,7 @@ class FormGuardAuthenticator extends AbstractGuardAuthenticator
 
     public function __construct(EntityManagerInterface $entityManager,
                                 CsrfTokenManagerInterface $csrfTokenManager,
-                                UserPasswordEncoderInterface $passwordEncoder,
+                                UserPasswordHasherInterface $passwordEncoder,
                                 DataStore $ds)
     {
         $this->entityManager = $entityManager;
@@ -50,32 +52,21 @@ class FormGuardAuthenticator extends AbstractGuardAuthenticator
         $this->ds = $ds;
     }
 
-    /**
-     * @required
-     */
-    public function setPasswordEncoder(UserPasswordEncoderInterface $passwordEncoder)
-    {
-        $this->passwordEncoder = $passwordEncoder;
-    }
-
     public function supports(Request $request): bool
     {
         return $this->login_route === $request->attributes->get('_route') && $request->isMethod('POST')
             && $request->request->get('method') == 'form';
     }
 
-    public function getCredentials(Request $request)
+    public function authenticate(Request $request): PassportInterface
     {
-        return [
+        $credentials = [
             'username' => $request->request->get('username'),
             'password' => $request->request->get('password'),
             'driver' => $request->request->get('driver'),
             'csrf_token' => $request->request->get('_csrf_token'),
         ];
-    }
 
-    public function getUser($credentials, UserProviderInterface $userProvider)
-    {
         $token = new CsrfToken('authenticate', $credentials['csrf_token']);
         if (!$this->csrfTokenManager->isTokenValid($token)) {
             throw new InvalidCsrfTokenException('Invalid CSRF');
@@ -97,13 +88,7 @@ class FormGuardAuthenticator extends AbstractGuardAuthenticator
             // User blocked
             throw new CustomUserMessageAuthenticationException('Sorry but you have been blocked from logging in. Please contact an administrator if you think it is a mistake.');
         }
-
-        return $user_auth;
-    }
-
-    public function checkCredentials($credentials, UserInterface $user_auth): bool
-    {
-        $authDriver = $this->ds->getAuthDriver($user_auth->driver_id);
+        $authDriver = $user_auth->driver;
         if (!$authDriver) {
             // Authentication method missing
             throw new CustomUserMessageAuthenticationException("Your account requires authentication method '$user_auth->auth' which has been disabled. Please contact an administrator to request for access.");
@@ -116,34 +101,33 @@ class FormGuardAuthenticator extends AbstractGuardAuthenticator
             } else {
                 $welcome = sprintf('Welcome to Renogen, %s.', $user_auth->user->getName());
             }
-            $this->session->getFlashBag()->add('persistent', $welcome);
+            $request->getSession()->getFlashBag()->add('persistent', $welcome);
             $user_auth->user->last_login = new DateTime();
             $this->ds->commit($user_auth->user);
-            return true;
+            return new SelfValidatingPassport(
+                new UserBadge($user_auth->username, function($id) use ($user_auth) {
+                    return $user_auth;
+                }));
         }
-        return false;
-    }
-
-    public function onAuthenticationFailure(Request $request,
-                                            AuthenticationException $exception)
-    {
-        $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
-        $request->getSession()->set(Security::LAST_USERNAME, $request->get('username'));
-    }
-
-    public function supportsRememberMe(): bool
-    {
-        return true;
+        throw new CustomUserMessageAuthenticationException("Invalid credentials");
     }
 
     public function onAuthenticationSuccess(Request $request,
                                             TokenInterface $token,
-                                            string $providerKey)
+                                            string $providerKey): ?Response
     {
-        $redirect = $this->session->get('redirect_after_login');
+        $redirect = $request->getSession()->get('redirect_after_login');
         if ($redirect) {
-            $this->saveTargetPath($this->session, $providerKey, $redirect);
+            $this->saveTargetPath($request->getSession(), $providerKey, $redirect);
         }
+        return null;
+    }
+
+    public function onAuthenticationFailure(Request $request,
+                                            AuthenticationException $exception): ?Response
+    {
+        $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
+        $request->getSession()->set(Security::LAST_USERNAME, $request->get('username'));
         return null;
     }
 }

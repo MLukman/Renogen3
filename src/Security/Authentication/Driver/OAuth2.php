@@ -2,8 +2,8 @@
 
 namespace App\Security\Authentication\Driver;
 
+use App\Entity\UserAuthentication;
 use App\Security\Authentication\Driver;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -72,8 +72,8 @@ class OAuth2 extends Driver
         return 'OAuth2.0 Provider';
     }
 
-    public function redirectToAuthorize(string $redirect_uri,
-                                        SessionInterface $session): RedirectResponse
+    public function generateRedirectToAuthorizeURL(string $redirect_uri,
+                                                   SessionInterface $session): ?string
     {
         $params = [];
         $authorize_url = $this->params['authorize_url'];
@@ -98,12 +98,12 @@ class OAuth2 extends Driver
         }
 
         $session->set($this->getSessionKey('redirect_uri'), $redirect_uri);
-        return new RedirectResponse($authorize_url."?".http_build_query(array_merge($params, [
+        return $authorize_url."?".http_build_query(array_merge($params, [
                 'client_id' => $this->params['client_id'],
                 'scope' => $this->params['scope'],
                 'redirect_uri' => $redirect_uri,
                 'state' => $session->getId(),
-        ])));
+        ]));
     }
 
     public function handleRedirectRequest(Request $request,
@@ -176,7 +176,7 @@ class OAuth2 extends Driver
 
     public function fetchUserInfo(string $access_token,
                                   HttpClientInterface $httpClient,
-                                  SessionInterface $session): array
+                                  SessionInterface $session): ?array
     {
         try {
             $user_response = $httpClient->request('GET', $this->params['userinfo_url'], [
@@ -196,11 +196,11 @@ class OAuth2 extends Driver
 
             return $user_info;
         } catch (\Exception $ex) {
-            return [];
+            return null;
         }
     }
 
-    public function resetPassword(\App\Entity\UserAuthentication $user_auth)
+    public function resetPassword(UserAuthentication $user_auth)
     {
 
     }
@@ -215,16 +215,7 @@ class OAuth2 extends Driver
         return $this->getSessionKey('pkce');
     }
 
-    public function authenticate(\App\Security\Authentication\Credentials $credentials,
-                                 \App\Entity\UserAuthentication $user,
-                                 \Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface $passwordEncoder,
-                                 \App\Entity\AuthDriver $driver,
-                                 \App\Service\DataStore $ds): bool
-    {
-
-    }
-
-    public function prepareNewUser(\App\Entity\UserAuthentication $user_auth)
+    public function prepareNewUser(UserAuthentication $user_auth)
     {
 
     }

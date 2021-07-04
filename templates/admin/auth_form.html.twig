@@ -28,26 +28,34 @@
             <div class="ui required field basic segment">
                 <label class="ui top attached large label">Driver Class</label>
                 <div class="inline fields">
-                    {% for class in classes %}
-                        {#% if class != 'App\\Auth\\Driver\\Password' or auth.class == 'App\\Auth\\Driver\\Password' %#}
-                        <div class="field">
-                            <div class="ui radio checkbox">
-                                <input id="auth-{{loop.index}}" type="radio" name="class" value="{{class}}" {% if class == auth.class|default(null) %}checked="checked"{% endif %} {% if auth.class %}disabled="disabled"{% endif %}>
-                                <label for="auth-{{loop.index}}">{{class}}</label>
-                            </div>
-                        </div>
-                        {#% endif %#}
-                    {% endfor %}
                     {% if auth.class %}
+                        {{ auth.class }}
                         <input type="hidden" name="class" value="{{auth.class}}" />
+                    {% else %}
+                        {% for class in classes %}
+                            {#% if class != 'App\\Auth\\Driver\\Password' or auth.class == 'App\\Auth\\Driver\\Password' %#}
+                            <div class="field">
+                                <div class="ui radio checkbox">
+                                    <input id="auth-{{loop.index}}" type="radio" name="class" value="{{class}}" {% if class == auth.class|default(null) %}checked="checked"{% endif %}>
+                                    <label for="auth-{{loop.index}}">{{class}}</label>
+                                </div>
+                            </div>
+                            {#% endif %#}
+                        {% endfor %}
                     {% endif %}
                 </div>
                 {{ _self.fieldError(errors|default([]), 'class') }}
             </div>
             <div class="ui required field basic segment">
                 <label class="ui top attached large label">Name</label>
-                <input placeholder="Name" type="text" name="name" value="{{auth.name|default(null)}}" {% if is_existing %}disabled="disabled"{% endif %} />
-                {{ _self.fieldError(errors|default([]), 'name') }}
+                {% if is_existing %}
+                <div class="inline fields">
+                    {{ auth.name }}
+                </div>
+                {% else %}
+                    <input placeholder="Name" type="text" name="name" value="{{auth.name|default(null)}}" />
+                    {{ _self.fieldError(errors|default([]), 'name') }}
+                {% endif %}
             </div>
             <div class="ui required field basic segment">
                 <label class="ui top attached large label">Title</label>

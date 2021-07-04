@@ -5,8 +5,6 @@ namespace App\Security\Authentication;
 use App\Entity\AuthDriver;
 use App\Entity\User;
 use App\Entity\UserAuthentication;
-use App\Service\DataStore;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 abstract class Driver
 {
@@ -41,14 +39,9 @@ abstract class Driver
      */
     abstract static public function checkParams(array $params);
 
-    abstract public function authenticate(Credentials $credentials,
-                                          UserAuthentication $user,
-                                          UserPasswordEncoderInterface $passwordEncoder,
-                                          AuthDriver $driver, DataStore $ds): bool;
-
     /**
      * Prepare a newly created user record before saving
-     * @param User $user The instance of user record
+     * @param UserAuthentication $user_auth The instance of user record
      */
     abstract public function prepareNewUser(UserAuthentication $user_auth);
 
@@ -63,7 +56,7 @@ abstract class Driver
 
     /**
      * Perform password reset on a specific user
-     * @param User $user
+     * @param UserAuthentication $user_auth
      * @return string|null Success message. Null if failed.
      */
     public function resetPassword(UserAuthentication $user_auth)

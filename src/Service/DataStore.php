@@ -141,7 +141,7 @@ class DataStore
         $qb = $this->em->getRepository($entity)->createQueryBuilder('e')
             ->select('COUNT(1)');
         foreach ($criteria as $field => $value) {
-            $qb->andWhere("e.$field > :$field")
+            $qb->andWhere("e.$field = :$field")
                 ->setParameter($field, $value);
         }
         return $qb->getQuery()->getSingleScalarResult();
@@ -545,7 +545,7 @@ class DataStore
                 if ($shortName == 'Password') {
                     continue;
                 }
-                $className = 'App\\Security\\Authentication\Driver\\'.$shortName;
+                $className = '\\App\\Security\\Authentication\Driver\\'.$shortName;
                 $classId = strtolower($shortName);
                 $au[$classId] = $className;
             }

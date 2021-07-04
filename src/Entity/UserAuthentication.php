@@ -4,16 +4,17 @@ namespace App\Entity;
 
 use App\Base\Entity;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=\App\Repository\UserAuthenticationRepository::class)
  * @ORM\Table(name="user_authentications")
  */
-class UserAuthentication extends Entity implements UserInterface
+class UserAuthentication extends Entity implements UserInterface, PasswordAuthenticatedUserInterface
 {
     /**
-     * @ORM\ManyToOne(targetEntity="User",inversedBy="authentications")
+     * @ORM\ManyToOne(targetEntity="User",inversedBy="authentications",fetch="EAGER")
      * @ORM\JoinColumn(name="username", referencedColumnName="username", onDelete="CASCADE")
      * @var User
      */
@@ -27,9 +28,16 @@ class UserAuthentication extends Entity implements UserInterface
 
     /**
      * @ORM\Id
-     * @ORM\Column(type="string", length=100)
+     * @ORM\Column(type="string", length=30)
      */
     public $driver_id;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="AuthDriver", fetch="EAGER")
+     * @ORM\JoinColumn(name="driver_id", referencedColumnName="name", nullable=false, onDelete="CASCADE")
+     * @var AuthDriver
+     */
+    public $driver;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -41,18 +49,21 @@ class UserAuthentication extends Entity implements UserInterface
      */
     protected $reset_code;
 
-    public function __construct(User $user)
+    public function __construct(User $user, $driver_id = null,
+                                $credential = null)
     {
         $this->user = $user;
         $this->username = $user->getUsername();
+        $this->driver_id = $driver_id;
+        $this->credential = $credential;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUsername(): string
+    {
+        return $this->getUserIdentifier();
+    }
+
+    public function getUserIdentifier(): string
     {
         return $this->username;
     }
@@ -62,7 +73,7 @@ class UserAuthentication extends Entity implements UserInterface
         $this->credential = $password;
     }
 
-    public function getPassword()
+    public function getPassword(): ?string
     {
         return $this->credential;
     }

@@ -1,71 +1,155 @@
 {% extends "renobase.html.twig" %}
 
 {% block content %}
-    <div class="ui basic huge segment">
+    <h1><i class="ui id badge icon"></i> Profile for {{ user.shortname }}</h1>
 
-{% apply markdown|raw %}
-{% verbatim %}
-
-# About Renogen
-
-Renogen is a release management approval & tracking platform developed by [Muhammad Lukman Nasaruddin](mailto:lukman.nasaruddin@tm.com.my).
-
-It allows developers to request approval from the system environment owners for the releases of developed enhancements as well as for system environment administrators to execute the steps needed to release the enhancements.
-
-## Common flow
-
-```mermaid
-graph TB
-req([Developer requests deployment window])-->crt
-crt([Owner creates deployment window])-->item
-item([Developer registers deployment items & specifies deployment activities])-->rev
-rev([Reviewer reviews deployment items])-->appr
-appr([Owner approves deployment items])-->exec
-exec([System Admin executes deployment activities])-->complete([Complete])
-```
-
-## Concepts
-
-### Project
-
-A project represents a group of developers, quality assurance team, system owners, system admins etc working to release enhancements onto a specific system environment.
-
-### Deployment
-
-A deployment represents a scheduled date and time to release the enhancements.
-
-### Deployment Item
-
-A deployment item represents an enhancement that to be released onto the system environment.
-
-### Activity
-
-An activity represent a step that needs to be execute to release an enhancement.
-
-### Activity Template
-
-An activity template is a template created at the project level that allows creation of activities using a configuration form.
-
-### Checklist
-
-A checklist is a list of tasks created at a deployment level to allow the project users to coordinate related tasks related to the deployment apart from the execution of the activities.
-
-## Technologies
-
-Renogen was proudly built using the following technologies: 
-
-- PHP 7
-- Symfony 5
-- Doctrine ORM
-- MySQL
-- Twig
-- Fomantic-UI
-- jQuery
-
-The source code of Renogen is available at https://github.com/MLukman/Renogen3
-
-{% endverbatim %}
-{% endapply %}
-
+    {# <pre>{{ contribs|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre> #}
+    <div class="ui top attached tabular secondary pointing menu">
+        <div class="active item" data-tab="stats">
+            <h2 class="ui header">
+                <span>
+                    <i class="ui chart pie icon"></i> <span class="hide-on-mobile">Statistics</span>
+                </span>
+            </h2>
+        </div>
+        {% if oauth2|length > 0 %}
+            <div class="item" data-tab="oauth2">
+                <h2 class="ui header">
+                    <span>
+                        <i class="ui openid icon"></i> <span class="hide-on-mobile">Login Provider</span>
+                    </span>
+                </h2>
+            </div>
+        {% endif %}
     </div>
+
+    <div class="ui tab basic segment active" data-tab="stats">
+        {% set role_icon = {'view':'thermometer empty','execute':'thermometer quarter','entry':'thermometer half','review':'thermometer three quarters','approval':'thermometer full'} %}
+        {% set role_value = {'view':0,'execute':1,'entry':2,'review':3,'approval':4} %}
+        <div class="ui list">
+            <div class="item">
+                <div class="header"><h3>Membership</h3></div>
+                <div class="ui grid basic segment">
+                    <div class="ui two column row">
+                        {{ _self.stat('Member Since', user.created_date|date('j F Y')) }}
+                        {{ _self.stat('Projects Membership', projects|length) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="ui list">
+            <div class="item">
+                <div class="header"><h3>Project Roles</h3></div>
+                <div class="ui grid basic segment">
+                    <div class="doubling five column row">
+                        {% for role, icon in role_icon|reverse %}
+                            {{ _self.stat(role, roles_count[role]|default(0), icon) }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <div class="header"><h3>Contributions</h3></div>
+                <div class="ui basic segment">
+                    <div style="position:relative; overflow: auto; max-width: inherit;">
+                        <table class="ui celled structured sortable table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Project</th>
+                                    <th rowspan="2">Role</th>
+                                    <th colspan="2" class="ui center aligned no-sort">Deployment</th>
+                                    <th colspan="5" class="ui center aligned no-sort">Item</th>
+                                    <th colspan="2" class="ui center aligned no-sort">Checklist</th>
+                                    <th colspan="3" class="ui center aligned no-sort">Activity</th>
+                                    <th rowspan="2" class="ui center aligned collapsing" data-sort-index="14">Attachment<br />Uploaded</th>
+                                    <th rowspan="2" class="ui center aligned collapsing" data-sort-index="15"><i class="ui trophy icon"></i></th>
+                                </tr>
+                                <tr>
+                                    <th class="ui center aligned collapsing" data-sort-index="2">Created</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="3">Requested</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="4">Created</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="5">Submitted</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="6">Reviewed</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="7">Approved</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="8">Rejected</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="9">Created</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="10">Updated</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="11">Created</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="12">Completed</th>
+                                    <th class="ui center aligned collapsing" data-sort-index="13">Failed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in projects %}
+                                    {% set role = contribs[project.name].role %}
+                                    <tr>
+                                        <td><i class="ui {{project.icon }} icon"></i> {{ project.title }}</td>
+                                        <td class="ui collapsing" data-sort-value="{{ role_value[role] }}">
+                                            <i class="ui {{role_icon[role]}} icon"></i> {{ role }}
+                                        </td>
+                                        {% for cat in contrib_categories|keys %}
+                                            <td class="ui center aligned" data-sort-value="{{ contribs[project.name][cat]|default(0) }}">{{ contribs[project.name][cat]|default(0) }}</td>
+                                        {% endfor %}
+                                        <td class="ui center aligned" data-sort-value="{{ contribs[project.name].total }}">{{ contribs[project.name].total }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td>Total projects: {{ projects|length }}</td>
+                                    <td>
+                                        <div class="ui middle aligned divided tiny list">
+                                            {% for r,c in roles_count %}
+                                                <div class="item">
+                                                    <div class="right floated content">
+                                                        {{ c }}
+                                                    </div>
+                                                    <div class="content">
+                                                        {{ r }}
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                N/A
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    {% for count in contrib_categories %}
+                                        <td class="ui center aligned">{{ count }}</td>
+                                    {% endfor %}
+                                    <td class="ui center aligned">{{ super_total }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if oauth2|length > 0 %}
+        <div class="ui tab basic segment" data-tab="oauth2">
+            <p>You are registered in Renogen using the following authentication methods:</p>
+            <ul>
+                {% for au in user.authentications %}
+                    <li>{{ au.driver.title }}</li>
+                    {% endfor %}
+            </ul>
+            <p>Click on a button below to add another authentication method:</p>
+            {% for au in oauth2 %}
+                <a class="ui button" href="{{ nav.path('app_profile_oauth2', { 'driver':au.name }) }}">{{au.title}}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}
+
+{% macro stat(label, value, icon) %}
+    <div class="ui column center aligned">
+        <div class="ui tiny statistic ">
+            <div class="label">
+                {% if icon %}<i class="ui {{icon}} icon"></i>{% endif %} {{ label }}
+            </div>
+            <div class="value">
+                {{ value }}
+            </div>
+        </div>
+    </div>
+{% endmacro %}

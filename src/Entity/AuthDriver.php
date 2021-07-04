@@ -13,12 +13,12 @@ use Doctrine\ORM\Mapping as ORM;
 class AuthDriver extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string")
+     * @ORM\Id @ORM\Column(type="string", length=30)
      */
     public $name;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", length=50)
      */
     public $title;
 
@@ -60,8 +60,8 @@ class AuthDriver extends Entity
     public static function getValidationRules(): ?array
     {
         return [
-            'name' => Rules::new()->trim()->required()->unique(),
-            'title' => Rules::new()->trim()->required()->unique(),
+            'name' => Rules::new()->trim()->required()->maxlen(30)->unique(),
+            'title' => Rules::new()->trim()->required()->maxlen(50)->unique(),
             'class' => Rules::new()->trim()->required(),
             'registration_explanation' => Rules::new()->trim(),
         ];

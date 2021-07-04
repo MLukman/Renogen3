@@ -18,7 +18,7 @@ class Activity extends Actionable
     public $title;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Item", inversedBy="activities")
+     * @ORM\ManyToOne(targetEntity="Item", inversedBy="activities", fetch="EAGER")
      * @ORM\JoinColumn(name="item_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Item
      */

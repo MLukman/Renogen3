@@ -183,36 +183,36 @@ class ProjectController extends RenoController
         $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
 
         $queries = [
-            'deployment_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT d.id) AS contribs FROM \App\Entity\Deployment d JOIN \App\Entity\User u WITH d.created_by = u WHERE d.project = :project GROUP BY u',
-            'deployment_requested' => 'SELECT u.username, u.shortname, COUNT(DISTINCT d.id) AS contribs FROM \App\Entity\DeploymentRequest d JOIN \App\Entity\User u WITH d.created_by = u WHERE d.project = :project GROUP BY u',
-            'item_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH i.created_by = u GROUP BY u',
+            'deployment_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT d.id) AS contribs FROM \App\Entity\Deployment d JOIN \App\Entity\User u WITH d.created_by = u WHERE d.project = :project GROUP BY u.username',
+            'deployment_requested' => 'SELECT u.username, u.shortname, COUNT(DISTINCT d.id) AS contribs FROM \App\Entity\DeploymentRequest d JOIN \App\Entity\User u WITH d.created_by = u WHERE d.project = :project GROUP BY u.username',
+            'item_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH i.created_by = u GROUP BY u.username',
             'item_submitted' => [
-                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u.username',
                 [
                     'status' => Project::ITEM_STATUS_REVIEW,
                 ]
             ],
             'item_reviewed' => [
-                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u.username',
                 [
                     'status' => Project::ITEM_STATUS_APPROVAL,
                 ]
             ],
             'item_approved' => [
-                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u.username',
                 [
                     'status' => Project::ITEM_STATUS_READY,
                 ]
             ],
             'item_rejected' => [
-                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u',
+                'SELECT u.username, u.shortname, COUNT(DISTINCT i.id) AS contribs FROM \App\Entity\Item i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\ItemStatusLog isl WITH isl.item = i AND isl.status = :status JOIN \App\Entity\User u WITH isl.created_by = u GROUP BY u.username',
                 [
                     'status' => Project::ITEM_STATUS_REJECTED,
                 ]
             ],
-            'checklist_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\User u WITH cl.created_by = u GROUP BY u',
-            'checklist_updated' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\ChecklistUpdate clu WITH clu.checklist = cl JOIN \App\Entity\User u WITH clu.created_by = u GROUP BY u',
-            'activity_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Activity a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u',
+            'checklist_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\User u WITH cl.created_by = u GROUP BY u.username',
+            'checklist_updated' => 'SELECT u.username, u.shortname, COUNT(DISTINCT cl.id) AS contribs FROM \App\Entity\Checklist cl JOIN \App\Entity\Deployment d WITH d.project = :project AND cl.deployment = d JOIN \App\Entity\ChecklistUpdate clu WITH clu.checklist = cl JOIN \App\Entity\User u WITH clu.created_by = u GROUP BY u.username',
+            'activity_created' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Activity a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u.username',
             'activity_completed' => [
                 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\RunItem a JOIN \App\Entity\Deployment d WITH d.project = :project AND a.deployment = d JOIN \App\Entity\User u WITH a.updated_by = u WHERE a.status = :status GROUP BY u ',
                 [
@@ -225,7 +225,7 @@ class ProjectController extends RenoController
                     'status' => Project::ITEM_STATUS_FAILED,
                 ]
             ],
-            'attachment_uploaded' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Attachment a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u',
+            'attachment_uploaded' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Attachment a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u.username',
         ];
 
 

@@ -1,5 +1,7 @@
 security:
-    encoders:
+    enable_authenticator_manager: true
+    
+    password_hashers:
         App\Entity\UserAuthentication:
             algorithm: bcrypt
 
@@ -15,14 +17,12 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
-            anonymous: true
             lazy: true
             provider: app_user_provider
-            guard:
-                authenticators:
-                    - App\Security\Authentication\FormGuardAuthenticator
-                    - App\Security\Authentication\OAuth2GuardAuthenticator
-                entry_point: App\Security\Authentication\EntryPoint
+            custom_authenticators:
+                - App\Security\Authentication\FormAuthenticator
+                - App\Security\Authentication\OAuth2Authenticator
+            entry_point: App\Security\Authentication\EntryPoint
             logout:
                 path: app_logout
                 # where to redirect after logout
@@ -36,6 +36,6 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/(_login|_register), roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/[^/]+/plugins/[^/]+/[^/]+, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/(_login|_register), roles: PUBLIC_ACCESS }
+        - { path: ^/[^/]+/plugins/[^/]+/[^/]+, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }

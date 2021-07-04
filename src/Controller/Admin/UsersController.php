@@ -72,7 +72,7 @@ class UsersController extends RenoController
                 case 'Reset Password':
                     $driver = $post->get('driver');
                     $user_auth = $user->authentications[$driver];
-                    $res = $this->ds->getAuthDriver($driver)->driverClass()->resetPassword($user_auth);
+                    $res = $user_auth->driver->driverClass()->resetPassword($user_auth);
                     if ($res) {
                         $this->ds->commit($user_auth);
                         $this->addFlash('info', $res);

@@ -136,12 +136,11 @@
             </thead>
             <tbody>
                 {% for user_auth in user.authentications %}
-                    {% set driver = ds.getAuthDriver(user_auth.driver_id) %}
                     <tr>
-                        <td>{{ driver.title|default(user_auth.driver_id) }}</td>
+                        <td>{{ user_auth.driver.title|default(user_auth.driver_id) }}</td>
                         <td class="ui collapsing">{{ user_auth.created_date|date('d/m/Y') }}</td>
                         <td class="ui collapsing">
-                            {% if is_existing and driver and driver.driverClass().canResetPassword() %}
+                            {% if is_existing and user_auth.driver and user_auth.driver.driverClass().canResetPassword() %}
                                 <form method="POST">
                                     <input type="hidden" name="driver" value="{{ user_auth.driver_id }}" />
                                     <input type="submit" class="ui orange right floated button" name="_action" value="Reset Password"

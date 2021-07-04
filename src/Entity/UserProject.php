@@ -11,14 +11,14 @@ use Doctrine\ORM\Mapping as ORM;
 class UserProject extends Entity
 {
     /**
-     * @ORM\Id @ORM\ManyToOne(targetEntity="User",inversedBy="userProjects")
+     * @ORM\Id @ORM\ManyToOne(targetEntity="User",inversedBy="userProjects",fetch="EAGER")
      * @ORM\JoinColumn(name="username", referencedColumnName="username", onDelete="CASCADE")
      * @var User
      */
     public $user;
 
     /**
-     * @ORM\Id @ORM\ManyToOne(targetEntity="Project",inversedBy="userProjects")
+     * @ORM\Id @ORM\ManyToOne(targetEntity="Project",inversedBy="userProjects",fetch="EAGER")
      * @ORM\JoinColumn(name="project_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Project
      */

@@ -38,7 +38,7 @@ class SecuredAccessVoter extends Voter
                                        TokenInterface $token)
     {
         /* @var $subject SecuredAccessInterface */
-        if ($subject->isUsernameAllowed($token->getUsername(), $attribute)) {
+        if ($subject->isUsernameAllowed($token->getUserIdentifier(), $attribute)) {
             return true;
         }
 

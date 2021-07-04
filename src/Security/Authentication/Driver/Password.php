@@ -7,7 +7,7 @@ use App\Entity\UserAuthentication;
 use App\Security\Authentication\Credentials;
 use App\Security\Authentication\Driver;
 use App\Service\DataStore;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
 class Password extends Driver
@@ -41,7 +41,7 @@ class Password extends Driver
 
     public function authenticate(Credentials $credentials,
                                  UserAuthentication $user_auth,
-                                 UserPasswordEncoderInterface $passwordEncoder,
+                                 UserPasswordHasherInterface $passwordEncoder,
                                  AuthDriver $driver, DataStore $ds): bool
     {
         if (!($driver->driverClass() instanceof Password)) {
@@ -49,7 +49,7 @@ class Password extends Driver
         }
 
         if (empty($user_auth->getPassword())) {
-            $user_auth->credential = $passwordEncoder->encodePassword($user_auth, $credentials->getPassword());
+            $user_auth->credential = $passwordEncoder->hashPassword($user_auth, $credentials->getPassword());
             $ds->commit($user_auth);
             $ds->reloadEntity($user_auth);
             return true;

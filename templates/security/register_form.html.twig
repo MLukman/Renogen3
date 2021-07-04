@@ -20,7 +20,7 @@
 
     <form method="POST" onsubmit="javascript:form_disabler(this)">
         <div class="ui form">
-            {%  if not auth %}
+            {%  if auth is not defined %}
                 <div class="ui required field basic segment">
                     <label class="ui top attached large label">Authentication Method</label>
                     <p>Please choose from the following authentication methods:</p>

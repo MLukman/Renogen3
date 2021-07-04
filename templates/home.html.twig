@@ -6,7 +6,7 @@
             <div class="active item" data-tab="deployments">
                 <h2 class="ui header">
                     <span>
-                        <i class="ui calendar check o icon"></i> <span class="hide-on-mobile">Active Deployments</span>
+                        <i class="ui calendar alternate icon"></i> <span class="hide-on-mobile">Active Deployments</span>
                         <span class="ui circular large label">{{upcoming_deployments|length}}</span>
                     </span>
                 </h2>
@@ -15,7 +15,7 @@
         <div class="{% if not upcoming_deployments_hierarchy %}active{% endif %} item" data-tab="projects">
             <h2 class="ui header">
                 <span>
-                    <i class="ui cube icon"></i> <span class="hide-on-mobile">Projects</span>
+                    <i class="ui cubes icon"></i> <span class="hide-on-mobile">Projects</span>
                     <span class="ui circular large label">{{projects_with_access|length}}</span>
                 </span>
             </h2>
@@ -24,7 +24,7 @@
             <div class="item" data-tab="actions">
                 <h2 class="ui header">
                     <span>
-                        <i class="ui warning icon"></i> <span class="hide-on-mobile">Actions Needed</span>
+                        <i class="ui exclamation triangle icon"></i> <span class="hide-on-mobile">Actions Needed</span>
                         <span class="ui circular large label">{{need_actions|length}}</span>
                     </span>
                 </h2>
@@ -186,39 +186,40 @@
             </script>
         {% endif %}
         {% if projects_no_access|length > 0 %}
-            <div class="hide-on-mobile">
-                <div class="ui divider"></div>
+            <div>
+                {% if projects_with_access|length > 0 %}
+                    <div class="ui divider"></div>
+                {% endif %}
                 <p>
                     <strong>You do not have access to the following projects but you can request access from the users with approval role as listed for each project, or from an administrator</strong>
                 </p>
-                <div class="ui three stackable cards">
-                    {% for project in projects_no_access %}
-                        <div class="ui card">
-                            <div class="ui content">
-                                <div class="ui purple header">
+                <table class="ui striped celled red fluid table">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Request Access From</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects_no_access %}
+                            <tr>
+                                <td>
                                     <h3>
                                         <i class="ui {{project.icon}} icon"></i> 
                                         {{project.title}}
                                     </h3>
-                                </div>
-                                {% if project.description %}
-                                    <div class="ui description">
-                                        {{project.description}}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="extra content">
-                                <div class="ui meta">
+                                </td>
+                                <td>
                                     {% for u in project.usersWithRole('approval') %}
-                                        <span class="nowrap"><i class="ui id badge outline icon"></i> {{ u.shortname }}</span>
+                                        <span class="ui nowrap label"><i class="ui id badge outline icon"></i> {{ u.shortname }}</span>
                                     {% else %}
-                                        <div>Please request access from admin</div>
+                                        <div>Please request access from an administrator</div>
                                     {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         {% endif %}
     </div>

@@ -22,7 +22,7 @@ abstract class Actionable extends Entity
     public $signature;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Template", inversedBy="activities")
+     * @ORM\ManyToOne(targetEntity="Template", inversedBy="activities", fetch="EAGER")
      * @ORM\JoinColumn(name="template_id", referencedColumnName="id", onDelete="RESTRICT")
      * @var Template
      */

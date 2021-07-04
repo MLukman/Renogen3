@@ -20,66 +20,69 @@
     {% endif %}
 
     {% if activity.item.deployment.project.enabled_templates.count == 0 %}
-        <div class="ui error message">
-            There is no activity template found for project '{{activity.item.deployment.project.title}}'.
-            Please contact administrator.
+        <div class="ui basic segment">
+            <div class="ui error message">
+                There is no activity template found for project '{{activity.item.deployment.project.title}}'.
+                Please contact administrator.
+            </div>
+            <a href="javascript:window.history.go(-1)" class="ui button">Go Back</a>
         </div>
-    {% endif %}
-
-    <form method="POST" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
-        <div class="ui form">
-            {% if activity.template is empty %}
-                <div class="ui required field basic segment">
-                    <label class="ui top attached large label">Template</label>
-                    <div class="ui basic segment">
-                        <div class="ui very relaxed divided list">
-                            {% for template in activity.item.deployment.project.enabled_templates %}
-                                <div class="ui item">
-                                    <div class="content">
-                                        <div class="ui radio checkbox">
-                                            <input type="radio" name="template" value="{{template.id}}" onchange="javascript:$('#submit_Next').click()" />
-                                            <label>
-                                                <h3 class="ui header">    
-                                                    {{template.title}}
-                                                </h3>
-                                                {{template.description}}
-                                            </label>
+    {% else %}
+        <form method="POST" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
+            <div class="ui form">
+                {% if activity.template is empty %}
+                    <div class="ui required field basic segment">
+                        <label class="ui top attached large label">Template</label>
+                        <div class="ui basic segment">
+                            <div class="ui very relaxed divided list">
+                                {% for template in activity.item.deployment.project.enabled_templates %}
+                                    <div class="ui item">
+                                        <div class="content">
+                                            <div class="ui radio checkbox">
+                                                <input type="radio" name="template" value="{{template.id}}" onchange="javascript:$('#submit_Next').click()" />
+                                                <label>
+                                                    <h3 class="ui header">    
+                                                        {{template.title}}
+                                                    </h3>
+                                                    {{template.description}}
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            {% endfor %}
+                                {% endfor %}
+                            </div>
+                            {{ _self.fieldError(errors|default([]), 'template') }}
                         </div>
-                        {{ _self.fieldError(errors|default([]), 'template') }}
                     </div>
-                </div>
-                <div class="ui field">
-                    <input id="submit_Next" type="submit" class="ui submit primary button" name="_action" value="Next" />
-                    <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
-                </div>
-            {% else %}
-                <h2 class="ui header">Template: {{activity.template.title}}</h2>
-                <input type="hidden" name="template" value="{{activity.template.id}}" />
+                    <div class="ui field">
+                        <input id="submit_Next" type="submit" class="ui submit primary button" name="_action" value="Next" />
+                        <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                    </div>
+                {% else %}
+                    <h2 class="ui header">Template: {{activity.template.title}}</h2>
+                    <input type="hidden" name="template" value="{{activity.template.id}}" />
 
-                <div class="ui required field basic segment">
-                    <label class="ui top attached large label">Title</label>
-                    <input placeholder="Activity title (max 100 characters)" type="text" name="title" value="{{activity.title}}" />
-                    {{ _self.fieldError(errors|default([]), 'title') }}
-                </div>
-                {{ _self.activityConfigForm(activity.template, activity, errors|default([])) }}
-                <div class="ui field">
-                    <input id="submit_Save" type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Create{% endif %} activity" />
-                    <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
-                    {% if is_existing and security.isGranted('delete',activity) %}
-                        <input type="submit" class="ui red right floated button" name="_action" value="Delete"
-                               onclick="return confirm('Are you sure you want to delete?')" />
-                    {% endif %}
-                </div>
-            {% endif %}
-        </div>
-    </form>
+                    <div class="ui required field basic segment">
+                        <label class="ui top attached large label">Title</label>
+                        <input placeholder="Activity title (max 100 characters)" type="text" name="title" value="{{activity.title}}" />
+                        {{ _self.fieldError(errors|default([]), 'title') }}
+                    </div>
+                    {{ _self.activityConfigForm(activity.template, activity, errors|default([])) }}
+                    <div class="ui field">
+                        <input id="submit_Save" type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Create{% endif %} activity" />
+                        <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                        {% if is_existing and security.isGranted('delete',activity) %}
+                            <input type="submit" class="ui red right floated button" name="_action" value="Delete"
+                                   onclick="return confirm('Are you sure you want to delete?')" />
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </form>
 
-    <p>&nbsp;</p>
-    {{ _self.timestamps(activity) }}
+        <p>&nbsp;</p>
+        {{ _self.timestamps(activity) }}
+    {% endif %}
 {% endblock %}
 
 {% macro activityConfigForm(template, activity, errors) %}

@@ -293,16 +293,18 @@
                                     <div class="menu">
                                         {% block usermenu %}
                                         {% endblock %}
-                                        {{ m.topmenu_item('About Renogen', nav.path('app_about'), 'help') }}
+                                        {{ m.topmenu_item('Profile', nav.path('app_profile'), 'id badge') }}
                                         {{ m.topmenu_item('Logout', nav.path('app_logout'), 'sign out') }}
+                                        <div class="ui divider"></div>
+                                        {{ m.topmenu_item('About Renogen', nav.path('app_about'), 'help') }}
                                         {% if security.isGranted('ROLE_ADMIN') %}
                                             <div class="ui divider"></div>
                                             <div class="header">Administrations</div>
                                             {{ m.topmenu_item('Create Project', nav.path('app_project_create'), 'cube') }}
-                                            {{ m.topmenu_item('Users', nav.path('app_admin_users'), 'users') }}
-                                            {{ m.topmenu_item('Authentication', nav.path('app_admin_auth'), 'lock') }}
-                                            {{ m.topmenu_item('Archived Projects', nav.path('app_archived'), 'archive') }}
-                                            {{ m.topmenu_item('PHP Info', nav.path('app_admin_phpinfo'), 'php') }}
+                                            {{ m.topmenu_item('Manage Users', nav.path('app_admin_users'), 'users') }}
+                                            {{ m.topmenu_item('Manage Authentication', nav.path('app_admin_auth'), 'lock') }}
+                                            {{ m.topmenu_item('View Archived Projects', nav.path('app_archived'), 'archive') }}
+                                            {{ m.topmenu_item('View PHP Info', nav.path('app_admin_phpinfo'), 'php') }}
                                         {% endif %}
                                     </div>
                                 </div>
