@@ -11,12 +11,13 @@
 
     <form method="POST" onsubmit="javascript:form_disabler(this)">
         <div class="ui form">
-            <table class="ui celled structured sortable table">
+            <table class="ui celled structured table">
                 <thead>
                     <tr>
                         <th>Username</th>
                         <th>Short Name</th>
                         <th colspan="6">Role</th>
+                        <th class="ui collapsing"><i class="ui star icon"></i></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,7 +41,7 @@
 {% endblock %}
 
 {%  macro user_row(project, user) %}
-    {% set urole = project.getUserAccess(user.username) %}
+    {% set up = project.userProject(user) %}
     <td>
         {{user.username}}
         {% if user.blocked %}
@@ -53,9 +54,12 @@
     {% for lbl,role in {'None':null,'View':'view','Entry':'entry','Review':'review','Approval':'approval','Execute':'execute'} %}
         <td class="ui collapsing">
             <div class="ui toggle checkbox">
-                <input type="radio" name="role[{{user.username}}]]" value="{{role}}" {% if role == urole %}checked="checked"{% endif %} />
+                <input type="radio" name="role[{{user.username}}]]" value="{{role}}" {% if up is not empty and role == up.role %}checked="checked"{% endif %} />
                 <label>{{lbl}}</label>
             </div>
         </td>
     {% endfor %}
+    <td>
+        {% if up is not empty %}<i class="ui star {% if up.fav %}yellow{% endif %} icon"></i>{% endif %}
+    </td>
 {% endmacro %}

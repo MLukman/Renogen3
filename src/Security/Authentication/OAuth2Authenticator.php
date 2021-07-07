@@ -75,7 +75,7 @@ class OAuth2Authenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException('Invalid login method detected.');
         }
 
-        $result = $this->process($request, $authDriver, $request->getUri());
+        $result = $this->process($request, $authDriver);
         if (!$result) {
             throw new CustomUserMessageAuthenticationException('Unable to authenticate you via the third party identity provider. Please try again.');
         }
@@ -131,11 +131,15 @@ class OAuth2Authenticator extends AbstractAuthenticator
     }
 
     public function process(Request $request, AuthDriver $authDriver,
-                            $redirect_uri): ?OAuth2AuthenticatorResult
+                            $redirect_uri = null): ?OAuth2AuthenticatorResult
     {
         $driverClass = $authDriver->driverClass();
         if (!($driverClass instanceof OAuth2)) {
             return null;
+        }
+
+        if (!$redirect_uri) {
+            $redirect_uri = $request->getUri();
         }
 
         // fresh request -> redirect to OAuth2 provider

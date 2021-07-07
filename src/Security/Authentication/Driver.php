@@ -63,4 +63,9 @@ abstract class Driver
     {
         
     }
+
+    public function testable()
+    {
+        return false;
+    }
 }

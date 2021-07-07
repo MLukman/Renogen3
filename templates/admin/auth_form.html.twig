@@ -49,9 +49,9 @@
             <div class="ui required field basic segment">
                 <label class="ui top attached large label">Name</label>
                 {% if is_existing %}
-                <div class="inline fields">
-                    {{ auth.name }}
-                </div>
+                    <div class="inline fields">
+                        {{ auth.name }}
+                    </div>
                 {% else %}
                     <input placeholder="Name" type="text" name="name" value="{{auth.name|default(null)}}" />
                     {{ _self.fieldError(errors|default([]), 'name') }}
@@ -103,6 +103,9 @@
             <div class="ui field">
                 <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% elseif auth.class %}Add{% else %}Next{% endif %}" />
                 <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
+                {% if is_existing and auth.driverClass().testable() %}
+                    <a href="{{nav.path('app_admin_auth_test', {'driver':auth.name})}}" class="ui secondary button">Test</a>
+                {% endif %}
                 {% if is_existing and auth.name != 'password' %}
                     <input type="submit" class="ui red right floated button" name="_action" value="Delete"
                            onclick="return prompt('Are you sure you want to delete this authentication?\nUsers using this authentication method will not be able to login anymore until you add another one with the same name.\n\nEnter the \'{{auth.name}}\' to confirm:') == '{{auth.name}}'" />

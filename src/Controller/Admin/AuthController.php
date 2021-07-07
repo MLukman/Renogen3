@@ -4,6 +4,9 @@ namespace App\Controller\Admin;
 
 use App\Base\RenoController;
 use App\Entity\AuthDriver;
+use App\Security\Authentication\Driver\OAuth2;
+use App\Security\Authentication\OAuth2Authenticator;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -90,5 +93,32 @@ class AuthController extends RenoController
                     'getParamConfigs')) : null),
                 'errors' => $errors,
         ));
+    }
+
+    /**
+     * @Route("/!auth/{driver}/test", name="app_admin_auth_test", priority=10)
+     */
+    public function test(Request $request, OAuth2Authenticator $oauth2auth,
+                         $driver)
+    {
+        $this->requireAdminRole();
+        $this->title = "Test '$driver' Authentication";
+        $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
+        $this->addEditCrumb($this->nav->path('app_admin_auth_edit', array('driver' => $driver)));
+        $this->addCrumb('Test', $this->nav->path('app_admin_auth_test', array('driver' => $driver)), 'lock');
+        $authDriver = $this->ds->queryOne('\App\Entity\AuthDriver', $driver);
+        if ($authDriver && $authDriver->driverClass() instanceof OAuth2) {
+            $result = $oauth2auth->process($request, $authDriver);
+            if (!$result) {
+                throw new \Exception('Unable to authenticate you via the third party identity provider. Please try again.');
+            }
+            if (($redirect = $result->getRedirectResponse())) {
+                return $redirect;
+            }
+            $user_info = $result->getUserInfo();
+            return new JsonResponse($user_info);
+        }
+
+        return $this->redirectToRoute('app_admin_auth_edit', array('driver' => $driver));
     }
 }

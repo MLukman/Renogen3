@@ -7,8 +7,6 @@ use App\Security\Authentication\Driver;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use function GuzzleHttp\json_encode;
-use function GuzzleHttp\Psr7\hash;
 
 class OAuth2 extends Driver
 {
@@ -219,5 +217,10 @@ class OAuth2 extends Driver
     public function prepareNewUser(UserAuthentication $user_auth)
     {
 
+    }
+
+    public function testable()
+    {
+        return true;
     }
 }

@@ -47,7 +47,7 @@ class SecurityController extends RenoController
             'message' => [],
             'last_username' => $authenticationUtils->getLastUsername(),
             'oauth2_drivers' => $ds->queryMany('\App\Entity\AuthDriver', [
-                'class' => 'App\Security\Authentication\Driver\OAuth2']),
+                'class' => '\App\Security\Authentication\Driver\OAuth2']),
             'last_page' => $request->request->get('last_page') ?: $this->getTargetPath($session, 'main'),
             'self_register' => ($ds->count(
                 '\App\Entity\AuthDriver', ['allow_self_registration' => 1]) > 0),
@@ -134,7 +134,7 @@ class SecurityController extends RenoController
         $authClass = $authDriver->driverClass();
         if ($authClass instanceof OAuth2) {
             if (empty($user_info = $session->get("register.${driver}.userinfo"))) {
-                $result = $oauth2auth->process($request, $authDriver, $request->getUri());
+                $result = $oauth2auth->process($request, $authDriver);
                 if (!$result) {
                     throw new \Exception('Unable to authenticate you via the third party identity provider. Please try again.');
                 }
@@ -295,6 +295,11 @@ class SecurityController extends RenoController
     public function oauth2_callback(Request $request)
     {
         $original_redirect = $request->getSession()->get('oauth2.original_redirect.url');
+        if (empty($original_redirect)) {
+            return $this->redirectToRoute('app_home');
+        }
+
+        // Save query parameters in session before redirect to original redirect URL
         $request->getSession()->set('oauth2.params', json_encode($request->query->all()));
         return new RedirectResponse($original_redirect);
     }
