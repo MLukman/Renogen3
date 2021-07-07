@@ -62,9 +62,9 @@
                         <div class="ui center aligned">
                             <h3 class="ui inverted header">Login using:</h3>
                             {% for driver in oauth2_drivers %}
-                                <form action="{{ path('app_login_oauth2', {'driver':driver.name}) }}" method="post" style="display:inline;">
-                                    <input type="hidden" name="driver" value="{{ driver.name }}" />
-                                    <button class="ui big black button" type="submit" name="method" value="oauth" style="margin-bottom:0.5em">
+                                <form action="{{ path('app_login_oauth2', {'driver':driver.name}) }}" method="post" style="display:inline;" onsubmit="javascript:form_disabler(this)">
+                                    <input type="hidden" name="method" value="oauth2" />
+                                    <button class="ui big black button" type="submit" name="driver" value="{{ driver.name }}" style="margin-bottom:0.5em">
                                         <i class="openid icon"></i> {{ driver.title }}
                                     </button>
                                 </form>

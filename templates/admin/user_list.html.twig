@@ -70,7 +70,7 @@
                             {% endfor %}
                         {% endif %}
                     </td>
-                    <td class="ui center aligned">{{'ROLE_ADMIN' in user.roles ? 'Y':'N'}}</td>
+                    <td class="ui center aligned">{{user.admin ? 'Y' : 'N'}}</td>
                     <td class="ui center aligned" data-sort-value="{{user.userProjects|length}}">
                         {{user.userProjects|length}}
                     </td>

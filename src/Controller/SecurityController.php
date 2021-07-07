@@ -7,9 +7,9 @@ use App\Entity\User;
 use App\Entity\UserAuthentication;
 use App\Security\Authentication\Driver\OAuth2;
 use App\Security\Authentication\OAuth2Authenticator;
-use App\Security\Authentication\OAuth2RedirectionRequiredException;
 use App\Service\DataStore;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -26,20 +26,7 @@ class SecurityController extends RenoController
     use TargetPathTrait;
 
     /**
-     * @Route("/_login/oauth2/{driver}", name="app_login_oauth2", priority=20)
-     */
-    public function loginOAuth2(Request $request): Response
-    {
-        if ($this->getUser()) {
-            return $this->redirect($request->request->get('last_page') ?:
-                    $this->getTargetPath($request->getSession(), 'main') ?:
-                    $this->nav->path('app_home'));
-        }
-        return $this->redirectToRoute('app_login');
-    }
-
-    /**
-     * @Route("/_login/{reset_code}", name="app_login", priority=10)
+     * @Route("/.login/{reset_code}", name="app_login", priority=10)
      */
     public function login(AuthenticationUtils $authenticationUtils,
                           DataStore $ds, SessionInterface $session,
@@ -52,63 +39,46 @@ class SecurityController extends RenoController
                     $this->nav->path('app_home'));
         }
 
-        if (count($ds->queryMany('\App\Entity\User')) == 0) {
-            // register admin user
-            $user = new User();
-            $user->username = 'admin';
-            $user->shortname = 'Administrator';
-            $user->roles = array('ROLE_ADMIN');
-            $user->created_by = $user;
-            $user->created_date = new \DateTime();
-            $user_auth = new UserAuthentication($user);
-            $user_auth->driver_id = 'password';
-            $this->updateResetCode($user_auth);
-            $ds->commit($user);
-            $ds->commit($user_auth);
-            return $this->redirectToRoute('app_login', array('reset_code' => $user_auth->reset_code));
+        if (($user_auth = $ds->createAdminUserIfNotExists())) {
+            return $this->redirectToRoute('app_login', ['reset_code' => $user_auth->reset_code]);
         }
 
-        $message = array();
-        $username = '';
+        $context = [
+            'message' => [],
+            'last_username' => $authenticationUtils->getLastUsername(),
+            'oauth2_drivers' => $ds->queryMany('\App\Entity\AuthDriver', [
+                'class' => 'App\Security\Authentication\Driver\OAuth2']),
+            'last_page' => $request->request->get('last_page') ?: $this->getTargetPath($session, 'main'),
+            'self_register' => ($ds->count(
+                '\App\Entity\AuthDriver', ['allow_self_registration' => 1]) > 0),
+            'can_reset_password' => $this->canResetPassword(),
+        ];
         if (($error = $authenticationUtils->getLastAuthenticationError())) {
-            $message['text'] = $error->getMessage();
-            $message['negative'] = true;
+            $context['message'] = ['negative' => true, 'text' => $error->getMessage()];
         } elseif (!empty($reset_code) && $request->request->count() == 0) {
             $reset_user = $ds->getUserAuthentication(['reset_code' => $reset_code]);
             if ($reset_user) {
-                $username = $reset_user->username;
+                $context['last_username'] = $reset_user->username;
                 $reset_user->credential = '';
                 $reset_user->setResetCode('');
                 $ds->commit($reset_user);
-                $message['text'] = 'Please login now to set your password.';
-                $message['negative'] = false;
+                $context['message'] = ['negative' => false, 'text' => 'Please login now to set your password.'];
             } else {
-                $message['text'] = 'Invalid password reset code';
-                $message['negative'] = true;
+                $context['message'] = ['negative' => true, 'text' => 'Invalid password reset code'];
             }
         }
 
-        $lastUsername = $authenticationUtils->getLastUsername();
         $count_last = 30;
-        $query = $ds->em()->createQuery("SELECT COUNT(u) FROM \App\Entity\User u WHERE u.last_login > ?1");
-        $query->setParameter(1, new \DateTime("- $count_last minute"));
-        $usersCount = $query->getSingleScalarResult();
-
-        return $this->render('security/login.html.twig', [
-                'last_username' => $username ?: $lastUsername,
-                'message' => $message,
-                'oauth2_drivers' => $ds->queryMany('\App\Entity\AuthDriver', [
-                    'class' => 'App\Security\Authentication\Driver\OAuth2']),
-                'last_page' => $request->request->get('last_page') ?: $this->getTargetPath($session, 'main'),
-                'bottom_message' => ($usersCount < 2 ? '' : "There are ${usersCount} users who logged in within the last ${count_last} minutes"),
-                'self_register' => ($ds->count(
-                    '\App\Entity\AuthDriver', ['allow_self_registration' => 1]) > 0),
-                'can_reset_password' => $this->canResetPassword(),
-        ]);
+        $usersCount = $ds->em()->
+            createQuery("SELECT COUNT(u) FROM \App\Entity\User u WHERE u.last_login > ?1")->
+            setParameter(1, new \DateTime("- $count_last minute"))->
+            getSingleScalarResult();
+        $context['bottom_message'] = ($usersCount < 2 ? '' : "There are ${usersCount} users who logged in within the last ${count_last} minutes");
+        return $this->render('security/login.html.twig', $context);
     }
 
     /**
-     * @Route("/_logout", name="app_logout", priority=10)
+     * @Route("/.logout", name="app_logout", priority=10)
      */
     public function logout()
     {
@@ -116,7 +86,7 @@ class SecurityController extends RenoController
     }
 
     /**
-     * @Route("/_register/{driver}", name="app_register", priority=10)
+     * @Route("/.register/{driver}", name="app_register", priority=10)
      */
     public function register(HttpClientInterface $httpClient,
                              UserAuthenticatorInterface $authenticator,
@@ -134,12 +104,6 @@ class SecurityController extends RenoController
             'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
         );
 
-        $user = new User();
-        $user_auth = new UserAuthentication($user);
-        $authDriver = null;
-        $post = $request->request;
-        $session = $request->getSession();
-
         if (!$driver) {
             if (count($auths) == 1) {
                 return $this->redirectToRoute('app_register', [
@@ -152,6 +116,7 @@ class SecurityController extends RenoController
             }
         }
 
+        $authDriver = null;
         foreach ($auths as $auth) {
             if ($driver == $auth->name) {
                 $authDriver = $auth;
@@ -162,17 +127,21 @@ class SecurityController extends RenoController
             return $this->redirectToRoute('app_register');
         }
 
-        $user_auth->driver_id = $driver;
+        $user = new User();
+        $user_auth = new UserAuthentication($user, $authDriver);
+        $post = $request->request;
+        $session = $request->getSession();
         $authClass = $authDriver->driverClass();
         if ($authClass instanceof OAuth2) {
             if (empty($user_info = $session->get("register.${driver}.userinfo"))) {
-                try {
-                    if (!($user_info = $oauth2auth->process($request, $authDriver, $request->getUri()))) {
-                        throw new \Exception('Unable to authenticate you via the third party identity provider. Please try again.');
-                    }
-                } catch (OAuth2RedirectionRequiredException $ex) {
-                    return $ex->generateRedirectResponse();
+                $result = $oauth2auth->process($request, $authDriver, $request->getUri());
+                if (!$result) {
+                    throw new \Exception('Unable to authenticate you via the third party identity provider. Please try again.');
                 }
+                if (($redirect = $result->getRedirectResponse())) {
+                    return $redirect;
+                }
+                $user_info = $result->getUserInfo();
                 $session->set("register.${driver}.userinfo", $user_info);
                 return $this->redirectToRoute('app_register', ['driver' => $driver]);
             }
@@ -237,7 +206,7 @@ class SecurityController extends RenoController
     }
 
     /**
-     * @Route("/_login/resetpwd/", name="app_resetpwd", priority=100)
+     * @Route("/.login/resetpwd/", name="app_resetpwd", priority=100)
      */
     public function resetpwd(Request $request, MailerInterface $mailer)
     {
@@ -305,6 +274,29 @@ class SecurityController extends RenoController
                 'errors' => $errors,
                 'recaptcha' => $recaptcha_keys,
         ]);
+    }
+
+    /**
+     * @Route("/.login/oauth2/{driver}", name="app_login_oauth2", priority=20)
+     */
+    public function loginOAuth2(Request $request): Response
+    {
+        if ($this->getUser()) {
+            return $this->redirect($request->request->get('last_page') ?:
+                    $this->getTargetPath($request->getSession(), 'main') ?:
+                    $this->nav->path('app_home'));
+        }
+        return $this->redirectToRoute('app_login');
+    }
+
+    /**
+     * @Route("/.oauth2/callback", name="app_oauth2", priority=20)
+     */
+    public function oauth2_callback(Request $request)
+    {
+        $original_redirect = $request->getSession()->get('oauth2.original_redirect.url');
+        $request->getSession()->set('oauth2.params', json_encode($request->query->all()));
+        return new RedirectResponse($original_redirect);
     }
 
     private function canResetPassword()

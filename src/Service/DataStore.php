@@ -15,6 +15,7 @@ use App\Entity\Item;
 use App\Entity\Project;
 use App\Entity\Template;
 use App\Entity\User;
+use App\Entity\UserAuthentication;
 use App\Exception\NoResultException;
 use App\Security\Authentication\Driver\Password;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -579,6 +580,25 @@ class DataStore
         } elseif (class_exists($name)) {
             $this->_templateClasses[$name] = new $name($this->nav, $this);
             return $this->_templateClasses[$name];
+        }
+        return null;
+    }
+
+    public function createAdminUserIfNotExists(): ?UserAuthentication
+    {
+        if (count($this->queryMany('\App\Entity\User', ['admin' => 1])) == 0) {
+            // register admin user
+            $user = new User();
+            $user->username = 'admin';
+            $user->shortname = 'Administrator';
+            $user->admin = 1;
+            $user->created_by = $user;
+            $user->created_date = new \DateTime();
+            $user_auth = new UserAuthentication($user, $this->getAuthDriver('password'));
+            $this->updateResetCode($user_auth);
+            $this->commit($user);
+            $this->commit($user_auth);
+            return $user_auth;
         }
         return null;
     }

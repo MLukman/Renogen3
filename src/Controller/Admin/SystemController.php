@@ -10,7 +10,7 @@ class SystemController extends RenoController
 {
 
     /**
-     * @Route("/!/phpinfo/", name="app_admin_phpinfo", priority=10)
+     * @Route("/!phpinfo", name="app_admin_phpinfo", priority=10)
      */
     public function phpinfo()
     {
@@ -23,7 +23,7 @@ class SystemController extends RenoController
     }
 
     /**
-     * @Route("/!/phpinfo/!/", name="app_admin_phpinfo_content", priority=10)
+     * @Route("/!phpinfo!", name="app_admin_phpinfo_content", priority=10)
      */
     public function phpinfo_content()
     {

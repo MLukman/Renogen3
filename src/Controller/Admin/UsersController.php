@@ -14,9 +14,9 @@ class UsersController extends RenoController
 {
 
     /**
-     * @Route("/!/users/", name="app_admin_users", priority=10)
+     * @Route("/!users", name="app_admin_users", priority=10)
      */
-    public function index(Request $request)
+    public function index()
     {
         $this->requireAdminRole();
         $this->title = "Users";
@@ -25,7 +25,7 @@ class UsersController extends RenoController
     }
 
     /**
-     * @Route("/!/users/+", name="app_admin_users_create", priority=10)
+     * @Route("/!users/+", name="app_admin_users_create", priority=10)
      */
     public function create(Request $request)
     {
@@ -37,7 +37,7 @@ class UsersController extends RenoController
     }
 
     /**
-     * @Route("/!/users/{username}", name="app_admin_users_edit", priority=10)
+     * @Route("/!users/{username}", name="app_admin_users_edit", priority=10)
      */
     public function edit(Request $request, $username)
     {
@@ -85,7 +85,7 @@ class UsersController extends RenoController
             }
             if ($this->ds->prepareValidateEntity($user, array('username',
                     'shortname',
-                    'email', 'roles'), $post)) {
+                    'email', 'admin'), $post)) {
                 $this->ds->commit($user);
                 if (($auth = $post->get('auth')) && !isset($user->authentications[$auth])) {
                     $user_auth = new \App\Entity\UserAuthentication($user);

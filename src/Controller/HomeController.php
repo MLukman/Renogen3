@@ -22,7 +22,7 @@ class HomeController extends RenoController
         );
 
         // No project yet and the current user is an admin so go to create project screen
-        if (count($projects) == 0 && $this->getUser() && in_array('ROLE_ADMIN', $this->getUser()->getRoles('ROLE_ADMIN'))) {
+        if (count($projects) == 0 && $this->getUser() && in_array('ROLE_ADMIN', $this->getUser()->getRoles())) {
             return $this->redirectToRoute('app_project_create');
         }
 
@@ -157,7 +157,7 @@ class HomeController extends RenoController
     }
 
     /**
-     * @Route("/_archived", name="app_archived", priority=10)
+     * @Route("/!archived", name="app_archived", priority=10)
      */
     public function archived()
     {
@@ -171,7 +171,7 @@ class HomeController extends RenoController
     }
 
     /**
-     * @Route("/_about", name="app_about", priority=10)
+     * @Route("/.about", name="app_about", priority=10)
      */
     public function about()
     {

@@ -75,36 +75,38 @@ class OAuth2Authenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException('Invalid login method detected.');
         }
 
-        if (!($oauth2_user = $this->process($request, $authDriver, $this->getRedirectUri($authDriver->name)))) {
+        $result = $this->process($request, $authDriver, $request->getUri());
+        if (!$result) {
             throw new CustomUserMessageAuthenticationException('Unable to authenticate you via the third party identity provider. Please try again.');
         }
+        if (($redirect = $result->getRedirectResponse())) {
+            throw new OAuth2RedirectionRequiredException($redirect->getTargetUrl());
+        }
+        $user_info = $result->getUserInfo();
 
         $user_auth = $this->ds->getUserAuthentication([
             'driver_id' => $authDriver->name,
-            'credential' => $oauth2_user['username']
-        ]);
-        if ($user_auth) {
-            if ($user_auth->user->last_login) {
-                $welcome = sprintf('Welcome back, %s. Your last login was on %s.', $user_auth->user->getName(), $user_auth->user->last_login->format('d/m/Y h:i A'));
-            } else {
-                $welcome = sprintf('Welcome to Renogen, %s.', $user_auth->user->getName());
-            }
-            $request->getSession()->getFlashBag()->add('persistent', $welcome);
-            $user_auth->user->last_login = new \DateTime();
-            $this->ds->commit($user_auth->user);
-            return new SelfValidatingPassport(
-                new UserBadge($user_auth->username, function($id) use ($user_auth) {
-                    return $user_auth;
-                }));
+            'credential' => $user_info['username']]);
+
+        if (!$user_auth) {
+            throw new CustomUserMessageAuthenticationException('Please register first');
         }
 
-        throw new CustomUserMessageAuthenticationException('Please register first');
+        return new SelfValidatingPassport(
+            new UserBadge($user_auth->username, function($id) use ($user_auth) {
+                return $user_auth;
+            }));
     }
 
     public function onAuthenticationSuccess(Request $request,
                                             TokenInterface $token,
                                             string $providerKey): ?Response
     {
+        $user = $this->ds->currentUserEntity();
+        $welcome = $this->getWelcomMessageAndUserLastLogin($user);
+        $this->ds->commit($user);
+        $request->getSession()->getFlashBag()->add('persistent', $welcome);
+
         $redirect = $request->getSession()->get('redirect_after_login');
         if ($redirect) {
             $this->saveTargetPath($request->getSession(), $providerKey, $redirect);
@@ -129,23 +131,27 @@ class OAuth2Authenticator extends AbstractAuthenticator
     }
 
     public function process(Request $request, AuthDriver $authDriver,
-                            $redirect_uri): ?array
+                            $redirect_uri): ?OAuth2AuthenticatorResult
     {
         $driverClass = $authDriver->driverClass();
         if (!($driverClass instanceof OAuth2)) {
             return null;
         }
+
         // fresh request -> redirect to OAuth2 provider
-        if ($request->query->count() === 0) {
-            throw new OAuth2RedirectionRequiredException(
-                $driverClass->generateRedirectToAuthorizeURL($redirect_uri, $request->getSession()));
+        if (!$request->getSession()->get('oauth2.original_redirect.url')) {
+            $request->getSession()->set('oauth2.original_redirect.url', $redirect_uri);
+            $redirect_uri = $this->nav->url('app_oauth2');
+            return OAuth2AuthenticatorResult::redirect($driverClass->generateRedirectToAuthorizeURL($redirect_uri, $request->getSession()));
         }
+        $request->getSession()->remove('oauth2.original_redirect.url');
+        $request->query->add(\json_decode($request->getSession()->get('oauth2.params'), true));
 
         // coming from OAuth2 provider
         if (empty($access_token = $driverClass->handleRedirectRequest($request, $this->httpClient, $request->getSession()))) {
             return null;
         }
 
-        return $driverClass->fetchUserInfo($access_token, $this->httpClient, $request->getSession());
+        return OAuth2AuthenticatorResult::userInfo($driverClass->fetchUserInfo($access_token, $this->httpClient, $request->getSession()));
     }
 }

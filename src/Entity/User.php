@@ -35,6 +35,11 @@ class User extends Entity
     protected $roles = [];
 
     /**
+     * @ORM\Column(type="boolean", options={"default":0})
+     */
+    protected $admin = 0;
+
+    /**
      * @var string The hashed password
      * @ORM\Column(type="string")
      */
@@ -90,17 +95,15 @@ class User extends Entity
      */
     public function getRoles(): array
     {
-        $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+        $roles = ['ROLE_USER'];
 
-        return array_unique($roles);
-    }
+        // add admin role
+        if ($this->admin) {
+            $roles[] = 'ROLE_ADMIN';
+        }
 
-    public function setRoles(array $roles): self
-    {
-        $this->roles = $roles;
-        return $this;
+        return $roles;
     }
 
     /**
@@ -182,6 +185,11 @@ class User extends Entity
         return $this->shortname ?: $this->username;
     }
 
+    public function isAdmin()
+    {
+        return $this->admin;
+    }
+
     public static function getValidationRules(): ?array
     {
         return [
@@ -189,7 +197,7 @@ class User extends Entity
                 ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z\._-]*$/', 'Username must start with an alphanumerical character and contains only alphanumeric, underscores, dashes and dots'),
             'shortname' => Rules::new()->trim()->required()->unique()->truncate(100),
             'email' => Rules::new()->trim()->required()->unique()->maxlen(50)->email(),
-            'roles' => Rules::new()->required(),
+            //'admin' => Rules::new()->default(0),
         ];
     }
 }

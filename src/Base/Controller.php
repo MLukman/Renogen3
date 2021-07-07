@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\Security;
 abstract class Controller extends AbstractController
 {
     private $appTitle = 'Renogen';
-    private $appLogo = '/ui/logo.png';
+    private $appLogo = '/ui/branding.png';
 
     /**
      *

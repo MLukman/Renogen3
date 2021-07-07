@@ -67,17 +67,17 @@ class ProjectController extends RenoController
     public function users(Request $request, $project)
     {
         try {
-            $project = $this->ds->fetchProject($project);
-            $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project);
+            $project_obj = $this->ds->fetchProject($project);
+            $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
 
             if ($request->request->get('_action')) {
                 foreach ($request->request->get('role', array()) as $username => $role) {
                     try {
-                        $project_role = $project->userProjects->containsKey($username)
-                                ? $project->userProjects->get($username) : null;
+                        $project_role = $project_obj->userProjects->containsKey($username)
+                                ? $project_obj->userProjects->get($username) : null;
                         if ($role) {
                             if (!$project_role) {
-                                $project_role = new UserProject($project, $this->ds->fetchUser($username));
+                                $project_role = new UserProject($project_obj, $this->ds->fetchUser($username));
                                 $this->ds->manage($project_role);
                             }
                             $project_role->role = $role;
@@ -91,13 +91,13 @@ class ProjectController extends RenoController
                     }
                 }
                 $this->ds->commit();
-                return $this->nav->redirectForEntity('app_project_users', $project);
+                return $this->nav->redirectForEntity('app_project_users', $project_obj);
             }
 
-            $this->addEntityCrumb($project);
-            $this->addCrumb('Users', $this->nav->entityPath('app_project_users', $project), 'users');
+            $this->addEntityCrumb($project_obj);
+            $this->addCrumb('Users', $this->nav->entityPath('app_project_users', $project_obj), 'users');
             return $this->render('project_users.html.twig', array(
-                    'project' => $project,
+                    'project' => $project_obj,
                     'users' => $this->ds->queryMany('\App\Entity\User'),
             ));
         } catch (NoResultException $ex) {
@@ -111,12 +111,12 @@ class ProjectController extends RenoController
     public function edit(Request $request, $project)
     {
         try {
-            $project = $this->ds->fetchProject($project);
-            $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project);
+            $project_obj = $this->ds->fetchProject($project);
+            $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
 
-            $this->addEntityCrumb($project);
-            $this->addEditCrumb($this->nav->entityPath('app_project_edit', $project));
-            return $this->edit_or_create($request->request, $project);
+            $this->addEntityCrumb($project_obj);
+            $this->addEditCrumb($this->nav->entityPath('app_project_edit', $project_obj));
+            return $this->edit_or_create($request->request, $project_obj);
         } catch (NoResultException $ex) {
             return $this->errorPage('Project not found', $ex->getMessage());
         }

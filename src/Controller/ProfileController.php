@@ -7,7 +7,6 @@ use App\Entity\Project;
 use App\Entity\UserAuthentication;
 use App\Security\Authentication\Driver\Password;
 use App\Security\Authentication\OAuth2Authenticator;
-use App\Security\Authentication\OAuth2RedirectionRequiredException;
 use App\Service\DataStore;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -16,7 +15,7 @@ class ProfileController extends RenoController
 {
 
     /**
-     * @Route("/_profile", name="app_profile", priority=20)
+     * @Route("/.profile", name="app_profile", priority=20)
      */
     public function profile(Request $request)
     {
@@ -127,19 +126,20 @@ class ProfileController extends RenoController
     }
 
     /**
-     * @Route("/_profile/oauth2/{driver}", name="app_profile_oauth2", priority=20)
+     * @Route("/.profile/oauth2/{driver}", name="app_profile_oauth2", priority=20)
      */
     public function oauth2(DataStore $ds, OAuth2Authenticator $oauth2auth,
                            Request $request, $driver)
     {
         $authDriver = $ds->queryOne('\App\Entity\AuthDriver', ['name' => $driver]);
-        try {
-            if (!($user_info = $oauth2auth->process($request, $authDriver, $request->getUri()))) {
-                throw new \Exception('Unable to authenticate you via the third party identity provider. Please try again.');
-            }
-        } catch (OAuth2RedirectionRequiredException $ex) {
-            return $ex->generateRedirectResponse();
+        $result = $oauth2auth->process($request, $authDriver, $request->getUri());
+        if (!$result) {
+            throw new \Exception('Unable to authenticate you via the third party identity provider. Please try again.');
         }
+        if (($redirect = $result->getRedirectResponse())) {
+            return $redirect;
+        }
+        $user_info = $result->getUserInfo();
 
         $existing = $ds->getUserAuthentication([
             'driver_id' => $driver,
@@ -150,7 +150,7 @@ class ProfileController extends RenoController
             throw new \Exception("Your identity with {$authDriver->title} is already tied to user {$existing->user->shortname}");
         }
 
-        $user_auth = new UserAuthentication($ds->currentUserEntity(), $driver, $user_info['username']);
+        $user_auth = new UserAuthentication($ds->currentUserEntity(), $authDriver, $user_info['username']);
         $ds->commit($user_auth);
 
         return $this->nav->redirectRoute('app_profile', [], 'oauth2');

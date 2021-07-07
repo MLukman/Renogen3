@@ -82,6 +82,12 @@ class MigrateCommand extends Command
             ]);
         }
 
+        // Update User::$admin
+        foreach ($this->ds->queryMany('App\Entity\User') as $user) {
+            $user->admin = in_array("ROLE_ADMIN", $user->roles);
+        }
+        $this->ds->commit();
+
         return Command::SUCCESS;
     }
 }

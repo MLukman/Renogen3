@@ -94,28 +94,26 @@ class FormAuthenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException("Your account requires authentication method '$user_auth->auth' which has been disabled. Please contact an administrator to request for access.");
         }
 
-        if ($authDriver->driverClass()->authenticate(new Credentials($credentials['username'], $credentials['password']),
+        if (!$authDriver->driverClass()->authenticate(new Credentials($credentials['username'], $credentials['password']),
                 $user_auth, $this->passwordEncoder, $authDriver, $this->ds)) {
-            if ($user_auth->user->last_login) {
-                $welcome = sprintf('Welcome back, %s. Your last login was on %s.', $user_auth->user->getName(), $user_auth->user->last_login->format('d/m/Y h:i A'));
-            } else {
-                $welcome = sprintf('Welcome to Renogen, %s.', $user_auth->user->getName());
-            }
-            $request->getSession()->getFlashBag()->add('persistent', $welcome);
-            $user_auth->user->last_login = new DateTime();
-            $this->ds->commit($user_auth->user);
-            return new SelfValidatingPassport(
-                new UserBadge($user_auth->username, function($id) use ($user_auth) {
-                    return $user_auth;
-                }));
+            throw new CustomUserMessageAuthenticationException("Invalid credentials");
         }
-        throw new CustomUserMessageAuthenticationException("Invalid credentials");
+
+        return new SelfValidatingPassport(
+            new UserBadge($user_auth->username, function($id) use ($user_auth) {
+                return $user_auth;
+            }));
     }
 
     public function onAuthenticationSuccess(Request $request,
                                             TokenInterface $token,
                                             string $providerKey): ?Response
     {
+        $user = $this->ds->currentUserEntity();
+        $welcome = $this->getWelcomMessageAndUserLastLogin($user);
+        $this->ds->commit($user);
+        $request->getSession()->getFlashBag()->add('persistent', $welcome);
+
         $redirect = $request->getSession()->get('redirect_after_login');
         if ($redirect) {
             $this->saveTargetPath($request->getSession(), $providerKey, $redirect);

@@ -125,6 +125,7 @@ class OAuth2 extends Driver
             // auth token flow
             return $this->fetchAccessToken($code, $httpClient, $session);
         }
+        return null;
     }
 
     public function fetchAccessToken(string $code,

@@ -12,7 +12,7 @@ class AuthController extends RenoController
 {
 
     /**
-     * @Route("/!/auth/", name="app_admin_auth", priority=10)
+     * @Route("/!auth", name="app_admin_auth", priority=10)
      */
     public function index(Request $request)
     {
@@ -23,7 +23,7 @@ class AuthController extends RenoController
     }
 
     /**
-     * @Route("/!/auth/+", name="app_admin_auth_create", priority=10)
+     * @Route("/!auth/+", name="app_admin_auth_create", priority=10)
      */
     public function create(Request $request)
     {
@@ -35,7 +35,7 @@ class AuthController extends RenoController
     }
 
     /**
-     * @Route("/!/auth/{driver}", name="app_admin_auth_edit", priority=10)
+     * @Route("/!auth/{driver}", name="app_admin_auth_edit", priority=10)
      */
     public function edit(Request $request, $driver)
     {

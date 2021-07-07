@@ -49,12 +49,13 @@ class UserAuthentication extends Entity implements UserInterface, PasswordAuthen
      */
     protected $reset_code;
 
-    public function __construct(User $user, $driver_id = null,
+    public function __construct(User $user, AuthDriver $driver = null,
                                 $credential = null)
     {
         $this->user = $user;
         $this->username = $user->getUsername();
-        $this->driver_id = $driver_id;
+        $this->driver = $driver;
+        $this->driver_id = $driver->name;
         $this->credential = $credential;
     }
 

@@ -192,7 +192,10 @@
             });
 
             function form_disabler(form) {
-                setTimeout(() => $('*[type=submit]', form).attr('disabled', 'disabled'), 0);
+                setTimeout(() => {
+                    $('button,input').attr('disabled', 'disabled');
+                    $('a[class*=button]').addClass('disabled');
+                }, 0);
                 $(form).submit(() => event.preventDefault());
             }
         </script>
