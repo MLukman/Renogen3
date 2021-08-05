@@ -446,7 +446,7 @@ class DataStore
     public function deleteEntity(Entity &$entity)
     {
         $todelete = [];
-        $cascader = function(Entity $e) use (&$todelete, &$cascader) {
+        $cascader = function (Entity $e) use (&$todelete, &$cascader) {
             if (!in_array($e, $todelete)) {
                 $todelete[] = $e;
                 foreach ($e->cascadeDelete() as $c) {
@@ -539,7 +539,7 @@ class DataStore
     public function getAuthClassNames()
     {
         $globPath = __DIR__.'/../Security/Authentication/Driver/*.php';
-        $authClassNames = $this->cache->get('authClasses', function(ItemInterface $item) use($globPath) {
+        $authClassNames = $this->cache->get('authClasses', function (ItemInterface $item) use ($globPath) {
             $au = [];
             foreach (glob($globPath) as $fn) {
                 $shortName = basename($fn, '.php');
@@ -568,7 +568,7 @@ class DataStore
                 $templateClass = new $templateClassName($this->nav, $this);
                 $this->_templateClasses[$templateClassName] = $templateClass;
             }
-            uasort($this->_templateClasses, function($a, $b) {
+            uasort($this->_templateClasses, function ($a, $b) {
                 return strcmp($a->classTitle(), $b->classTitle());
             });
         }
@@ -595,7 +595,7 @@ class DataStore
             $user->created_by = $user;
             $user->created_date = new \DateTime();
             $user_auth = new UserAuthentication($user, $this->getAuthDriver('password'));
-            $this->updateResetCode($user_auth);
+            $user_auth->generateResetCode();
             $this->commit($user);
             $this->commit($user_auth);
             return $user_auth;

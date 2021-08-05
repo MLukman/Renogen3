@@ -61,7 +61,19 @@
                                             left
                                         </div>
                                     {% else %}
-                                        <strong>In progress</strong>
+                                        {% set difference = date(now).diff(date(dt)) %}
+                                        <strong>
+                                            In progress
+                                            {% if difference.h > 0 or difference.i > 0 %}
+                                                for
+                                                {% if difference.h > 0 %}
+                                                    {{ difference.h }} hour{% if difference.h > 1 %}s{% endif %}
+                                                {% endif %}
+                                                {% if difference.i > 0 %}
+                                                    {{ difference.i }} minute{% if difference.i > 1 %}s{% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        </strong>
                                     {% endif %}
                                 </td>
                                 <td>

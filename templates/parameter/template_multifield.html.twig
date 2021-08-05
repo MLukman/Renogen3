@@ -10,6 +10,7 @@
             <th>Description</th>
             <th>Configuration</th>
             <th>Required</th>
+            <th>Sensitive</th>
         </tr>
     </thead>
     <tbody>
@@ -40,6 +41,9 @@
                 </td>
                 <td class="ui center aligned collapsing">
                     <input class="ui checkbox" type="checkbox" name="parameters[{{param}}][{{i}}][required]" value="1" {% if paramval[i].required|default(null) %}checked="checked"{% endif %} />
+                </td>
+                <td class="ui center aligned collapsing">
+                    <input class="ui checkbox" type="checkbox" name="parameters[{{param}}][{{i}}][sensitive]" value="1" {% if paramval[i].sensitive|default(null) %}checked="checked"{% endif %} />
                 </td>
             </tr>
         {% endfor %}

@@ -189,7 +189,11 @@ class MultiField extends Parameter
 
             //$options[$d] = null;
             if (isset($data[$p['id']])) {
-                if ($p['type'] == 'file') {
+                if ($p['type'] == 'password' && !$isForRunbook) {
+                    $options[$d] = '******';
+                } elseif (isset($p['sensitive']) && $p['sensitive'] && !$isForRunbook) {
+                    $options[$d] = '<em>-- Redacted due to sensitive details --</em>';
+                } elseif ($p['type'] == 'file') {
                     $file = $this->template->ds()->queryOne($activity->fileClass, array(
                         "{$activity->actionableType}" => $activity,
                         'classifier' => $key.'.'.$p['id'],
@@ -197,8 +201,6 @@ class MultiField extends Parameter
                     if ($file) {
                         $options[$d] = '<a href="'.htmlentities($this->getDownloadLink($file)).'">'.htmlentities($file->filename).'</a>';
                     }
-                } elseif ($p['type'] == 'password' && !$isForRunbook) {
-                    $options[$d] = '******';
                 } elseif ($p['type'] == 'url') {
                     $options[$d] = '<a href="'.htmlentities($data[$p['id']]).'" target="_blank">'.htmlentities($data[$p['id']]).'</a>';
                 } elseif ($p['type'] == 'script') {

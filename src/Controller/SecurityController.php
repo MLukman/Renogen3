@@ -188,7 +188,7 @@ class SecurityController extends RenoController
                     $session->remove("register.${driver}.userinfo");
                     return $this->redirectAfterAuthenticate($request);
                 } else {
-                    $this->updateResetCode($user_auth);
+                    $user_auth->generateResetCode();
                     $ds->commit($user);
                     $ds->commit($user_auth);
                     return $this->redirectToRoute('app_login', ['reset_code' => $user_auth->reset_code]);
@@ -241,9 +241,10 @@ class SecurityController extends RenoController
             }
 
             if (empty($errors)) {
-                $this->updateResetCode($reset_user->authentications['password']);
-                $this->ds->commit($reset_user->authentications['password']);
-                $reset_url = $this->nav->url('app_login', ['reset_code' => $reset_user->authentications['password']->reset_code]);
+                $reset_user_auth = $reset_user->authentications['password'];
+                $reset_user_auth->generateResetCode();
+                $this->ds->commit($reset_user_auth);
+                $reset_url = $this->nav->url('app_login', ['reset_code' => $reset_user_auth->reset_code]);
                 $email = (new TemplatedEmail())
                     ->to($reset_email)
                     ->subject("Hello {$reset_user->shortname}! It seems that you forgot your Renogen's password?")
@@ -307,11 +308,6 @@ class SecurityController extends RenoController
     private function canResetPassword()
     {
         return !empty($_ENV['MAILER_DSN']);
-    }
-
-    private function updateResetCode(UserAuthentication $user_auth)
-    {
-        $user_auth->setResetCode(md5($user_auth->user->getEmail().':'.time()));
     }
 
     private function redirectAfterAuthenticate(Request $request)

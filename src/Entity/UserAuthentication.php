@@ -100,6 +100,11 @@ class UserAuthentication extends Entity implements UserInterface, PasswordAuthen
         return $this;
     }
 
+    public function generateResetCode()
+    {
+        $this->setResetCode(md5($this->user->getEmail().':'.time()));
+    }
+
     public function eraseCredentials()
     {
         
