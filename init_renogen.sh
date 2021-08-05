@@ -23,4 +23,7 @@ bin/console doctrine:migrations:migrate --no-interaction || echo No migrations n
 # Call special migration code
 bin/console app:migrate --no-interaction
 
+# Cleanup orphans \App\Entity\FileStore
+bin/console doctrine:query:dql "DELETE FROM \App\Entity\FileStore fs WHERE NOT EXISTS (SELECT 1 FROM \App\Entity\FileLink fl WHERE fl.filestore = fs)"
+
 chown -R www-data:www-data var

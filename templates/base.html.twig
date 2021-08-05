@@ -166,10 +166,11 @@
                     fixedOffset: $('#topbar')
                 });
                 $('.ui.checkbox').checkbox();
+                $('.ui.dropdown.button').dropdown();
                 $('.ui.dropdown.action-nothing').dropdown({
                     action: 'nothing'
                 });
-                $('.ui.dropdown:not(.action-nothing)').dropdown({
+                $('.ui.dropdown:not(.action-nothing):not(.button)').dropdown({
                     fullTextSearch: true,
                     clearable: true
                 });

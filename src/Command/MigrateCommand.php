@@ -43,12 +43,17 @@ class MigrateCommand extends Command
         }
 
         // Update AuthDriver
-        $this->ds->em()->createQueryBuilder()
+        $updateAuthDriverQuery = $this->ds->em()->createQueryBuilder()
             ->update('App\Entity\AuthDriver', 'a')
             ->set('a.class', ':new')
             ->where('a.class = :old')
-            ->getQuery()->execute([
+            ->getQuery();
+        $updateAuthDriverQuery->execute([
             'old' => 'Renogen\Auth\Driver\Password',
+            'new' => '\App\Security\Authentication\Driver\Password'
+        ]);
+        $updateAuthDriverQuery->execute([
+            'old' => 'App\Auth\Driver\Password',
             'new' => '\App\Security\Authentication\Driver\Password'
         ]);
 

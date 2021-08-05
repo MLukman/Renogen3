@@ -1,0 +1,15 @@
+include:
+  - project: 'cicd/gitlabci-yml-templates'
+    file: '/docker.yml'
+
+build_docker_gitlab_registry:
+  stage: build
+  extends:
+    - .docker_build_push_using_kaniko_template
+  only:
+    variables:
+      - $CI_REGISTRY
+      - $CI_COMMIT_TAG
+  before_script:
+    - export DOCKER_IMAGE_NAME="renogen3"
+    - export DOCKER_IMAGE_TAG="$CI_COMMIT_TAG"
