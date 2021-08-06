@@ -205,7 +205,7 @@ class MultiField extends Parameter
                     $options[$d] = '<a href="'.htmlentities($data[$p['id']]).'" target="_blank">'.htmlentities($data[$p['id']]).'</a>';
                 } elseif ($p['type'] == 'script') {
                     $options[$d] = '<div class="ui form">';
-                    $options[$d] .= '<div class="ui right corner labeled fluid input"><div class="ui right corner label"><i class="code icon"></i></div>';
+                    $options[$d] .= '<div class="ui right corner labeled fluid input"><a class="ui right corner label" onclick="popupClone($(this).closest(\'.form\'))"><i class="code icon"></i></a>';
                     $options[$d] .= '<textarea readonly="readonly" style="font-family: monospace">'.htmlentities($data[$p['id']]).'</textarea>';
                     $options[$d] .= '</div>';
                     $options[$d] .= '</div>';

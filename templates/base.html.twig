@@ -199,6 +199,10 @@
                 }, 0);
                 $(form).submit(() => event.preventDefault());
             }
+
+            function popupClone(elements) {
+                $('body').modal({content: elements.clone()}).modal('show');
+            }
         </script>
         {% for js in extra_js|default([]) %}<script src="{{js}}"></script>{% endfor %}
         {% for css in extra_css|default([]) %}<link rel="stylesheet" type="text/css" href="{{css}}" />{% endfor %}

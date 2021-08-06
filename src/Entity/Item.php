@@ -266,7 +266,7 @@ class Item extends Entity
                         'type' => '',
                     );
                 }
-            } else if (in_array($this->status, $config['requirecurrent'])) {
+            } else if (in_array($this->status(), $config['requirecurrent'])) {
                 // current status is compatible with this transition
                 if ($this->deployment->project->isUserNameAllowed($user->username, $config['role'])) {
                     $transition[$config['proceedaction']] = array(
@@ -282,7 +282,7 @@ class Item extends Entity
                         );
                     }
                     // Special condition: Ready For Release cannot be completed here if there are activities
-                    if ($this->status == Project::ITEM_STATUS_READY &&
+                    if ($this->status() == Project::ITEM_STATUS_READY &&
                         $this->activities->count() > 0) {
                         $transition = array();
                     }
