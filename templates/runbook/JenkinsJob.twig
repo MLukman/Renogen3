@@ -1,0 +1,42 @@
+{% import "renobase.html.twig" as m %}
+{% set has_details = false %}
+{% for row in data %}
+    {% if row.params.parameters is defined %}
+        {% set has_details = true %}
+    {% endif %}
+{% endfor %}
+<table class="ui striped very compact table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Jobs</th>
+                {% if has_details %}
+                <th>Parameters</th>
+                {% endif %}
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in data %}
+            <tr>
+                <td class="top aligned collapsing">
+                    <a name="{{row.runitem.id}}" class="anchor">&nbsp;</a>{{loop.index}}
+                </td>
+                <td class="top aligned">
+                    {{ row.params.job }}
+                </td>
+                {% if has_details %}
+                    <td class="top aligned">
+                        {% if row.params.parameters is defined and row.params.parameters|length > 0 %}
+                            {{ m.prettyDisplay(row.params.parameters) }}
+                        {% endif %}
+                    </td>
+                {% endif %}
+                <td class="top aligned collapsing">
+                    {{ m.runItemStatusControl(row.runitem) }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+

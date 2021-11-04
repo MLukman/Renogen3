@@ -120,9 +120,6 @@
     "laminas/laminas-code": {
         "version": "3.4.1"
     },
-    "laravelfy/parsedown-extra-plugin": {
-        "version": "v0.01"
-    },
     "monolog/monolog": {
         "version": "2.1.1"
     },
@@ -569,6 +566,9 @@
     },
     "symfony/yaml": {
         "version": "v5.1.5"
+    },
+    "taufik-nurrohman/parsedown-extra-plugin": {
+        "version": "v1.3.1"
     },
     "twig/extra-bundle": {
         "version": "v3.0.5"

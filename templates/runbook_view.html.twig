@@ -33,6 +33,7 @@
 {% endblock %}
 
 {% block content %}
+    {% import "renobase.html.twig" as m %}
     <h1 class="ui dividing header">
         <div class="breadcrumb">
             <span>{{_self.crumb_project(deployment.project, true)}} &raquo;</span>
@@ -56,7 +57,8 @@
                     <div class="ui left ribbon {{colors[stage]}} label">
                         <h3>{{loop.index}} &raquo; {{group.getTitle()}}</h3>
                     </div>
-                    <p>{{group.getInstruction()}}</p>
+                    <h2 class="ui sub header">{{group.getInstructionLabel()}}</h2>
+                    <div>{{m.prettyDisplay(group.getInstruction())}}</div>
                     {% set data = group.getData() %}
                     {% include group.getTemplate() %}
                 </div>

@@ -8,15 +8,16 @@ RUN apt-get update && apt-get install -y libldap2-dev libonig-dev libicu-dev wge
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ARG APCU_VERSION=5.1.20
+ARG APCU_VERSION=5.1.21
+ARG DUMB_INIT_VERSION=1.2.5
 RUN pecl install apcu-${APCU_VERSION} \
     && docker-php-ext-enable apcu \
     && pecl clear-cache \
     && a2enmod rewrite \
-    && wget -O /usr/local/bin/dumb-init --no-verbose https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 \
+    && wget -O /usr/local/bin/dumb-init --no-verbose https://github.com/Yelp/dumb-init/releases/download/v${DUMB_INIT_VERSION}/dumb-init_${DUMB_INIT_VERSION}_x86_64 \
     && chmod +x /usr/local/bin/dumb-init
 
-RUN echo 'TLS_REQCERT never' >> /etc/ldap/ldap.conf \
+RUN echo 'TLS_REQCERT never' >> /etc/ldap.conf \
     && echo 'upload_max_filesize = 100M' > /usr/local/etc/php/conf.d/max.ini \
     && echo 'post_max_size = 120M' >> /usr/local/etc/php/conf.d/max.ini \
     && wget -O /usr/local/etc/cacert.pem --no-verbose https://curl.haxx.se/ca/cacert.pem \

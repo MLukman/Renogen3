@@ -8,6 +8,7 @@ class RunbookGroup
 {
     protected $title;
     protected $instruction;
+    protected $instruction_label;
     protected $template;
     protected $data = array();
 
@@ -30,6 +31,16 @@ class RunbookGroup
     public function getInstruction()
     {
         return $this->instruction;
+    }
+
+    public function getInstructionLabel()
+    {
+        return $this->instruction_label;
+    }
+
+    public function setInstructionLabel($instruction_label): void
+    {
+        $this->instruction_label = $instruction_label;
     }
 
     public function setTemplate($template)

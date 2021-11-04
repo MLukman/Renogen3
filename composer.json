@@ -12,7 +12,6 @@
         "doctrine/orm": "^2.7",
         "google/recaptcha": "^1.2",
         "guzzlehttp/guzzle": "^7.0",
-        "laravelfy/parsedown-extra-plugin": "^0.01.0",
         "phpdocumentor/reflection-docblock": "^5.2",
         "sensio/framework-extra-bundle": "^5.6",
         "symfony/apache-pack": "^1.0",
@@ -41,6 +40,7 @@
         "symfony/validator": "5.3.*",
         "symfony/web-link": "5.3.*",
         "symfony/yaml": "5.3.*",
+        "taufik-nurrohman/parsedown-extra-plugin": "^1.3",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0"
     },

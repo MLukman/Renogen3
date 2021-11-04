@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c43c0c262ba5f413a1457fecb6be2a41",
+    "content-hash": "d488229742621dd56dd2f6e7a5a95b10",
     "packages": [
         {
             "name": "composer/package-versions-deprecated",
@@ -2043,52 +2043,6 @@
                 }
             ],
             "time": "2021-07-09T11:58:40+00:00"
-        },
-        {
-            "name": "laravelfy/parsedown-extra-plugin",
-            "version": "v0.01",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/laravelfy/parsedown-extra-plugin.git",
-                "reference": "51944829ed4261bf5c63fc98765419388469bc95"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/laravelfy/parsedown-extra-plugin/zipball/51944829ed4261bf5c63fc98765419388469bc95",
-                "reference": "51944829ed4261bf5c63fc98765419388469bc95",
-                "shasum": ""
-            },
-            "require": {
-                "erusev/parsedown-extra": "~0.7"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "ParsedownExtraPlugin": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taufik Nurrohman",
-                    "homepage": "https://plus.google.com/+TaufikNurrohman"
-                }
-            ],
-            "description": "Configurable Markdown to HTML converter with Parsedown Extra.",
-            "homepage": "https://github.com/tovic/parsedown-extra-plugin",
-            "keywords": [
-                "markdown",
-                "markdown extra",
-                "parsedown",
-                "parser"
-            ],
-            "support": {
-                "source": "https://github.com/laravelfy/parsedown-extra-plugin/tree/v0.01"
-            },
-            "time": "2018-12-25T07:29:43+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -8024,6 +7978,57 @@
                 }
             ],
             "time": "2021-07-29T06:20:01+00:00"
+        },
+        {
+            "name": "taufik-nurrohman/parsedown-extra-plugin",
+            "version": "v1.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/taufik-nurrohman/parsedown-extra-plugin.git",
+                "reference": "0e4373ce07449c1675b7bacfd08add38cfe4f7ea"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/taufik-nurrohman/parsedown-extra-plugin/zipball/0e4373ce07449c1675b7bacfd08add38cfe4f7ea",
+                "reference": "0e4373ce07449c1675b7bacfd08add38cfe4f7ea",
+                "shasum": ""
+            },
+            "require": {
+                "erusev/parsedown-extra": "~0.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "ParsedownExtraPlugin": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taufik Nurrohman",
+                    "homepage": "https://github.com/taufik-nurrohman/parsedown-extra-plugin"
+                }
+            ],
+            "description": "Configurable Markdown to HTML converter with Parsedown Extra.",
+            "homepage": "https://github.com/taufik-nurrohman/parsedown-extra-plugin",
+            "keywords": [
+                "Parsedown Extra",
+                "extension",
+                "extra",
+                "markdown",
+                "markdown extra",
+                "markdown extra extension",
+                "parsedown",
+                "parsedown extra extension"
+            ],
+            "support": {
+                "issues": "https://github.com/taufik-nurrohman/parsedown-extra-plugin/issues",
+                "source": "https://github.com/taufik-nurrohman/parsedown-extra-plugin/tree/v1.3.1"
+            },
+            "time": "2020-05-25T16:30:00+00:00"
         },
         {
             "name": "twig/extra-bundle",
