@@ -12,7 +12,10 @@ use Doctrine\ORM\Mapping as ORM;
 abstract class Actionable extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -39,7 +42,7 @@ abstract class Actionable extends Entity
     public $priority;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $parameters;
 

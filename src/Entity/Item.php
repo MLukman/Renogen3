@@ -18,7 +18,10 @@ use Doctrine\ORM\Mapping as ORM;
 class Item extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -45,7 +48,7 @@ class Item extends Entity
     public $category;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $modules = array();
 
@@ -104,7 +107,7 @@ class Item extends Entity
     public $approved_date;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      * @var array
      */
     public $plugin_data = array();
@@ -112,8 +115,8 @@ class Item extends Entity
 
     public function __construct(Deployment $deployment)
     {
-        $this->deployment = $deployment;
-        $this->activities = new ArrayCollection();
+        $this->deployment  = $deployment;
+        $this->activities  = new ArrayCollection();
         $this->attachments = new ArrayCollection();
         $this->status_logs = new ArrayCollection();
         $this->status_logs->add(new ItemStatusLog($this, $this->status));
@@ -148,12 +151,13 @@ class Item extends Entity
      */
     public function compareCurrentStatusTo($status_to_compare)
     {
-        return static::compareStatuses($this->deployment->project, $this->status(), $status_to_compare);
+        return static::compareStatuses($this->deployment->project,
+                $this->status(), $status_to_compare);
     }
 
     static public function compareStatuses(Project $project, $status1, $status2)
     {
-        $_statuses = array_keys($project->item_statuses);
+        $_statuses      = array_keys($project->item_statuses);
         $compare_status = array_search($status1, $_statuses);
         if ($compare_status === FALSE) {
             return -1;
@@ -168,7 +172,7 @@ class Item extends Entity
     public function getNextStatus()
     {
         $this->_statuses = array_keys($this->deployment->project->item_statuses);
-        $compare_status = array_search($this->status(), $this->_statuses);
+        $compare_status  = array_search($this->status(), $this->_statuses);
         if ($compare_status === FALSE) {
             return $this->_statuses[0];
         } elseif ($compare_status < count($this->_statuses) - 1) {
@@ -180,25 +184,25 @@ class Item extends Entity
 
     public function changeStatus($status, $remark = null)
     {
-        $project = $this->deployment->project;
+        $project         = $this->deployment->project;
         $old_status_real = $this->status();
         if ($status == Project::ITEM_STATUS_READY &&
             static::compareStatuses($project, $old_status_real, $status) > 0) {
             $this->approved_date = new DateTime();
         }
-        if (static::compareStatuses($project, $status, Project::ITEM_STATUS_APPROVAL)
-            >= 0) {
+        if (static::compareStatuses($project, $status,
+                Project::ITEM_STATUS_APPROVAL) >= 0) {
             $this->approved_date = null;
         }
 
-        $old_status = $this->status;
+        $old_status   = $this->status;
         $this->storeOldValues(array('status'));
         $this->status = $status;
-        $status_log = new ItemStatusLog($this, $this->status);
+        $status_log   = new ItemStatusLog($this, $this->status);
         if (!empty($remark)) {
-            $comment = new ItemComment($this);
-            $comment->event = "$old_status > $this->status";
-            $comment->text = $remark;
+            $comment            = new ItemComment($this);
+            $comment->event     = "$old_status > $this->status";
+            $comment->text      = $remark;
             $this->comments->add($comment);
             $status_log->remark = $remark;
         }
@@ -210,7 +214,7 @@ class Item extends Entity
     {
         static $crit = null;
         if (!$crit) {
-            $eb = new ExpressionBuilder();
+            $eb   = new ExpressionBuilder();
             $crit = new Criteria($eb->eq('status', $status));
         }
         return $this->status_logs->matching($crit)->last();
@@ -235,12 +239,13 @@ class Item extends Entity
         switch ($attribute) {
             case 'delete':
             case 'move':
-                $allowed = ($this->created_by->username == $username);
+                $allowed   = ($this->created_by->username == $username);
                 $attribute = 'approval';
                 break;
         }
 
-        return $allowed || $this->deployment->isUsernameAllowed($username, $attribute);
+        return $allowed || $this->deployment->isUsernameAllowed($username,
+                $attribute);
     }
 
     /**
@@ -255,11 +260,12 @@ class Item extends Entity
     {
         $transitions = array();
         foreach ($this->deployment->project->item_statuses as $status => $config) {
-            $progress = $this->compareCurrentStatusTo($status);
+            $progress   = $this->compareCurrentStatusTo($status);
             $transition = array();
             if ($progress < 0) {
                 // iterated status is behind current status
-                if ($this->deployment->project->isUserNameAllowed($user->username, $config['role'])) {
+                if ($this->deployment->project->isUserNameAllowed($user->username,
+                        $config['role'])) {
                     $transition['Revert'] = array(
                         'status' => $status,
                         'remark' => true,
@@ -268,7 +274,8 @@ class Item extends Entity
                 }
             } else if (in_array($this->status(), $config['requirecurrent'])) {
                 // current status is compatible with this transition
-                if ($this->deployment->project->isUserNameAllowed($user->username, $config['role'])) {
+                if ($this->deployment->project->isUserNameAllowed($user->username,
+                        $config['role'])) {
                     $transition[$config['proceedaction']] = array(
                         'status' => $config['proceedstatus'],
                         'remark' => false,

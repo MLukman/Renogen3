@@ -10,12 +10,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="templates")
+ * @ORM\Entity
+ * @ORM\Table(name="templates")
  */
 class Template extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -52,7 +56,7 @@ class Template extends Entity
     public $priority;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $parameters;
 
@@ -69,7 +73,7 @@ class Template extends Entity
 
     public function __construct(Project $project)
     {
-        $this->project = $project;
+        $this->project    = $project;
         $this->activities = new ArrayCollection();
     }
 

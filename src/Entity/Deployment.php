@@ -16,7 +16,10 @@ use Doctrine\ORM\Mapping as ORM;
 class Deployment extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -87,18 +90,18 @@ class Deployment extends Entity
     public $checklists = null;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      * @var array
      */
     public $plugin_data = array();
-    protected $_caches = [];
+    protected $_caches  = [];
 
     public function __construct(Project $project)
     {
-        $this->project = $project;
-        $this->duration = $this->project->approx_deployment_duration;
-        $this->items = new ArrayCollection();
-        $this->runitems = new ArrayCollection();
+        $this->project    = $project;
+        $this->duration   = $this->project->approx_deployment_duration;
+        $this->items      = new ArrayCollection();
+        $this->runitems   = new ArrayCollection();
         $this->checklists = new ArrayCollection();
     }
 
@@ -137,7 +140,8 @@ class Deployment extends Entity
      */
     public function getItemsWithStatus($status)
     {
-        $status_items = $this->cached("items", function() use ($status) {
+        $status_items = $this->cached("items",
+            function () use ($status) {
             $status_items = [];
             foreach ($this->items as $item) {
                 if (!isset($status_items[$item->status])) {
@@ -158,7 +162,8 @@ class Deployment extends Entity
             1 => array(),
         );
         foreach ($this->runitems as $runitem) {
-            $tid = sprintf("%03d:%s", $runitem->template->priority, $runitem->template->id);
+            $tid   = sprintf("%03d:%s", $runitem->template->priority,
+                $runitem->template->id);
             $array = &$activities[$runitem->stage ?: 0];
             if (!isset($array[$tid])) {
                 $array[$tid] = array();
@@ -174,7 +179,8 @@ class Deployment extends Entity
         foreach (array_keys($rungroups) as $stage) {
             ksort($activities[$stage]);
             foreach ($activities[$stage] as $acts) {
-                $rungroups[$stage] = array_merge($rungroups[$stage], $ds->getActivityTemplateClass($acts[0]->template->class)
+                $rungroups[$stage] = array_merge($rungroups[$stage],
+                    $ds->getActivityTemplateClass($acts[0]->template->class)
                         ->convertActivitiesToRunbookGroups($acts));
             }
         }
@@ -192,10 +198,11 @@ class Deployment extends Entity
         if (empty($this->project->checklist_templates)) {
             return array();
         }
-        $checklists = array_map(function($c) {
+        $checklists = array_map(function ($c) {
             return $c->title;
         }, $this->checklists->toArray());
-        return array_values(array_filter($this->project->checklist_templates, function($a) use ($checklists) {
+        return array_values(array_filter($this->project->checklist_templates,
+                function ($a) use ($checklists) {
                 return !in_array($a, $checklists);
             }));
     }
@@ -223,7 +230,7 @@ class Deployment extends Entity
     /** @ORM\PostLoad @ORM\PrePersist @ORM\PreUpdate */
     public function populateEndDate()
     {
-        $hour = $this->duration ?: $this->project->approx_deployment_duration;
+        $hour           = $this->duration ?: $this->project->approx_deployment_duration;
         $this->end_date = (clone $this->execute_date)->add(new \DateInterval("PT{$hour}H"));
     }
 }

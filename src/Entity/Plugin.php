@@ -9,12 +9,14 @@ use App\Service\NavigationFactory;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="plugins")
+ * @ORM\Entity
+ * @ORM\Table(name="plugins")
  */
 class Plugin extends Entity
 {
     /**
-     * @ORM\Id @ORM\ManyToOne(targetEntity="Project",inversedBy="plugins")
+     * @ORM\Id
+     * @ORM\ManyToOne(targetEntity="Project",inversedBy="plugins")
      * @ORM\JoinColumn(name="project_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Project
      */
@@ -37,7 +39,7 @@ class Plugin extends Entity
     protected $instance;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $options;
 

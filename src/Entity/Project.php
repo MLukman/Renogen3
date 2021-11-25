@@ -21,7 +21,10 @@ class Project extends Entity
     const DEFAULT_ATTACHMENT_FILE_EXTS = ".png,.jpg,.jpeg,.gif,.tif,.tiff,.bmp,.eps,.pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.rtf";
 
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -46,12 +49,12 @@ class Project extends Entity
     public $description;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $modules = array();
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $categories = array(
         'Bug Fix',
@@ -65,7 +68,7 @@ class Project extends Entity
     public $private = false;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $checklist_templates;
 
@@ -119,13 +122,13 @@ class Project extends Entity
      */
     public $attachment_file_exts;
 
-    const ITEM_STATUS_INIT = 'Documentation';
-    const ITEM_STATUS_REVIEW = 'Review';
-    const ITEM_STATUS_APPROVAL = 'Go No Go';
-    const ITEM_STATUS_READY = 'Ready For Release';
+    const ITEM_STATUS_INIT      = 'Documentation';
+    const ITEM_STATUS_REVIEW    = 'Review';
+    const ITEM_STATUS_APPROVAL  = 'Go No Go';
+    const ITEM_STATUS_READY     = 'Ready For Release';
     const ITEM_STATUS_COMPLETED = 'Completed';
-    const ITEM_STATUS_REJECTED = 'Rejected';
-    const ITEM_STATUS_FAILED = 'Failed';
+    const ITEM_STATUS_REJECTED  = 'Rejected';
+    const ITEM_STATUS_FAILED    = 'Failed';
 
     public $item_statuses = array(
         self::ITEM_STATUS_INIT => array(
@@ -187,12 +190,12 @@ class Project extends Entity
 
     public function __construct()
     {
-        $this->created_date = new \DateTime();
-        $this->deployments = new ArrayCollection();
+        $this->created_date        = new \DateTime();
+        $this->deployments         = new ArrayCollection();
         $this->deployment_requests = new ArrayCollection();
-        $this->templates = new ArrayCollection();
-        $this->plugins = new ArrayCollection();
-        $this->userProjects = new ArrayCollection();
+        $this->templates           = new ArrayCollection();
+        $this->plugins             = new ArrayCollection();
+        $this->userProjects        = new ArrayCollection();
     }
 
     /**
@@ -201,8 +204,10 @@ class Project extends Entity
      */
     public function upcoming()
     {
-        return $this->cached('upcoming', function() {
-                return static::filterUpcomingDateOnly($this->deployments, 'execute_date', 'end_date');
+        return $this->cached('upcoming',
+                function () {
+                return static::filterUpcomingDateOnly($this->deployments,
+                    'execute_date', 'end_date');
             });
     }
 
@@ -220,7 +225,7 @@ class Project extends Entity
                                                   $limit = 0): Selectable
     {
         $compare_dates = [];
-        $now = date_create();
+        $now           = date_create();
         if (!empty($end_date_field)) {
             // find out if there is ongoing deployment (the latest one between now and previous $lookback hours)
             $ongoing = $collection->matching(Criteria::create()
@@ -233,7 +238,7 @@ class Project extends Entity
             }
         }
         $compare_dates[] = $now;
-        $upcoming = [];
+        $upcoming        = [];
         foreach ($compare_dates as $compare) {
             $criteria = Criteria::create()
                 ->where(new Comparison($date_field, '>=', $compare))
@@ -255,12 +260,14 @@ class Project extends Entity
      */
     public function past($limit = 0)
     {
-        return $this->cached("past.$limit", function() use ($limit) {
+        return $this->cached("past.$limit",
+                function () use ($limit) {
                 $criteria = Criteria::create()
                     ->orderBy(array('execute_date' => 'DESC'));
                 $upcoming = $this->upcoming();
                 if (count($upcoming) > 0) {
-                    $criteria = $criteria->where(new Comparison('execute_date', '<', $upcoming[0]->execute_date));
+                    $criteria = $criteria->where(new Comparison('execute_date',
+                            '<', $upcoming[0]->execute_date));
                 }
                 if ($limit > 0) {
                     $criteria = $criteria->setMaxResults($limit);
@@ -294,8 +301,10 @@ class Project extends Entity
 
     public function upcomingDeploymentRequests()
     {
-        return $this->cached('upcomingRequests', function() {
-                return static::filterUpcomingDateOnly($this->deployment_requests, 'execute_date');
+        return $this->cached('upcomingRequests',
+                function () {
+                return static::filterUpcomingDateOnly($this->deployment_requests,
+                    'execute_date');
             });
     }
 
@@ -306,18 +315,22 @@ class Project extends Entity
         $criteria = Criteria::create();
         switch (strlen($datestring)) {
             case 12:
-                $criteria->where(Criteria::expr()->eq('execute_date', DateTime::createFromFormat('!YmdHi', $datestring)));
+                $criteria->where(Criteria::expr()->eq('execute_date',
+                        DateTime::createFromFormat('!YmdHi', $datestring)));
                 $matching = $this->deployments->matching($criteria);
                 if ($matching->count() == 0 && $fuzzy) {
-                    return $this->getDeploymentsByDateString(substr($datestring, 0, 8), true);
+                    return $this->getDeploymentsByDateString(substr($datestring,
+                                0, 8), true);
                 }
                 return $matching;
 
             case 8:
-                $criteria->andWhere(new Comparison('execute_date', '>=', DateTime::createFromFormat('!Ymd', $datestring)))
+                $criteria->andWhere(new Comparison('execute_date', '>=',
+                            DateTime::createFromFormat('!Ymd', $datestring)))
                     ->orderBy(array('execute_date' => 'ASC'));
                 if (!$include_future) {
-                    $criteria->andWhere(new Comparison('execute_date', '<', DateTime::createFromFormat('!Ymd', $datestring)->add(new DateInterval("P1D"))));
+                    $criteria->andWhere(new Comparison('execute_date', '<',
+                            DateTime::createFromFormat('!Ymd', $datestring)->add(new DateInterval("P1D"))));
                 }
                 return $this->deployments->matching($criteria);
 
@@ -367,7 +380,8 @@ class Project extends Entity
     public function enabled_templates()
     {
         if (!isset($this->_enabled_templates)) {
-            $this->_enabled_templates = $this->templates->matching(Criteria::create()->where(Criteria::expr()->eq("disabled", false)));
+            $this->_enabled_templates = $this->templates->matching(Criteria::create()->where(Criteria::expr()->eq("disabled",
+                        false)));
         }
         return $this->_enabled_templates;
     }
@@ -375,12 +389,14 @@ class Project extends Entity
     public function usersWithRole($role)
     {
         return array_filter(
-            array_map(function($a) {
+            array_map(function ($a) {
                 return $a->user;
-            }, $this->userProjects->matching(Criteria::create()->where(Criteria::expr()->eq('role', $role)))->toArray()),
-            function($u) {
-            return $u->blocked != 1;
-        });
+            },
+                $this->userProjects->matching(Criteria::create()->where(Criteria::expr()->eq('role',
+                            $role)))->toArray()),
+            function ($u) {
+                return $u->blocked != 1;
+            });
     }
 
     /**
@@ -403,7 +419,8 @@ class Project extends Entity
     {
         return [
             'name' => Rules::new()->trim()->required()->unique()->maxlen(30)
-                ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z_-]*$/', 'Project name can only contains alphanumeric, dashes and undercores, and it must start with an alphanumerical character'),
+                ->pregmatch('/^[0-9a-zA-Z][0-9a-zA-Z_-]*$/',
+                    'Project name can only contains alphanumeric, dashes and undercores, and it must start with an alphanumerical character'),
             'title' => Rules::new()->trim()->required()->unique()->maxlen(100),
             'categories' => Rules::new()->trim()->required(),
             'modules' => Rules::new()->trim()->required(),
@@ -419,6 +436,7 @@ class Project extends Entity
 
     public function starCount(): int
     {
-        return $this->userProjects->matching(Criteria::create()->where(Criteria::expr()->gt('fav', 0)))->count();
+        return $this->userProjects->matching(Criteria::create()->where(Criteria::expr()->gt('fav',
+                        0)))->count();
     }
 }

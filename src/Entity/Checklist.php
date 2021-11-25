@@ -8,12 +8,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="checklists")
+ * @ORM\Entity
+ * @ORM\Table(name="checklists")
  */
 class Checklist extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -71,8 +75,8 @@ class Checklist extends Entity
     public function __construct(Deployment $deployment)
     {
         $this->deployment = $deployment;
-        $this->pics = new ArrayCollection();
-        $this->updates = new ArrayCollection();
+        $this->pics       = new ArrayCollection();
+        $this->updates    = new ArrayCollection();
     }
 
     public function isPending()

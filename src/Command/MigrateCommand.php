@@ -18,6 +18,11 @@ class MigrateCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         // Populate UserAuthentication

@@ -27,7 +27,7 @@ class PluginTriggerer implements EventSubscriberInterface
         $this->nav = $nav;
     }
 
-    public function getSubscribedEvents()
+    public function getSubscribedEvents() : array
     {
         return [
             Events::postPersist,

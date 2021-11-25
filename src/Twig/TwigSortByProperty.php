@@ -8,11 +8,11 @@ use Twig\TwigFilter;
 class TwigSortByProperty extends AbstractExtension
 {
 
-    public function getFilters()
+    public function getFilters(): array
     {
-        return array(
-            new TwigFilter('psort', array($this, 'sortByProperty')),
-        );
+        return [
+            new TwigFilter('psort', [$this, 'sortByProperty']),
+        ];
     }
 
     public function sortByProperty($var, $prop)

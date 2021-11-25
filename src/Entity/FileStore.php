@@ -8,13 +8,15 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
- * @ORM\Entity @ORM\Table(name="file_store")
+ * @ORM\Entity
+ * @ORM\Table(name="file_store")
  * @ORM\HasLifecycleCallbacks
  */
 class FileStore extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string")
+     * @ORM\Id
+     * @ORM\Column(type="string")
      */
     public $id;
 

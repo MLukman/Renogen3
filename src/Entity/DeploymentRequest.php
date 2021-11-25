@@ -11,12 +11,16 @@ use Doctrine\ORM\Mapping as ORM;
 use RuntimeException;
 
 /**
- * @ORM\Entity @ORM\Table(name="deployment_requests")
+ * @ORM\Entity
+ * @ORM\Table(name="deployment_requests")
  */
 class DeploymentRequest extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -73,7 +77,7 @@ class DeploymentRequest extends Entity
 
     public function __construct(Project $project)
     {
-        $this->project = $project;
+        $this->project  = $project;
         $this->duration = $this->project->approx_deployment_duration;
     }
 
@@ -96,12 +100,13 @@ class DeploymentRequest extends Entity
     {
         return [
             'title' => Rules::new()->trim()->required()->truncate(100),
-            'execute_date' => Rules::new()->required()->unique('project')->future(2)->callback(function(DeploymentRequest $e) {
-                    if (0 < $e->project->deployments->matching(Criteria::create()->where(new Comparison('execute_date', '=', $e->execute_date)))->count()) {
-                        throw new RuntimeException('Existing deployment with the exact date and time already exist within the same project');
-                    }
-                    return true;
-                }),
+            'execute_date' => Rules::new()->required()->unique('project')->future(2)->callback(function (DeploymentRequest $e) {
+                if (0 < $e->project->deployments->matching(Criteria::create()->where(new Comparison('execute_date',
+                                '=', $e->execute_date)))->count()) {
+                    throw new RuntimeException('Existing deployment with the exact date and time already exist within the same project');
+                }
+                return true;
+            }),
             'external_url' => array('trim' => 1, 'maxlen' => 2000, 'url' => 1),
             'external_url_label' => array('trim' => 1, 'truncate' => 30),
         ];

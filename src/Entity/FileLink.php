@@ -10,7 +10,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * @ORM\Entity @ORM\Table(name="file_links")
+ * @ORM\Entity
+ * @ORM\Table(name="file_links")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="parent_type", type="string")
  * @ORM\DiscriminatorMap({"item" = "Attachment", "activity" = "ActivityFile", "runitem" = "RunItemFile"})
@@ -19,7 +20,10 @@ use Symfony\Component\HttpFoundation\Response;
 abstract class FileLink extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -79,8 +83,8 @@ abstract class FileLink extends Entity
 
     public function getHtmlLink(NavigationFactory $nav)
     {
-        $base = log($this->filestore->filesize) / log(1024);
-        $suffix = array(" bytes", " KB", " MB", " GB", " TB")[floor($base)];
+        $base      = log($this->filestore->filesize) / log(1024);
+        $suffix    = array(" bytes", " KB", " MB", " GB", " TB")[floor($base)];
         $humansize = round(pow(1024, $base - floor($base)), 2).$suffix;
         return '<a href="'.htmlentities($this->downloadUrl($nav)).'" title="'.$humansize.' '.$this->filestore->mime_type.'">'.htmlentities($this->filename).'</a>';
     }
@@ -92,7 +96,8 @@ abstract class FileLink extends Entity
 
     public function returnDownload()
     {
-        return new Response(stream_get_contents($this->filestore->data), 200, array(
+        return new Response(stream_get_contents($this->filestore->data), 200,
+            array(
             'Content-type' => $this->filestore->mime_type,
             'Content-Disposition' => "inline; filename=\"{$this->filename}\"",
         ));

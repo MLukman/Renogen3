@@ -9,7 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * @ORM\Entity @ORM\Table(name="users")
+ * @ORM\Entity
+ * @ORM\Table(name="users")
  */
 class User extends Entity
 {

@@ -6,12 +6,16 @@ use App\Base\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="item_status_log")
+ * @ORM\Entity
+ * @ORM\Table(name="item_status_log")
  */
 class ItemStatusLog extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string") @ORM\GeneratedValue(strategy="UUID")
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
      */
     public $id;
 
@@ -35,10 +39,10 @@ class ItemStatusLog extends Entity
     public function __construct(Item $item, $status, User $user = null,
                                 \DateTime $datetime = null)
     {
-        $this->item = $item;
+        $this->item         = $item;
         $this->created_date = $datetime ?: new \DateTime();
-        $this->created_by = $user;
-        $this->status = $status;
+        $this->created_by   = $user;
+        $this->status       = $status;
     }
 
     public function getProject(): ?Project

@@ -20,7 +20,7 @@ class DefaultEntityCreatorUpdater implements EventSubscriberInterface
         $this->ds = $ds;
     }
 
-    public function getSubscribedEvents()
+    public function getSubscribedEvents() : array
     {
         return [
             Events::prePersist,

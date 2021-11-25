@@ -134,7 +134,7 @@ class Rules implements \ArrayAccess
         return isset($this->rules[$offset]);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset) : mixed
     {
         return $this->rules[$offset];
     }

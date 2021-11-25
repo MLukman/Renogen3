@@ -8,12 +8,14 @@ use App\Validation\Rules;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="auth_drivers")
+ * @ORM\Entity
+ * @ORM\Table(name="auth_drivers")
  */
 class AuthDriver extends Entity
 {
     /**
-     * @ORM\Id @ORM\Column(type="string", length=30)
+     * @ORM\Id
+     * @ORM\Column(type="string", length=30)
      */
     public $name;
 
@@ -28,7 +30,7 @@ class AuthDriver extends Entity
     public $class;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     public $parameters = array();
 

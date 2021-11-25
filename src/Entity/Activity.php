@@ -8,7 +8,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="activities")
+ * @ORM\Entity
+ * @ORM\Table(name="activities")
  */
 class Activity extends Actionable
 {
@@ -36,13 +37,12 @@ class Activity extends Actionable
      * @var RunItem
      */
     public $runitem;
-
-    public $fileClass = '\App\Entity\ActivityFile';
+    public $fileClass      = '\App\Entity\ActivityFile';
     public $actionableType = 'activity';
 
     public function __construct(Item $item)
     {
-        $this->item = $item;
+        $this->item  = $item;
         $this->files = new ArrayCollection();
     }
 

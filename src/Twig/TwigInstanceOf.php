@@ -8,11 +8,11 @@ use Twig\TwigTest;
 class TwigInstanceOf extends AbstractExtension
 {
 
-    public function getTests()
+    public function getTests(): array
     {
-        return array(
-            new TwigTest('instanceof', array($this, 'isInstanceOf')),
-        );
+        return [
+            new TwigTest('instanceof', [$this, 'isInstanceOf']),
+        ];
     }
 
     public function isInstanceof($var, $instance)

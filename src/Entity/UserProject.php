@@ -6,19 +6,22 @@ use App\Base\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="user_projects")
+ * @ORM\Entity
+ * @ORM\Table(name="user_projects")
  */
 class UserProject extends Entity
 {
     /**
-     * @ORM\Id @ORM\ManyToOne(targetEntity="User",inversedBy="userProjects",fetch="EAGER")
+     * @ORM\Id
+     * @ORM\ManyToOne(targetEntity="User",inversedBy="userProjects",fetch="EAGER")
      * @ORM\JoinColumn(name="username", referencedColumnName="username", onDelete="CASCADE")
      * @var User
      */
     public $user;
 
     /**
-     * @ORM\Id @ORM\ManyToOne(targetEntity="Project",inversedBy="userProjects",fetch="EAGER")
+     * @ORM\Id
+     * @ORM\ManyToOne(targetEntity="Project",inversedBy="userProjects",fetch="EAGER")
      * @ORM\JoinColumn(name="project_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Project
      */
@@ -37,7 +40,7 @@ class UserProject extends Entity
     public function __construct(Project $project, User $user)
     {
         $this->project = $project;
-        $this->user = $user;
+        $this->user    = $user;
     }
 
     public function getProject(): ?Project

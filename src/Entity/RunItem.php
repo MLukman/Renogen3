@@ -7,7 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity @ORM\Table(name="runitems")
+ * @ORM\Entity
+ * @ORM\Table(name="runitems")
  * @ORM\HasLifecycleCallbacks
  */
 class RunItem extends Actionable
