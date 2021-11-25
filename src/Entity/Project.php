@@ -26,11 +26,6 @@ class Project extends Entity
     public $id;
 
     /**
-     * @ORM\Column(type="datetime")
-     */
-    public $created_date;
-
-    /**
      * @ORM\Column(type="string", length=30)
      */
     public $name;
