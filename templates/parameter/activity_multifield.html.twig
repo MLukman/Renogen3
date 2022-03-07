@@ -73,6 +73,11 @@
                             <option value="{{k}}" {% if k == paramval[p.id]|default(null) %}selected="selected"{% endif %}>{{k}}</option>
                         {% endfor %}
                     </select>
+                {% elseif p.type == 'checkbox' %}
+                    <input type="hidden" name="parameters[{{param}}][{{p.id}}]" value="0" />
+                    <div class="ui checkbox">
+                        <input id="{{pid}}" type="checkbox" name="parameters[{{param}}][{{p.id}}]" value="1" {% if paramval[p.id]|default(p.details) is not empty %}checked="checked"{% endif %} />
+                    </div>
                 {% else %}
                     <input id="{{pid}}" type="text" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]|default(p.details|split('\n')|first)}}" />
                 {% endif %}

@@ -11,8 +11,8 @@ use Symfony\Component\HttpFoundation\Request;
 
 class MultiField extends Parameter
 {
-    public $allowed_types = ['freetext', 'password', 'dropdown', 'multiselect', 'multiline',
-        'script', 'url', 'file', 'formatted', 'jsondropdown'];
+    public $allowed_types = ['freetext', 'password', 'checkbox', 'multiselect', 'multiline',
+        'dropdown', 'script', 'url', 'file', 'formatted', 'jsondropdown'];
     public $default_type = null;
 
     static public function create(BaseClass $template, $templateLabel,
@@ -209,6 +209,9 @@ class MultiField extends Parameter
                     $options[$d] .= '<textarea readonly="readonly" style="font-family: monospace">'.htmlentities($data[$p['id']]).'</textarea>';
                     $options[$d] .= '</div>';
                     $options[$d] .= '</div>';
+                } elseif ($p['type'] == 'checkbox') {
+                    $options[$d] = '<div class="ui read-only checkbox"><input type="checkbox" '.
+                        ($data[$p['id']] ? 'checked="checked" ' : '').' /></div>';
                 } else {
                     $options[$d] = $data[$p['id']];
                 }

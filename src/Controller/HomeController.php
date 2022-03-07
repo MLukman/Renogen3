@@ -58,12 +58,7 @@ class HomeController extends RenoController
         // Need actions
         $need_actions = array();
         foreach ($contexts['projects_with_access'] as $project) {
-            $project_role = null;
-            foreach ($roles as $role) {
-                if ($this->security->isGranted($role, $project)) {
-                    $project_role = $role;
-                }
-            }
+            $project_role = $project->userProject($this->ds->currentUserEntity()->getUsername());
             foreach ($project->upcoming() as $deployment) {
                 $d = array(
                     'deployment' => $deployment,

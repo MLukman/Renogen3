@@ -83,7 +83,7 @@
         {% if is_existing %}
             <div class="ui top attached tabular menu">
                 <a class="item active" data-tab="edit">Configuration</a>
-                <a class="item" data-tab="preview">Sample <span class="hide-on-mobile">Activity Form</span></a>
+                <a class="item" data-tab="preview">Preview</a>
                 {% if template.activities.count > 0 %}
                     <a class="item" data-tab="history">History</a>
                 {% endif %}
@@ -170,6 +170,7 @@
         </div>
 
         <div class="ui bottom attached tab segment" data-tab="history">
+            <p>Showing up to 25 last updated activities that used this template:</p>
             <table class="ui sortable orange striped table" style="table-layout: fixed;">
                 <thead>
                     <tr>
@@ -181,7 +182,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for activity in template.activities|reverse %}
+                    {% for activity in template.activities|slice(0,25) %}
                         <tr>
                             <td class="ui top aligned" data-sort-value="{{ activity.item.deployment.execute_date.getTimestamp() }}">
                                 <a href="{{nav.entityPath('app_deployment_view',activity.item.deployment)}}">{{activity.item.deployment.displayTitle}}</a>
@@ -193,8 +194,8 @@
                                 {% set description = activity.template.templateClass(ds).describeActivityAsArray(activity) %}
                                 {{ _self.arrayTable(description) }}
                             </td>
-                            <td class="ui top aligned" data-sort-value="{{ activity.updated_date.getTimestamp() }}">
-                                {{ activity.updated_date|date('d/m/Y h:i A') }}
+                            <td class="ui top aligned" data-sort-value="{{ (activity.updated_date ?? activity.created_date).getTimestamp() }}">
+                                {{ (activity.updated_date ?? activity.created_date)|date('d/m/Y h:i A') }}
                             </td>
                             <td class="ui top aligned">{{ activity.runitem.status|default('New') }}</td>
                         </tr>
