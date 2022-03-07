@@ -1,0 +1,63 @@
+{% extends "renobase.html.twig" %}
+
+{% block content %}
+    <div class="ui basic huge segment">
+
+{% apply markdown|raw %}
+{% verbatim %}
+
+# What's New
+
+## 3.1.6
+
+- This "What's New" page!
+- Scroll-to-top floating button on all pages
+- Navigation items on the top bar are now hidden on mobile view to give more space to contents; use scroll-to-top button to get to the navigation breadcrumbs in order to navigate up the hierarchy
+- Users with the `approval` access can now view the list of activities that used any particular activity templates in the `edit activity template` screen.
+- Upgraded to Symfony 5.4.* 
+
+## 3.1.5
+
+New activity template class `JenkinsJob`
+
+## 3.1.4
+
+- Fixed bug that prevented rejected/failed item to be re-submitted
+- Enhanced multifield 'script' parameter to have fullscreen modal popup upon clicking the corner button
+
+## 3.1.3
+
+Added 'sensitive' flag to 'multifield' activity template parameter to hide the parameter values from the view item page
+
+## 3.1.2
+
+Admin authentication test for OAuth2
+
+## 3.1.1
+
+Enhanced OAuth2 authentication to use single callback URL path
+
+## 3.1.0
+
+Upgraded to Symfony 5.3.* with the new authenticator system
+
+## 3.0.x
+
+- Projects can specify deployment duration approximation to determine which deployment is currently running
+- Project user contribution page
+- Tabs in `view project` page
+- Next/Previous Deployment buttons
+- Allow approval users to short-circuit approve Go No Go when status is still Review
+- New home page design
+- Users can flag projects as favourites
+- Support for login via OAuth2 providers
+
+## 3.0.0
+
+Completely ported Renogen from the EOL Silex framework to Symfony 5 framework.
+
+{% endverbatim %}
+{% endapply %}
+
+    </div>
+{% endblock %}

@@ -19,7 +19,7 @@
         <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
         <script>
             function dateParser(text) {
-                if (!text) {
+                if (!text || text == null || text == 'undefined') {
                     return null;
                 }
                 var dateArray = null;
@@ -157,6 +157,17 @@
             $(function () {
                 onResize();
                 $(window).resize(onResize);
+                $(window).on("scroll", function () {
+                    var scroll = $(window).scrollTop();
+                    if (scroll > 0) {
+                        $('#scrollToTop').show();
+                    } else {
+                        $('#scrollToTop').hide();
+                    }
+                });
+                $('#scrollToTop').click(function () {
+                    $('html, body').animate({scrollTop: 0}, "slow");
+                });
                 $('.tabular.menu .item').tab({
                     history: true,
                     historyType: 'hash'
@@ -211,14 +222,17 @@
                 position: fixed;
                 z-index: 101;
                 margin: 0;
-                width: 100%; 
-                top: 0px; left: 0px; right: auto; bottom: auto; 
+                width: 100%;
+                top: 0px;
+                left: 0px;
+                right: auto;
+                bottom: auto;
                 color: black
             }
 
             #topmenu {
-                margin: 0em; 
-                letter-spacing: 0.75pt; 
+                margin: 0em;
+                letter-spacing: 0.75pt;
                 border-radius: 0px;
                 box-shadow: inset 0px -3px 0px rgba(191,191,191,0.5);
             }
@@ -234,6 +248,13 @@
             a.anchor[name] {
                 position: relative;
                 top: -60px;
+            }
+
+            #scrollToTop {
+                display:none;
+                position: fixed;
+                bottom: 25px;
+                right: 25px;
             }
 
             @media print
@@ -305,6 +326,7 @@
                                         {{ m.topmenu_item('Logout', nav.path('app_logout'), 'sign out') }}
                                         <div class="ui divider"></div>
                                         {{ m.topmenu_item('About Renogen', nav.path('app_about'), 'help') }}
+                                        {{ m.topmenu_item('What\s New', nav.path('app_whatsnew'), 'magic') }}
                                         {% if security.isGranted('ROLE_ADMIN') %}
                                             <div class="ui divider"></div>
                                             <div class="header">Administrations</div>
@@ -313,6 +335,7 @@
                                             {{ m.topmenu_item('Manage Authentication', nav.path('app_admin_auth'), 'lock') }}
                                             {{ m.topmenu_item('View Archived Projects', nav.path('app_archived'), 'archive') }}
                                             {{ m.topmenu_item('View PHP Info', nav.path('app_admin_phpinfo'), 'php') }}
+                                            {{ m.topmenu_item('View Log', nav.path('app_admin_viewlog',[],'bottom'), 'bug') }}                                            
                                         {% endif %}
                                     </div>
                                 </div>
@@ -351,10 +374,15 @@
             {% if block('footer')|trim is not empty %}
                 <div class="ui basic segment" style="height: 100px; width:100%; position: absolute; bottom: 0; left: 0; clear:both">
                     <div class="ui divider"></div>
+                    <a name="bottom"></a>
                     {% block footer %}
                     {% endblock %}
                 </div>
             {% endif %}
+
+            <button id="scrollToTop" class="circular ui large icon purple basic button">
+                <i class="icon up arrow"></i>
+            </button>
         </div>
 
         <div id="overlay" class="ui page dimmer">

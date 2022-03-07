@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 abstract class RenoController extends Controller
 {
     const titleLength = 32;
-    const hideOnMobileThreshold = 1;
+    const hideOnMobileThreshold = 0;
 
     protected function addEntityCrumb(Entity $entity, $level = 0)
     {

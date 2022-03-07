@@ -83,7 +83,10 @@
         {% if is_existing %}
             <div class="ui top attached tabular menu">
                 <a class="item active" data-tab="edit">Configuration</a>
-                <a class="item" data-tab="preview">Sample Activity Form</a>
+                <a class="item" data-tab="preview">Sample <span class="hide-on-mobile">Activity Form</span></a>
+                {% if template.activities.count > 0 %}
+                    <a class="item" data-tab="history">History</a>
+                {% endif %}
             </div>
         {% endif %}
 
@@ -164,6 +167,40 @@
             <div class="ui form">
                 {{ actform.activityConfigForm(template, sample.activity|default(null), sample.errors|default(null)) }}
             </div>
+        </div>
+
+        <div class="ui bottom attached tab segment" data-tab="history">
+            <table class="ui sortable orange striped table" style="table-layout: fixed;">
+                <thead>
+                    <tr>
+                        <th style="width:20em">Deployment</th>
+                        <th style="width:20em">Item</th>
+                        <th class="no-sort">Details</th>
+                        <th style="width:12em">Timestamp</th>
+                        <th style="width:10em">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in template.activities|reverse %}
+                        <tr>
+                            <td class="ui top aligned" data-sort-value="{{ activity.item.deployment.execute_date.getTimestamp() }}">
+                                <a href="{{nav.entityPath('app_deployment_view',activity.item.deployment)}}">{{activity.item.deployment.displayTitle}}</a>
+                            </td>
+                            <td class="ui top aligned">
+                                <a href="{{nav.entityPath('app_item_view',activity.item)}}">{{activity.item.displayTitle}}</a>
+                            </td>
+                            <td class="top aligned" style="position:relative; overflow: auto; max-width: inherit;">
+                                {% set description = activity.template.templateClass(ds).describeActivityAsArray(activity) %}
+                                {{ _self.arrayTable(description) }}
+                            </td>
+                            <td class="ui top aligned" data-sort-value="{{ activity.updated_date.getTimestamp() }}">
+                                {{ activity.updated_date|date('d/m/Y h:i A') }}
+                            </td>
+                            <td class="ui top aligned">{{ activity.runitem.status|default('New') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
         {{ _self.timestamps(template) }}

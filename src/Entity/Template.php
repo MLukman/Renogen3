@@ -67,6 +67,7 @@ class Template extends Entity
 
     /**
      * @ORM\OneToMany(targetEntity="Activity", mappedBy="template", indexBy="id")
+     * @ORM\OrderBy({"updated_date" = "asc"})
      * @var ArrayCollection|Activity[]
      */
     public $activities = null;

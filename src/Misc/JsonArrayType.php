@@ -8,7 +8,7 @@ namespace App\Misc;
 class JsonArrayType extends \Doctrine\DBAL\Types\JsonType
 {
 
-    public function getName()
+    public function getName(): string
     {
         return 'json_array';
     }

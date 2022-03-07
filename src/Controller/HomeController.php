@@ -46,7 +46,7 @@ class HomeController extends RenoController
         }
 
         // sort projects by favorite flags and then by titles
-        usort($contexts['projects_with_access'], function($b, $a) {
+        usort($contexts['projects_with_access'], function ($b, $a) {
             $a_fav = $a->userProject($this->ds->currentUserEntity())->fav;
             $b_fav = $b->userProject($this->ds->currentUserEntity())->fav;
             if ($a_fav == $b_fav) {
@@ -178,5 +178,15 @@ class HomeController extends RenoController
         $this->title = 'About';
         $this->addCrumb('About Renogen', $this->nav->path('app_about'), 'help');
         return $this->render('about.html.twig');
+    }
+
+    /**
+     * @Route("/.whatsnew", name="app_whatsnew", priority=10)
+     */
+    public function whatsnew()
+    {
+        $this->title = 'What\'s New';
+        $this->addCrumb('What\'s New', $this->nav->path('app_whatsnew'), 'magic');
+        return $this->render('whatsnew.html.twig');
     }
 }

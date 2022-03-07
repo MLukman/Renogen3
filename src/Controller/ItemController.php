@@ -88,12 +88,14 @@ class ItemController extends RenoController
     {
         $new_status = $request->request->get('new_status');
         $item_obj = $this->ds->fetchItem($project, $deployment, $item);
+        $old_status = $item_obj->status;
 
         $remark = trim($request->request->get('remark'));
         if (empty($remark) && $request->request->get('remark_required', 0)) {
             $this->addFlash('info', "Remark is required", "Unable to change status", "error");
+        } else if ($old_status == $new_status) {
+            $this->addFlash('info', "Status is already '${new_status}'");
         } else {
-            $old_status = $item_obj->status;
             $direction = $item_obj->changeStatus($new_status, $remark);
             if ($item_obj->status == Project::ITEM_STATUS_READY && $direction > 0) {
                 /* @var $activity Activity */

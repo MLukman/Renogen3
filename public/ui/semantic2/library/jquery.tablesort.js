@@ -2,15 +2,17 @@
 	A simple, lightweight jQuery plugin for creating sortable tables.
 	https://github.com/kylefox/jquery-tablesort
 	Version 0.0.11
+        Modified by Lukman to work with tables with nested tables
 */
 
 (function($) {
 	$.tablesort = function ($table, settings) {
 		var self = this;
 		this.$table = $table;
-		this.$thead = this.$table.find('thead');
+		this.$thead = this.$table.children('thead');
 		this.settings = $.extend({}, $.tablesort.defaults, settings);
-		this.$sortCells = this.$thead.length > 0 ? this.$thead.find('th:not(.no-sort)') : this.$table.find('th:not(.no-sort)');
+                this.$sortRows = this.$thead.length > 0 ? this.$thead.children('tr') : this.$table.children('tr:has(> th)');
+		this.$sortCells = this.$sortRows.children('th:not(.no-sort)');
 		this.$sortCells.on('click.tablesort', function() {
 			self.sort($(this));
 		});
@@ -26,12 +28,11 @@
 			var start = new Date(),
 				self = this,
 				table = this.$table,
-				rowsContainer = table.find('tbody').length > 0 ? table.find('tbody') : table,
-				rows = rowsContainer.find('tr').has('td, th'),
-				cells = rows.find(':nth-child(' + (thIndex + 1) + ')').filter('td, th'),
+				rowsContainer = table.children('tbody').length > 0 ? table.children('tbody') : table,
+				rows = rowsContainer.children('tr').has('td, th'),
+				cells = rows.children(':nth-child(' + (thIndex + 1) + ')').filter('td, th'),
 				sortBy = th.data().sortBy,
 				sortedMap = [];
-
 			var unsortedValues = cells.map(function(idx, cell) {
 				if (sortBy)
 					return (typeof sortBy === 'function') ? sortBy($(th), $(cell), self) : sortBy;
