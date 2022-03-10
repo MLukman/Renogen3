@@ -155,6 +155,8 @@
         <em>-- Not Specified --</em>
     {% elseif val is instanceof('\\App\\Entity\\FileLink') %}
         {{val.getHtmlLink(nav)|raw}}
+    {% elseif attribute(val, 'templateString') is defined and attribute(val, 'templateContext') is defined %}
+        {{ include(template_from_string(val.templateString), val.templateContext) }}
     {% elseif val is iterable %}
         {{_self.arrayTable(val,level|default(0)+1)}}
     {% elseif val|first == '<' %}

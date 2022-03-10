@@ -38,6 +38,7 @@
 
     {% if errors|default(false) %}
         <div class="ui error message">
+            <i class="ui exclamation triangle icon"></i>
             Your input requires your further attention. Please inspect any messages below.
         </div>
     {% endif %}
@@ -170,14 +171,14 @@
         </div>
 
         <div class="ui bottom attached tab segment" data-tab="history">
-            <p>Showing up to 25 last updated activities that used this template:</p>
+            <p>Showing up to 25 last created activities that used this template:</p>
             <table class="ui sortable orange striped table" style="table-layout: fixed;">
                 <thead>
                     <tr>
                         <th style="width:20em">Deployment</th>
                         <th style="width:20em">Item</th>
                         <th class="no-sort">Details</th>
-                        <th style="width:12em">Timestamp</th>
+                        <th style="width:12em">Created</th>
                         <th style="width:10em">Status</th>
                     </tr>
                 </thead>
@@ -194,8 +195,8 @@
                                 {% set description = activity.template.templateClass(ds).describeActivityAsArray(activity) %}
                                 {{ _self.arrayTable(description) }}
                             </td>
-                            <td class="ui top aligned" data-sort-value="{{ (activity.updated_date ?? activity.created_date).getTimestamp() }}">
-                                {{ (activity.updated_date ?? activity.created_date)|date('d/m/Y h:i A') }}
+                            <td class="ui top aligned" data-sort-value="{{ activity.created_date.getTimestamp() }}">
+                                {{ activity.created_date|date('d/m/Y h:i A') }}
                             </td>
                             <td class="ui top aligned">{{ activity.runitem.status|default('New') }}</td>
                         </tr>

@@ -1,4 +1,5 @@
-{% import "renobase.html.twig" as m %}
+{% import "renobase.html.twig" as r %}
+{% import "parameter/macros.html.twig" as m %}
 <table class="ui striped very compact table">
     <thead>
         <tr>
@@ -18,12 +19,10 @@
                     {{row.params.login}}
                 </td>
                 <td class="top aligned">
-                    <div class="ui form">
-                        <textarea readonly="readonly" style="font-family: monospace">{{row.params.sql}}</textarea>
-                    </div>
+                    {{ m.copyableSourceField('SQL Script', row.params.sql) }}
                 </td>
                 <td class="top aligned collapsing">
-                    {{ m.runItemStatusControl(row.runitem) }}
+                    {{ r.runItemStatusControl(row.runitem) }}
                 </td>
             </tr>
         {% endfor %}

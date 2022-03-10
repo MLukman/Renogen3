@@ -58,7 +58,9 @@
                         <h3>{{loop.index}} &raquo; {{group.getTitle()}}</h3>
                     </div>
                     <h2 class="ui sub header">{{group.getInstructionLabel()}}</h2>
-                    <div>{{m.prettyDisplay(group.getInstruction())}}</div>
+                    {% if group.getInstruction() %}
+                        <div>{{m.prettyDisplay(group.getInstruction())}}</div>
+                    {% endif %}
                     {% set data = group.getData() %}
                     {% include group.getTemplate() %}
                 </div>

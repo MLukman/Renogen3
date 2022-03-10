@@ -177,7 +177,7 @@ class Parameter
 
     static protected function linesToCleanArray($text)
     {
-        $lines = array();
+        $lines = [];
         foreach (explode("\n", $text) as $t) {
             $t = trim($t);
             if (!empty($t)) {
@@ -198,7 +198,7 @@ class Parameter
 
         $errkey = ($error_prefix ? "$error_prefix.$key" : $key);
         if (empty($input[$key]) && $this->templateRequired) {
-            $errors[$errkey] = array('Required');
+            $errors[$errkey] = ['Required'];
         }
 
         return empty($errors);
@@ -213,7 +213,7 @@ class Parameter
             case 'multifreetext':
                 foreach ($template_parameters[$key] as $id => $label) {
                     if (substr($label, -1) == '*' && empty($input[$key][$id])) {
-                        $errors[$errkey.'.'.$id] = array('Required');
+                        $errors[$errkey.'.'.$id] = ['Required'];
                     }
                 }
                 break;
@@ -223,7 +223,7 @@ class Parameter
                     if (count($template_parameters[$key]) == 1) {
                         $input[$key] = array_values($template_parameters)[0];
                     } else {
-                        $errors[$errkey] = array('Required');
+                        $errors[$errkey] = ['Required'];
                         return false;
                     }
                 }
@@ -231,7 +231,7 @@ class Parameter
 
             default:
                 if (empty($input[$key]) && $this->activityRequired) {
-                    $errors[$errkey] = array('Required');
+                    $errors[$errkey] = ['Required'];
                     return false;
                 }
         }
@@ -266,7 +266,7 @@ class Parameter
         switch ($this->type) {
             case 'dropdown':
             case 'multiselect':
-                $cfg = array();
+                $cfg = [];
                 $values = static::linesToCleanArray($parameter['values']);
                 $texts = static::linesToCleanArray($parameter['texts']);
                 $size = count($values);
@@ -282,7 +282,7 @@ class Parameter
                 return $cfg;
 
             case 'multifreetext':
-                $cfg = array();
+                $cfg = [];
                 $keys = static::linesToCleanArray($parameter['keys']);
                 $labels = static::linesToCleanArray($parameter['labels']);
                 $size = min(count($keys), count($labels));
@@ -304,16 +304,27 @@ class Parameter
         switch ($this->type) {
             case 'dropdown':
             case 'multiselect':
-                return array(
-                    'values' => implode("\n", array_keys($parameter ?: array())),
-                    'texts' => implode("\n", array_values($parameter ?: array())),
-                );
+                if (!$parameter) {
+                    $parameter = [];
+                }
+                foreach ($parameter as $val => $text) {
+                    if ($val == $text) {
+                        $parameter[$val] = '';
+                    }
+                }
+                return [
+                    'values' => implode("\n", array_keys($parameter)),
+                    'texts' => implode("\n", array_values($parameter)),
+                ];
 
             case 'multifreetext':
-                return array(
-                    'keys' => implode("\n", array_keys($parameter ?: array())),
-                    'labels' => implode("\n", array_values($parameter ?: array())),
-                );
+                if ($parameter) {
+                    return [
+                        'keys' => implode("\n", array_keys($parameter)),
+                        'labels' => implode("\n", array_values($parameter)),
+                    ];
+                }
+                return ['keys' => '', 'labels' => ''];
 
             default:
                 return $parameter;
@@ -329,14 +340,14 @@ class Parameter
 
     public function displayActivityParameter(Actionable $activity, $key)
     {
-        return (isset($activity->parameters[$key]) ? $activity->parameters[$key]
-                : null);
+        return (isset($activity->parameters[$key]) ?
+            $activity->parameters[$key] : null);
     }
 
     public function displayTemplateParameter(Template $template, $key)
     {
-        return (isset($template->parameters[$key]) ? $template->parameters[$key]
-                : null);
+        return (isset($template->parameters[$key]) ?
+            $template->parameters[$key] : null);
     }
 
     public function handleActivityFiles(Request $request, Actionable $activity,

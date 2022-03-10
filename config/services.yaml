@@ -39,3 +39,7 @@ services:
             - { name: 'doctrine.event_subscriber' }
 
     Symfony\Component\HttpKernel\Profiler\Profiler: '@profiler'
+
+    Twig\Extension\StringLoaderExtension:
+        tags:
+            - { name: 'twig.extension' }

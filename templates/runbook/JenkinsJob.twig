@@ -1,4 +1,4 @@
-{% import "renobase.html.twig" as m %}
+{% import "renobase.html.twig" as r %}
 {% set has_details = false %}
 {% for row in data %}
     {% if row.params.parameters is defined %}
@@ -28,12 +28,12 @@
                 {% if has_details %}
                     <td class="top aligned">
                         {% if row.params.parameters is defined and row.params.parameters|length > 0 %}
-                            {{ m.prettyDisplay(row.params.parameters) }}
+                            {{ r.prettyDisplay(row.params.parameters) }}
                         {% endif %}
                     </td>
                 {% endif %}
                 <td class="top aligned collapsing">
-                    {{ m.runItemStatusControl(row.runitem) }}
+                    {{ r.runItemStatusControl(row.runitem) }}
                 </td>
             </tr>
         {% endfor %}

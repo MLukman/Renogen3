@@ -1,4 +1,4 @@
-{% import "renobase.html.twig" as m %}
+{% import "renobase.html.twig" as r %}
 {% set is_template = data[0].runitem.template.templateClass(ds).instructionsContainVariables(data[0].runitem) %}
 {% if not is_template %}
     <div style="max-width:100%; overflow: auto">
@@ -35,25 +35,25 @@
                 </td>
                 {% if row.runitem.template.parameters['nodes']|length > 0 %}
                     <td class="ui collapsing top aligned">
-                        {{ m.prettyDisplay(row.params[row.runitem.template.parameters['nodes_label']]) }}
+                        {{ r.prettyDisplay(row.params[row.runitem.template.parameters['nodes_label']]) }}
                     </td>
                 {% endif %}
                 {% if is_template %}
                     <td class="top aligned">
                         <div style="max-width:100%; overflow: auto">
-                            {{ m.prettyDisplay(row.params.Instructions) }}
+                            {{ r.prettyDisplay(row.params.Instructions) }}
                         </div>
                     </td>
                 {% endif %}
                 {% if has_details %}
                     <td class="top aligned">
                         {% if row.params.Details is defined and row.params.Details|length > 0 %}
-                            {{ m.prettyDisplay(row.params.Details) }}
+                            {{ r.prettyDisplay(row.params.Details) }}
                         {% endif %}
                     </td>
                 {% endif %}
                 <td class="top aligned collapsing">
-                    {{ m.runItemStatusControl(row.runitem) }}
+                    {{ r.runItemStatusControl(row.runitem) }}
                 </td>
             </tr>
         {% endfor %}

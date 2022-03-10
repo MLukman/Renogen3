@@ -89,137 +89,135 @@ class TemplateController extends RenoController
 
         $this->setTemplateClassContext($context, $template->class);
 
-        if ($post->count() > 0) {
-            switch ($post->get('_action')) {
+        switch ($post->get('_action')) {
 
-                case 'Next':
-                    if (!$this->setTemplateClassContext($context, $post->get('class'))) {
-                        $context['errors'] = array('class' => 'Please select a category');
-                    }
-                    break;
+            case 'Next':
+                if (!$this->setTemplateClassContext($context, $post->get('class'))) {
+                    $context['errors'] = array('class' => 'Please select a category');
+                }
+                break;
 
-                case 'Import':
-                    $file = $request->files->get('import');
-                    if ($file && ($imported = json_decode(file_get_contents($file->getRealPath()), true))) {
-                        if (isset($imported['class']) && $this->setTemplateClassContext($context, $imported['class'])) {
-                            foreach (self::entityFields as $k) {
-                                if (isset($imported[$k])) {
-                                    $template->$k = $imported[$k];
-                                }
-                            }
-                            $template->priority = 0;
-                            break;
-                        }
-                    }
+            case 'Import':
+                $file = $request->files->get('import');
+                if (!$file || !($imported = json_decode(file_get_contents($file->getRealPath()), true))
+                    || !isset($imported['class']) || !$this->setTemplateClassContext($context, $imported['class'])) {
                     $context['errors'] = array('import' => 'Please select a valid activity template exported file');
                     break;
+                }
+                foreach (self::entityFields as $k) {
+                    if (isset($imported[$k])) {
+                        $template->$k = $imported[$k];
+                    }
+                }
+                $template->priority = 0;
+                break;
 
-                case 'Delete':
-                    $this->ds->deleteEntity($template);
-                    // Adjust priority of the other templates
+            case 'Delete':
+                $this->ds->deleteEntity($template);
+                // Adjust priority of the other templates
+                $qb = $this->ds->em()->createQueryBuilder()
+                    ->select('e')
+                    ->from('\App\Entity\Template', 'e')
+                    ->where('e.project = :p')
+                    ->andWhere('e.priority > :from')
+                    ->setParameter('p', $template->project)
+                    ->setParameter('from', $template->priority)
+                    ->orderBy('e.priority', 'ASC');
+                $prio = 0;
+                foreach ($qb->getQuery()->getResult() as $atemplate) {
+                    $atemplate->priority = ++$prio;
+                }
+                $this->ds->commit();
+                $this->addFlash('info', "Template '$template->title' has been deleted");
+                return $this->nav->redirectForEntity('app_template_list', $template);
+
+            case 'Test Form Validation':
+                $context['sample'] = array(
+                    'data' => array(),
+                    'errors' => array(),
+                );
+                $context['sample']['activity'] = new Activity(new Item(new Deployment($template->project)));
+                $context['sample']['activity']->template = $template;
+                $parameters = $post->get('parameters', array());
+                foreach ($template->templateClass()->getParameters() as $param => $parameter) {
+                    $parameter->handleActivityFiles($request, $context['sample']['activity'], $parameters, $param);
+                    $parameter->validateActivityInput($template->parameters, $parameters, $param, $context['sample']['errors'], 'parameters');
+                }
+                $post->set('parameters', $parameters);
+                if ($this->ds->prepareValidateEntity($context['sample']['activity'], array(
+                        'parameters'), $post) && empty($context['sample']['errors'])) {
+                    $this->addFlash('info', "Form validation success");
+                } else {
+                    $this->addFlash('info', "Form validation failure");
+                }
+                $context['project'] = $template->project;
+                $context['template'] = $template;
+                return $this->render('template_form', $context);
+
+            case 'Create activity template':
+            case 'Save activity template':
+                $this->setTemplateClassContext($context, $post->get('class'));
+                $parameters = $post->get('parameters', array());
+                $errors = array();
+                foreach ($context['class_instance']->getParameters() as $param => $parameter) {
+                    $parameter->validateTemplateInput($parameters, $param, $errors, 'parameters');
+                }
+                $post->set('parameters', $parameters);
+                $oldpriority = $template->priority ?:
+                    $template->project->templates->count() + 1;
+
+                if (!$this->ds->prepareValidateEntity($template, static::entityFields, $post)
+                    || !empty($errors)) {
+                    $context['errors'] = $errors + $template->errors;
+                    break;
+                }
+
+                // re-order priorities
+                if ($oldpriority != $template->priority) {
                     $qb = $this->ds->em()->createQueryBuilder()
                         ->select('e')
                         ->from('\App\Entity\Template', 'e')
                         ->where('e.project = :p')
-                        ->andWhere('e.priority > :from')
-                        ->setParameter('p', $template->project)
-                        ->setParameter('from', $template->priority)
-                        ->orderBy('e.priority', 'ASC');
-                    $prio = 0;
-                    foreach ($qb->getQuery()->getResult() as $atemplate) {
-                        $atemplate->priority = ++$prio;
+                        ->andWhere('e.priority >= :from')
+                        ->andWhere('e.priority <= :to')
+                        ->setParameter('p', $template->project);
+                    if ($oldpriority > $template->priority) {
+                        $qb->setParameter('from', $template->priority)
+                            ->setParameter('to', $oldpriority - 1)
+                            ->orderBy('e.priority', 'ASC');
+                        $prio = $template->priority;
+                        foreach ($qb->getQuery()->getResult() as $atemplate) {
+                            $atemplate->priority = ++$prio;
+                        }
+                    } else {
+                        $qb->setParameter('from', $oldpriority + 1)
+                            ->setParameter('to', $template->priority)
+                            ->orderBy('e.priority', 'DESC');
+                        $prio = $template->priority;
+                        foreach ($qb->getQuery()->getResult() as $atemplate) {
+                            $atemplate->priority = --$prio;
+                        }
                     }
                     $this->ds->commit();
-                    $this->addFlash('info', "Template '$template->title' has been deleted");
-                    return $this->nav->redirectForEntity('app_template_list', $template);
+                }
+                $this->ds->commit($template);
 
-                case 'Test Form Validation':
-                    $context['sample'] = array(
-                        'data' => array(),
-                        'errors' => array(),
-                    );
-                    $context['sample']['activity'] = new Activity(new Item(new Deployment($template->project)));
-                    $context['sample']['activity']->template = $template;
-                    $parameters = $post->get('parameters', array());
-                    foreach ($template->templateClass()->getParameters() as $param => $parameter) {
-                        $parameter->handleActivityFiles($request, $context['sample']['activity'], $parameters, $param);
-                        $parameter->validateActivityInput($template->parameters, $parameters, $param, $context['sample']['errors'], 'parameters');
-                    }
-                    $post->set('parameters', $parameters);
-                    if ($this->ds->prepareValidateEntity($context['sample']['activity'], array(
-                            'parameters'), $post) && empty($context['sample']['errors'])) {
-                        $this->addFlash('info', "Form validation success");
-                    } else {
-                        $this->addFlash('info', "Form validation failure");
-                    }
-                    $context['project'] = $template->project;
-                    $context['template'] = $template;
-                    return $this->render('template_form', $context);
-
-                case 'Create activity template':
-                case 'Save activity template':
-                    $this->setTemplateClassContext($context, $post->get('class'));
-                    $parameters = $post->get('parameters', array());
-                    $errors = array();
-                    foreach ($context['class_instance']->getParameters() as $param => $parameter) {
-                        $parameter->validateTemplateInput($parameters, $param, $errors, 'parameters');
-                    }
-                    $post->set('parameters', $parameters);
-                    $oldpriority = $template->priority ?:
-                        $template->project->templates->count() + 1;
-
-                    if ($this->ds->prepareValidateEntity($template, static::entityFields, $post)
-                        && empty($errors)) {
-                        if ($oldpriority != $template->priority) {
-                            $qb = $this->ds->em()->createQueryBuilder()
-                                ->select('e')
-                                ->from('\App\Entity\Template', 'e')
-                                ->where('e.project = :p')
-                                ->andWhere('e.priority >= :from')
-                                ->andWhere('e.priority <= :to')
-                                ->setParameter('p', $template->project);
-                            if ($oldpriority > $template->priority) {
-                                $qb->setParameter('from', $template->priority)
-                                    ->setParameter('to', $oldpriority - 1)
-                                    ->orderBy('e.priority', 'ASC');
-                                $prio = $template->priority;
-                                foreach ($qb->getQuery()->getResult() as $atemplate) {
-                                    $atemplate->priority = ++$prio;
-                                }
-                            } else {
-                                $qb->setParameter('from', $oldpriority + 1)
-                                    ->setParameter('to', $template->priority)
-                                    ->orderBy('e.priority', 'DESC');
-                                $prio = $template->priority;
-                                foreach ($qb->getQuery()->getResult() as $atemplate) {
-                                    $atemplate->priority = --$prio;
-                                }
-                            }
-                            $this->ds->commit();
-                        }
-                        $this->ds->commit($template);
-
-                        // Fix: re-order templates to ensure unique order
-                        $qb = $this->ds->em()->createQueryBuilder()
-                            ->select('e')
-                            ->from('\App\Entity\Template', 'e')
-                            ->where('e.project = :p')
-                            ->setParameter('p', $template->project)
-                            ->orderBy('e.priority', 'ASC')
-                            ->addOrderBy('e.created_date', 'DESC');
-                        $prio = 0;
-                        foreach ($qb->getQuery()->getResult() as $atemplate) {
-                            $prio++;
-                            $atemplate->priority = $prio;
-                        }
-                        $this->ds->commit();
-                        $this->addFlash('info', "Template '$template->title' has been successfully saved");
-                        return $this->nav->redirectForEntity('app_template_edit', $template);
-                    } else {
-                        $context['errors'] = $errors + $template->errors;
-                    }
-                    break;
-            }
+                // Fix: re-order templates to ensure unique order
+                $qb = $this->ds->em()->createQueryBuilder()
+                    ->select('e')
+                    ->from('\App\Entity\Template', 'e')
+                    ->where('e.project = :p')
+                    ->setParameter('p', $template->project)
+                    ->orderBy('e.priority', 'ASC')
+                    ->addOrderBy('e.created_date', 'DESC');
+                $prio = 0;
+                foreach ($qb->getQuery()->getResult() as $atemplate) {
+                    $prio++;
+                    $atemplate->priority = $prio;
+                }
+                $this->ds->commit();
+                $this->addFlash('info', "Template '$template->title' has been successfully saved");
+                return $this->nav->redirectForEntity('app_template_edit', $template);
         }
 
         $context['project'] = $template->project;

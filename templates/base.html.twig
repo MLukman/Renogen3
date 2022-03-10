@@ -211,8 +211,29 @@
                 $(form).submit(() => event.preventDefault());
             }
 
-            function popupClone(elements) {
-                $('body').modal({content: elements.clone()}).modal('show');
+            function showToast(message, title, iserror) {
+                $('body').toast({
+                    title: title,
+                    message: message,
+                    class: (iserror ? 'red' : 'inverted') + ' center aligned',
+                    position: 'bottom center'
+                });
+            }
+
+            function inputCopier(input, title) {
+                var copytoast = (error) => showToast(
+                            error ? 'Unable to copy to clipboard due to error: ' + error : 'Copied to clipboard',
+                            title, error);
+                input.select();
+                if (!navigator.clipboard) {
+                    document.execCommand("copy");
+                    copytoast();
+                } else {
+                    navigator.clipboard.writeText(input.val())
+                            .then(() => copytoast())
+                            .catch((err) => copytoast(err));
+                }
+
             }
         </script>
         {% for js in extra_js|default([]) %}<script src="{{js}}"></script>{% endfor %}
@@ -350,6 +371,7 @@
                 <div id="topfiller" class="no-print"></div>
             {% endblock %}
 
+            {% set icons = {'info':'info circle', 'persistent':'info circle', 'warning':'exclamation triangle', 'error':'exclamation triangle'} %}
             {% for type,messages in app.flashes %}
                 {% for message in messages %}
                     <a class="ui floating {% if type == 'persistent' %}info persist{% else %}{{type}}{% endif %} flash message" style="display:block; margin:1em" onclick="javascript:$(this).fadeOut()">
@@ -358,7 +380,7 @@
                                 {{message.title}}
                             </div>
                         {% endif %}
-                        <p>{{message|nl2br}}</p>
+                        <p><i class="ui {{icons[type]}} icon"></i> {{message|nl2br}}</p>
                     </a>
                 {% endfor %}
             {% endfor %}

@@ -1,0 +1,29 @@
+{% macro copyableTextField(label, value) %}
+    <div class="ui left action input fluid">
+        <button class="ui icon very tiny button" onclick="inputCopier($(this).siblings('input[type=text]'), '{{ label}}')" title="Click to copy to clipboard">
+            <i class="copy outline icon"></i>
+        </button>
+        <input type="text" readonly="readonly" value="{{ value|escape('html') }}" />
+    </div>
+{% endmacro %}
+
+{% macro copyableSourceField(label, value) %}
+    <div class="ui corner form">
+        <div class="ui left corner labeled fluid input">
+            <a class="ui left corner label" onclick="inputCopier($(this).siblings('textarea'), '{{label}}')" title="Click to copy to clipboard">
+                <i class="ui copy outline icon"></i>
+            </a>
+            <textarea readonly="readonly" style="font-family: monospace">{{ value }}</textarea>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro textLink(text, link) %}
+    <a href="{{ link|escape('html') }}">{{ text }}</a>
+{% endmacro %}
+
+{% macro readonlyCheckbox(checked) %}
+    <div class="ui read-only checkbox">
+        <input type="checkbox" {% if checked %}checked="checked"{% endif %} />
+    </div>
+{% endmacro %}

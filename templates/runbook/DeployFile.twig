@@ -1,4 +1,4 @@
-{% import "renobase.html.twig" as m %}
+{% import "renobase.html.twig" as r %}
 <table class="ui striped very compact table">
     <thead>
         <tr>
@@ -16,16 +16,16 @@
                     <a name="{{row.runitem.id}}" class="anchor">&nbsp;</a>{{loop.index}}
                 </td>
                 <td class="top aligned">
-                    {{ m.prettyDisplay(row.params.Nodes) }}
+                    {{ r.prettyDisplay(row.params.Nodes) }}
                 </td>
                 <td class="top aligned">
-                    {{ m.prettyDisplay(row.params.File)}}
+                    {{ r.prettyDisplay(row.params.File)}}
                 </td>
                 <td class="top aligned" style="max-width: 480px; overflow-x: auto;">
-                    {{ m.prettyDisplay(row.params.Instruction) }}
+                    {{ r.prettyDisplay(row.params.Instruction) }}
                 </td>
                 <td class="top aligned collapsing">
-                    {{ m.runItemStatusControl(row.runitem) }}
+                    {{ r.runItemStatusControl(row.runitem) }}
                 </td>
             </tr>
         {% endfor %}

@@ -1,4 +1,5 @@
-{% import "renobase.html.twig" as m %}
+{% import "renobase.html.twig" as r %}
+{% import "parameter/macros.html.twig" as m %}
 <table class="ui striped very compact table">
     <thead>
         <tr>
@@ -16,18 +17,16 @@
                     <a name="{{row.runitem.id}}" class="anchor">&nbsp;</a>{{loop.index}}
                 </td>
                 <td class="ui collapsing top aligned">
-                    {{ m.prettyDisplay(row.params.Nodes) }}
+                    {{ r.prettyDisplay(row.params.Nodes) }}
                 </td>
                 <td class="ui collapsing top aligned">
-                    {{ m.prettyDisplay(row.params['Run as']) }}
+                    {{ r.prettyDisplay(row.params['Run as']) }}
                 </td>
                 <td class="top aligned">
-                    <div class="ui form">
-                        <textarea readonly="readonly" style="font-family: monospace">{{row.params.Commands}}</textarea>
-                    </div>
+                    {{ m.copyableSourceField('Commands', row.params.Commands) }}
                 </td>
                 <td class="ui collapsing top aligned">
-                    {{ m.runItemStatusControl(row.runitem) }}
+                    {{ r.runItemStatusControl(row.runitem) }}
                 </td>
             </tr>
         {% endfor %}

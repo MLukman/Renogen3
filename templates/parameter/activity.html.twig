@@ -15,7 +15,7 @@
         <select id="parameters-{{param}}" name="parameters[{{param}}]" class="ui search dropdown">
             <option value="">-- Please select --</option>
             {% for v,t in template.parameters[param] %}
-                <option value="{{v}}" {% if v == paramval %}selected="selected"{% endif %}>{{t}}</option>
+                <option value="{{v}}" {% if v == paramval %}selected="selected"{% endif %}>{{t|default(v)}}</option>
             {% endfor %}
         </select>
     {% endif %}

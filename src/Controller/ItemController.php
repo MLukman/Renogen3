@@ -88,13 +88,17 @@ class ItemController extends RenoController
     {
         $new_status = $request->request->get('new_status');
         $item_obj = $this->ds->fetchItem($project, $deployment, $item);
+        if (empty($new_status)) {
+            $this->addFlash('error', "Unable to change the status since the 'status' parameter has been missing from your request. Please try again.");
+            return $this->nav->redirectForEntity('app_item_view', $item_obj);
+        }
         $old_status = $item_obj->status;
 
         $remark = trim($request->request->get('remark'));
         if (empty($remark) && $request->request->get('remark_required', 0)) {
-            $this->addFlash('info', "Remark is required", "Unable to change status", "error");
+            $this->addFlash('error', "Remark is required", "Unable to change status", "error");
         } else if ($old_status == $new_status) {
-            $this->addFlash('info', "Status is already '${new_status}'");
+            $this->addFlash('warning', "Status is already '${new_status}'");
         } else {
             $direction = $item_obj->changeStatus($new_status, $remark);
             if ($item_obj->status == Project::ITEM_STATUS_READY && $direction > 0) {
@@ -224,7 +228,7 @@ class ItemController extends RenoController
                 $this->ds->commit($comment);
                 $this->addFlash('info', "Succesfully post a comment");
             } else {
-                $this->addFlash('info', "Failed to post a comment: please ensure you enter a reply and please try again");
+                $this->addFlash('error', "Failed to post a comment: please ensure you enter a reply and please try again");
             }
             return $this->nav->redirectForEntity('app_item_view', $item_obj);
         } catch (NoResultException $ex) {

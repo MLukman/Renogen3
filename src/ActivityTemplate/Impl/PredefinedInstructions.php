@@ -86,7 +86,7 @@ class PredefinedInstructions extends BaseClass
         }
         $activity->parameters['instructions'] = $instr;
 
-        $describe = array();
+        $describe = [];
 
         if (!empty($activity->template->parameters['nodes'])) {
             $nodes_param = $this->getParameter('nodes');
@@ -104,19 +104,19 @@ class PredefinedInstructions extends BaseClass
 
     public function convertActivitiesToRunbookGroups(array $activities)
     {
-        $templates = array();
-        $activities_by_template = array();
+        $templates = [];
+        $activities_by_template = [];
 
         foreach ($activities as $activity) {
             /* @var $activity Actionable */
             if (!isset($activities_by_template[$activity->template->id])) {
                 $templates[$activity->template->id] = $activity->template;
-                $activities_by_template[$activity->template->id] = array();
+                $activities_by_template[$activity->template->id] = [];
             }
             $activities_by_template[$activity->template->id][] = $activity;
         }
 
-        $groups = array();
+        $groups = [];
         foreach ($activities_by_template as $template_id => $activities) {
             $group = new RunbookGroup($templates[$template_id]->title);
             $group->setTemplate('runbook/PredefinedInstructions.twig');

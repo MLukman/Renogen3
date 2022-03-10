@@ -56,16 +56,16 @@ class Markdown extends Parameter
 
     public function displayActivityParameter(Actionable $activity, $key)
     {
-        $param = (isset($activity->parameters[$key]) ? $activity->parameters[$key]
-                : null);
+        $param = (isset($activity->parameters[$key]) ?
+            $activity->parameters[$key] : null);
 
         return static::parse($param);
     }
 
     public function displayTemplateParameter(Template $template, $key)
     {
-        $param = (isset($template->parameters[$key]) ? $template->parameters[$key]
-                : null);
+        $param = (isset($template->parameters[$key]) ?
+            $template->parameters[$key] : null);
 
         return '<div class="markdown">'.static::parse($param).'</div>';
     }

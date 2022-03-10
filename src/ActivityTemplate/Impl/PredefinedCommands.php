@@ -14,12 +14,12 @@ class PredefinedCommands extends BaseClass
 
     public function __construct(NavigationFactory $nav, DataStore $ds)
     {
-        parent::__construct( $nav, $ds);
+        parent::__construct($nav, $ds);
         $this->addParameter('nodes', Parameter::MultiSelect($this, 'Nodes', 'The list of nodes', true, 'Nodes', 'The list of nodes the file will be deployed at', true));
         $this->addParameter('runas', Parameter::FreeTextWithDefault($this, 'Default run as user', 'The commands will be run as this user', true, 'Run as user', 'The commands will be run as this user', true));
         $this->addParameter('commands', Parameter::MultiLineConfig($this, 'Commands', 'The commands; any configurable parts can be specified using {config_id} where config_id refers to the configuration values below', true));
-        $this->addParameter('configuration', Parameter\MultiField::create($this, 'Command Configuration', 'Define job options to be entered when creating activities', false, 'Parameters', '', false, array(
-                'freetext', 'password', 'dropdown', 'formatted'), 'freetext'));
+        $this->addParameter('configuration', Parameter\MultiField::create($this, 'Command Configuration', 'Define job options to be entered when creating activities', false, 'Parameters', '', false,
+                ['freetext', 'password', 'dropdown', 'formatted'], 'freetext'));
     }
 
     public function classTitle()
@@ -29,11 +29,17 @@ class PredefinedCommands extends BaseClass
 
     public function describeActivityAsArray(Actionable $activity)
     {
-        return array(
+        return [
             "Nodes" => $this->getParameter('nodes')->displayActivityParameter($activity, 'nodes'),
             "Run as" => $this->getParameter('runas')->displayActivityParameter($activity, 'runas'),
-            "Commands" => '<pre>'.htmlentities($this->prepareCommands($activity)).'</pre>',
-        );
+            "Commands" => [
+                'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.copyableSourceField(label, value) }}',
+                'templateContext' => [
+                    'label' => 'Commands',
+                    'value' => $this->prepareCommands($activity)
+                ],
+            ]
+        ];
     }
 
     public function prepareCommands(Actionable $activity)
@@ -41,8 +47,8 @@ class PredefinedCommands extends BaseClass
         $commands = $activity->template->parameters['commands'];
         foreach ($activity->template->parameters['configuration'] as $cfg) {
             if ($cfg['type'] != 'password' || $activity->actionableType == 'runitem') {
-                $k        = $cfg['id'];
-                $v        = $activity->parameters['configuration'][$k];
+                $k = $cfg['id'];
+                $v = $activity->parameters['configuration'][$k];
                 $commands = str_replace("{{$k}}", $v, $commands);
             }
         }
@@ -51,30 +57,30 @@ class PredefinedCommands extends BaseClass
 
     public function convertActivitiesToRunbookGroups(array $activities)
     {
-        $templates              = array();
-        $activities_by_template = array();
-        $added                  = array();
+        $templates = [];
+        $activities_by_template = [];
+        $added = [];
 
         foreach ($activities as $activity) {
             /* @var $activity Actionable */
             if (!isset($activities_by_template[$activity->template->id])) {
-                $templates[$activity->template->id]              = $activity->template;
-                $activities_by_template[$activity->template->id] = array();
+                $templates[$activity->template->id] = $activity->template;
+                $activities_by_template[$activity->template->id] = [];
             }
             $activities_by_template[$activity->template->id][] = $activity;
         }
 
-        $groups = array();
+        $groups = [];
         foreach ($activities_by_template as $template_id => $activities) {
             $group = new RunbookGroup($templates[$template_id]->title);
             $group->setInstruction("Execute the following commands on the respective nodes:");
             $group->setTemplate('runbook/PredefinedCommands.twig');
             foreach ($activities as $activity) {
-                $group->addRow($activity, array(
+                $group->addRow($activity, [
                     "Nodes" => $activity->parameters['nodes'],
                     "Run as" => $activity->parameters['runas'],
                     "Commands" => $this->prepareCommands($activity),
-                ));
+                ]);
             }
             $groups[] = $group;
         }

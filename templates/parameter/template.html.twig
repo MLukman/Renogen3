@@ -4,12 +4,12 @@
 {% elseif parameter.type in ['dropdown', 'multiselect'] %}
     <p>{{parameter.templateDescription}}</p>
     <div class="two fields">
-        <div class="ui field">
+        <div class="ui required field">
             <label>Values</label>
             <textarea name="parameters[{{param}}][values]" rows="3">{{paramval.values|default(null)}}</textarea>
         </div>
         <div class="ui field">
-            <label>Texts</label>
+            <label>Texts (Optional, will default to the corresponding values if not set)</label>
             <textarea name="parameters[{{param}}][texts]" rows="3">{{paramval.texts|default(null)}}</textarea>
         </div>
     </div>

@@ -15,10 +15,10 @@
 
     {% if errors|default(false) %}
         <div class="ui error message">
+            <i class="ui exclamation triangle icon"></i>
             Your input requires your further attention. Please inspect any messages below.
         </div>
     {% endif %}
-    <!-- debug errors: {{errors|default(null)|json_encode}} -->
 
     <form method="POST" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
         <div class="ui form">

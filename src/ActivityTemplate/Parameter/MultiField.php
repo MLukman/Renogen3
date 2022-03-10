@@ -181,40 +181,73 @@ class MultiField extends Parameter
         $options = array();
         $data = $this->activityDatabaseToForm($activity->template->parameters, $activity->parameters, $key, $activity);
         foreach ($activity->template->parameters[$key] as $p) {
-            if ($isForRunbook) {
-                $d = $p['id'];
-            } else {
-                $d = $p['title'];
+            if (!isset($data[$p['id']])) {
+                continue;
             }
 
-            //$options[$d] = null;
-            if (isset($data[$p['id']])) {
-                if ($p['type'] == 'password' && !$isForRunbook) {
-                    $options[$d] = '******';
-                } elseif (isset($p['sensitive']) && $p['sensitive'] && !$isForRunbook) {
-                    $options[$d] = '<em>-- Redacted due to sensitive details --</em>';
-                } elseif ($p['type'] == 'file') {
+            $d = $isForRunbook ? $p['id'] : $p['title'];
+
+            if (!$isForRunbook &&
+                ($p['type'] == 'password' || (isset($p['sensitive']) && $p['sensitive']))) {
+                $options[$d] = '<em>-- Redacted due to sensitive info --</em>';
+                continue;
+            }
+
+            switch ($p['type']) {
+                case 'file':
                     $file = $this->template->ds()->queryOne($activity->fileClass, array(
                         "{$activity->actionableType}" => $activity,
                         'classifier' => $key.'.'.$p['id'],
                     ));
                     if ($file) {
-                        $options[$d] = '<a href="'.htmlentities($this->getDownloadLink($file)).'">'.htmlentities($file->filename).'</a>';
+                        $options[$d] = [
+                            'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.textLink(text, link) }}',
+                            'templateContext' => [
+                                'text' => $file->filename,
+                                'link' => $this->getDownloadLink($file),
+                            ]
+                        ];
                     }
-                } elseif ($p['type'] == 'url') {
-                    $options[$d] = '<a href="'.htmlentities($data[$p['id']]).'" target="_blank">'.htmlentities($data[$p['id']]).'</a>';
-                } elseif ($p['type'] == 'script') {
-                    $options[$d] = '<div class="ui form">';
-                    $options[$d] .= '<div class="ui right corner labeled fluid input"><a class="ui right corner label" onclick="popupClone($(this).closest(\'.form\'))"><i class="code icon"></i></a>';
-                    $options[$d] .= '<textarea readonly="readonly" style="font-family: monospace">'.htmlentities($data[$p['id']]).'</textarea>';
-                    $options[$d] .= '</div>';
-                    $options[$d] .= '</div>';
-                } elseif ($p['type'] == 'checkbox') {
-                    $options[$d] = '<div class="ui read-only checkbox"><input type="checkbox" '.
-                        ($data[$p['id']] ? 'checked="checked" ' : '').' /></div>';
-                } else {
-                    $options[$d] = $data[$p['id']];
-                }
+                    break;
+
+                case 'url':
+                    $options[$d] = [
+                        'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.textLink(text, link) }}',
+                        'templateContext' => [
+                            'text' => $data[$p['id']],
+                            'link' => $data[$p['id']]
+                        ],
+                    ];
+                    break;
+
+                case 'script':
+                    $options[$d] = [
+                        'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.copyableSourceField(label, value) }}',
+                        'templateContext' => [
+                            'label' => $d,
+                            'value' => $data[$p['id']]
+                        ],
+                    ];
+                    break;
+
+                case 'checkbox':
+                    $options[$d] = [
+                        'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.readonlyCheckbox(checked) }}',
+                        'templateContext' => [
+                            'checked' => !empty($data[$p['id']])
+                        ],
+                    ];
+                    break;
+
+                default:
+
+                    $options[$d] = [
+                        'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.copyableTextField(label, value) }}',
+                        'templateContext' => [
+                            'label' => $d,
+                            'value' => $data[$p['id']]
+                        ],
+                    ];
             }
         }
         return $options;
