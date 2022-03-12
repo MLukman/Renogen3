@@ -64,14 +64,21 @@ class FormAuthenticator extends AbstractAuthenticator
             'username' => $request->request->get('username'),
             'password' => $request->request->get('password'),
             'driver' => $request->request->get('driver'),
+            'reset_code' => $request->request->get('reset_code'),
             'csrf_token' => $request->request->get('_csrf_token'),
         ];
 
+        if (empty($credentials['username'])) { // empty input
+            throw new CustomUserMessageAuthenticationException('Username is required.');
+        }
+
+        // check csrf token
         $token = new CsrfToken('authenticate', $credentials['csrf_token']);
         if (!$this->csrfTokenManager->isTokenValid($token)) {
             throw new InvalidCsrfTokenException('Invalid CSRF');
         }
 
+        // fetch user authentication entity
         try {
             $user_auth = $this->ds->getUserAuthentication([
                 'username' => $credentials['username'],
@@ -81,17 +88,23 @@ class FormAuthenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException($ex->getMessage());
         }
 
-        if (!$user_auth) {
-            // User not found
+        if (!$user_auth) { // User not found
             throw new CustomUserMessageAuthenticationException('Username could not be found.');
-        } elseif ($user_auth->user->blocked) {
-            // User blocked
+        } elseif ($user_auth->user->blocked) { // User blocked
             throw new CustomUserMessageAuthenticationException('Sorry but you have been blocked from logging in. Please contact an administrator if you think it is a mistake.');
         }
+
         $authDriver = $user_auth->driver;
-        if (!$authDriver) {
-            // Authentication method missing
+        if (!$authDriver) { // Authentication method missing
             throw new CustomUserMessageAuthenticationException("Your account requires authentication method '$user_auth->auth' which has been disabled. Please contact an administrator to request for access.");
+        }
+
+        if ((!empty($user_auth->reset_code) && $user_auth->reset_code == $credentials['reset_code'])
+            || empty($user_auth->getPassword())) { // reset password
+            $user_auth->setPassword($this->passwordEncoder->hashPassword($user_auth, $credentials['password']));
+            $user_auth->setResetCode(null);
+            $this->ds->commit($user_auth);
+            $this->ds->reloadEntity($user_auth);
         }
 
         if (!$authDriver->driverClass()->authenticate(new Credentials($credentials['username'], $credentials['password']),
@@ -99,10 +112,19 @@ class FormAuthenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException("Invalid credentials");
         }
 
+        // Update email address into UserAuthentication entity
+        if (empty($user_auth->email)) {
+            $user_auth->email = $user_auth->user->email;
+            $this->ds->commit($user_auth);
+        }
+
         return new SelfValidatingPassport(
-            new UserBadge($user_auth->username, function($id) use ($user_auth) {
-                return $user_auth;
-            }));
+            new UserBadge($user_auth->username,
+                function ($id) use ($user_auth) {
+                    return $user_auth;
+                }
+            )
+        );
     }
 
     public function onAuthenticationSuccess(Request $request,

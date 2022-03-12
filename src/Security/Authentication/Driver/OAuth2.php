@@ -199,11 +199,6 @@ class OAuth2 extends Driver
         }
     }
 
-    public function resetPassword(UserAuthentication $user_auth)
-    {
-
-    }
-
     protected function getSessionKey(string $suffix): string
     {
         return "auth.oauth2.".$this->instance->name.".".$suffix;

@@ -45,9 +45,14 @@ class UserAuthentication extends Entity implements UserInterface, PasswordAuthen
     public $credential;
 
     /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    public $email;
+
+    /**
      * @ORM\Column(type="string", length=32, nullable=true)
      */
-    protected $reset_code;
+    public $reset_code;
 
     public function __construct(User $user, AuthDriver $driver = null,
                                 $credential = null)

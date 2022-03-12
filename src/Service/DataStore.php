@@ -103,9 +103,9 @@ class DataStore
      *
      * @param type $entity
      * @param type $id_or_criteria
-     * @return Entity
+     * @return Entity|null
      */
-    public function queryOne($entity, $id_or_criteria)
+    public function queryOne($entity, $id_or_criteria): ?Entity
     {
         if (empty($id_or_criteria)) {
             return null;
@@ -122,10 +122,10 @@ class DataStore
      * @param string $entity
      * @param array $criteria
      * @param array $sort
-     * @return ArrayCollection
+     * @return array
      */
     public function queryMany($entity, Array $criteria = array(),
-                              Array $sort = array())
+                              Array $sort = array()): array
     {
         $repo = $this->em->getRepository($entity);
         return $repo->findBy($criteria, $sort);
@@ -137,7 +137,7 @@ class DataStore
      * @param array $criteria
      * @return int
      */
-    public function count($entity, Array $criteria = array())
+    public function count($entity, Array $criteria = array()): int
     {
         $qb = $this->em->getRepository($entity)->createQueryBuilder('e')
             ->select('COUNT(1)');
@@ -154,10 +154,10 @@ class DataStore
      * @param array $criteria
      * @param array $sort
      * @param type $limit
-     * @return ArrayCollection
+     * @return array
      */
     public function queryUsingOr($entity, Array $criteria = array(),
-                                 Array $sort = array(), $limit = 0)
+                                 Array $sort = array(), $limit = 0): array
     {
         $repo = $this->em->getRepository($entity);
         $qb = $repo->createQueryBuilder('e');
@@ -179,12 +179,12 @@ class DataStore
      * @return Project
      * @throws NoResultException
      */
-    public function fetchProject($project)
+    public function fetchProject($project): Project
     {
         if (!($project instanceof Project)) {
             $name = $project;
             if (!($project = $this->queryOne('\App\Entity\Project', array('name' => $name)))) {
-                throw new NoResultException("There is not such project with name '$name'");
+                throw new NoResultException("There is no such project with name '$name'");
             }
         }
         return $project;
@@ -196,12 +196,12 @@ class DataStore
      * @return User
      * @throws NoResultException
      */
-    public function fetchUser($user)
+    public function fetchUser($user): User
     {
-        if (!($user instanceof Project)) {
+        if (!($user instanceof User)) {
             $name = $user;
             if (!($user = $this->queryOne('\App\Entity\User', $name))) {
-                throw new NoResultException("There is not such user with username '$name'");
+                throw new NoResultException("There is no such user with username '$name'");
             }
         }
         return $user;
@@ -214,7 +214,7 @@ class DataStore
      * @return Deployment
      * @throws NoResultException
      */
-    public function fetchDeployment($project, $deployment)
+    public function fetchDeployment($project, $deployment): Deployment
     {
         if ($deployment instanceof Deployment) {
             return $deployment;
@@ -224,7 +224,7 @@ class DataStore
             && $deployments->count() > 0) {
             return $deployments->first();
         }
-        throw new NoResultException("There is not such deployment matching '$deployment'");
+        throw new NoResultException("There is no such deployment matching '$deployment'");
     }
 
     /**
@@ -234,7 +234,7 @@ class DataStore
      * @return DeploymentRequest
      * @throws NoResultException
      */
-    public function fetchDeploymentRequest($project, $deployment_request)
+    public function fetchDeploymentRequest($project, $deployment_request): DeploymentRequest
     {
         if ($deployment_request instanceof DeploymentRequest) {
             return $deployment_request;
@@ -243,7 +243,7 @@ class DataStore
         if (($deployment = $project_obj->deployment_requests->get($deployment_request))) {
             return $deployment;
         }
-        throw new NoResultException("There is not such deployment request matching '$deployment_request'");
+        throw new NoResultException("There is no such deployment request matching '$deployment_request'");
     }
 
     /**
@@ -254,12 +254,12 @@ class DataStore
      * @return Item
      * @throws NoResultException
      */
-    public function fetchItem($project, $deployment, $item)
+    public function fetchItem($project, $deployment, $item): Item
     {
         if (!($item instanceof Item)) {
             $id = $item;
             if (!($item = $this->queryOne('\App\Entity\Item', array('id' => $id)))) {
-                throw new NoResultException("There is not such deployment item with id '$id'");
+                throw new NoResultException("There is no such deployment item with id '$id'");
             }
         }
         return $item;
@@ -273,13 +273,13 @@ class DataStore
      * @return Item
      * @throws NoResultException
      */
-    public function fetchChecklist($project, $deployment, $checklist)
+    public function fetchChecklist($project, $deployment, $checklist): \App\Entity\Checklist
     {
         if (!($checklist instanceof Entity\Checklist)) {
             $id = $checklist;
             if (!($checklist = $this->queryOne('\App\Entity\Checklist', array(
                 'id' => $id)))) {
-                throw new NoResultException("There is not such deployment checklist id '$id'");
+                throw new NoResultException("There is no such deployment checklist id '$id'");
             }
         }
         return $checklist;
@@ -294,13 +294,13 @@ class DataStore
      * @return Activity
      * @throws NoResultException
      */
-    public function fetchActivity($project, $deployment, $item, $activity)
+    public function fetchActivity($project, $deployment, $item, $activity): Activity
     {
         if (!($activity instanceof Activity)) {
             $id = $activity;
             $item_obj = $this->fetchItem($project, $deployment, $item);
             if (!($activity = $item_obj->activities->get($id))) {
-                throw new NoResultException("There is not such activity with id '$id'");
+                throw new NoResultException("There is no such activity with id '$id'");
             }
         }
         return $activity;
@@ -315,13 +315,13 @@ class DataStore
      * @return Attachment
      * @throws NoResultException
      */
-    public function fetchAttachment($project, $deployment, $item, $attachment)
+    public function fetchAttachment($project, $deployment, $item, $attachment): Attachment
     {
         if (!($attachment instanceof Attachment)) {
             $id = $attachment;
             $item_obj = $this->fetchItem($project, $deployment, $item);
             if (!($attachment = $item_obj->attachments->get($id))) {
-                throw new NoResultException("There is not such attachment with id '$id'");
+                throw new NoResultException("There is no such attachment with id '$id'");
             }
         }
         return $attachment;
@@ -334,13 +334,13 @@ class DataStore
      * @return Template
      * @throws NoResultException
      */
-    public function fetchTemplate($template, $project = null)
+    public function fetchTemplate($template, $project = null): Template
     {
         if (!($template instanceof Template)) {
             $name = $template;
             $template = $this->queryOne('\App\Entity\Template', $template);
             if (!$template || ($project != null && $template->project != $this->fetchProject($project))) {
-                throw new NoResultException("There is not such template with id '$name'");
+                throw new NoResultException("There is no such template with id '$name'");
             }
         }
         return $template;
@@ -354,7 +354,7 @@ class DataStore
      * @return ArrayCollection|Project[]
      */
     public function getProjectsForUserAndRole(User $user, $roles,
-                                              Project $exclude = null)
+                                              Project $exclude = null): ArrayCollection
     {
         $projects = new ArrayCollection();
         if (!is_array($roles)) {
@@ -464,7 +464,7 @@ class DataStore
 
     public function processFileUpload(UploadedFile $file,
                                       FileLink $filelink = null,
-                                      array &$errors = array())
+                                      array &$errors = array()): ?FileLink
     {
         if ($file->isValid() && $filelink) {
             $sha1 = sha1_file($file->getRealPath());
@@ -514,7 +514,7 @@ class DataStore
         $this->overrideUser = $user;
     }
 
-    public function getUserAuthentication(array $criteria)
+    public function getUserAuthentication(array $criteria): ?UserAuthentication
     {
         return $this->queryOne('\\App\\Entity\\UserAuthentication', $criteria);
     }
@@ -524,7 +524,7 @@ class DataStore
      * @param string $classId
      * @return Driver|null
      */
-    public function getAuthDriver($classId): AuthDriver
+    public function getAuthDriver($classId): ?AuthDriver
     {
         if (empty($this->em->getRepository('\App\Entity\AuthDriver')->find('password'))) {
             $auth_password = new AuthDriver('password');
@@ -536,7 +536,7 @@ class DataStore
         return $this->em->getRepository('\App\Entity\AuthDriver')->find($classId);
     }
 
-    public function getAuthClassNames()
+    public function getAuthClassNames(): array
     {
         $globPath = __DIR__.'/../Security/Authentication/Driver/*.php';
         $authClassNames = $this->cache->get('authClasses', function (ItemInterface $item) use ($globPath) {

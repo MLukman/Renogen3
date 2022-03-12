@@ -152,7 +152,40 @@ class ProfileController extends RenoController
 
         $user_auth = new UserAuthentication($ds->currentUserEntity(), $authDriver, $user_info['username']);
         $ds->commit($user_auth);
+        $this->addFlash('info', "Your {$user_auth->driver->title} login has been added");
 
-        return $this->nav->redirectRoute('app_profile', [], 'oauth2');
+        return $this->nav->redirectRoute('app_profile', [], 'auth');
+    }
+
+    /**
+     * @Route("/.profile/editAuth/", name="app_profile_edit_auth", priority=20)
+     */
+    public function editAuth(DataStore $ds, OAuth2Authenticator $oauth2auth,
+                             Request $request)
+    {
+        switch ($request->request->get('action')) {
+            case 'Reset Password':
+                if (($ua = $ds->getUserAuthentication([
+                    'user' => $ds->currentUserEntity(),
+                    'driver_id' => $request->request->get('driver'),
+                    ]))) {
+                    $ua->generateResetCode();
+                    $ds->commit($ua);
+                    return $this->nav->redirectRoute('app_login', ['reset_code' => $ua->reset_code]);
+                }
+            case 'Delete':
+                if (!($ua = $ds->getUserAuthentication([
+                    'user' => $ds->currentUserEntity(),
+                    'driver_id' => $request->request->get('driver'),
+                    ]))) {
+                    break;
+                }
+                if ($ds->currentSecurityUser() != $ua) {
+                    $ds->deleteEntity($ua);
+                    $ds->commit();
+                    $this->addFlash('info', "Your {$ua->driver->title} login has been deleted");
+                }
+        }
+        return $this->nav->redirectRoute('app_profile', [], 'auth');
     }
 }

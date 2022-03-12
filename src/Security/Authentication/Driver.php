@@ -3,7 +3,6 @@
 namespace App\Security\Authentication;
 
 use App\Entity\AuthDriver;
-use App\Entity\User;
 use App\Entity\UserAuthentication;
 
 abstract class Driver
@@ -61,7 +60,7 @@ abstract class Driver
      */
     public function resetPassword(UserAuthentication $user_auth)
     {
-        
+        return null;
     }
 
     public function testable()

@@ -24,7 +24,7 @@
         </div>
     {% endif %}
 
-    <form method="POST" onsubmit="javascript:form_disabler(this)">
+    <form class="disable-on-submit confirm-on-leave" method="POST">
         <div class="ui form">
             {% if not is_existing %}
                 <div class="ui required field basic segment">

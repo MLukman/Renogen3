@@ -44,7 +44,7 @@
     {% endif %}
 
     {% if class_instance is not defined %}
-        <form method="POST" class="ui basic segment" onsubmit="javascript:form_disabler(this)">
+        <form class="ui basic segment disable-on-submit confirm-on-leave" method="POST">
             <div class="ui form">
                 <div class="ui required field basic segment">
                     <label class="ui top attached large label">Category</label>
@@ -66,7 +66,7 @@
                 </div>
             </div>
         </form>
-        <form method="POST" class="ui basic segment" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
+        <form class="ui basic segment disable-on-submit confirm-on-leave" method="POST" enctype="multipart/form-data">
             <div class="ui form">
                 <div class="ui field basic segment">
                     <label class="ui top attached large label">Import from exported activity template</label>
@@ -92,7 +92,7 @@
         {% endif %}
 
         <div{% if is_existing %} class="ui bottom attached tab active segment" data-tab="edit"{% endif %}>
-            <form method="POST">
+            <form class="disable-on-submit confirm-on-leave" method="POST">
                 <div class="ui form">
                     <div class="ui required field grey basic segment">
                         <label class="ui top attached large label">Title</label>

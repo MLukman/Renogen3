@@ -89,13 +89,19 @@ class OAuth2Authenticator extends AbstractAuthenticator
             'credential' => $user_info['username']]);
 
         if (!$user_auth) {
-            throw new CustomUserMessageAuthenticationException('Please register first');
+            throw new CustomUserMessageAuthenticationException("Please register first. Or you can login using another method and add {$authDriver->title} login from the profile page.");
+        }
+
+        // Update email address into UserAuthentication entity
+        if (empty($user_auth->email)) {
+            $user_auth->email = $user_info['email'];
+            $this->ds->commit($user_auth);
         }
 
         return new SelfValidatingPassport(
-            new UserBadge($user_auth->username, function($id) use ($user_auth) {
-                return $user_auth;
-            }));
+            new UserBadge($user_auth->username, function ($id) use ($user_auth) {
+                    return $user_auth;
+                }));
     }
 
     public function onAuthenticationSuccess(Request $request,
@@ -143,7 +149,8 @@ class OAuth2Authenticator extends AbstractAuthenticator
         }
 
         // fresh request -> redirect to OAuth2 provider
-        if (!$request->getSession()->get('oauth2.original_redirect.url')) {
+        if (!$request->getSession()->get('oauth2.original_redirect.url') ||
+            empty($request->getSession()->get('oauth2.params'))) {
             $request->getSession()->set('oauth2.original_redirect.url', $redirect_uri);
             $redirect_uri = $this->nav->url('app_oauth2');
             return OAuth2AuthenticatorResult::redirect($driverClass->generateRedirectToAuthorizeURL($redirect_uri, $request->getSession()));

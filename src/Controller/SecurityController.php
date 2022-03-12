@@ -15,10 +15,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use function GuzzleHttp\json_encode;
 
 class SecurityController extends RenoController
 {
@@ -30,10 +32,29 @@ class SecurityController extends RenoController
      */
     public function login(AuthenticationUtils $authenticationUtils,
                           DataStore $ds, SessionInterface $session,
-                          Request $request, $reset_code = null): Response
+                          Request $request, TokenStorageInterface $tokenStorage,
+                          $reset_code = null): Response
     {
         $this->title = 'Login';
-        if ($this->getUser()) {
+        $context = [
+            'message' => [],
+            'last_username' => $authenticationUtils->getLastUsername(),
+            'reset_code' => null,
+        ];
+
+        // reset password operation is prority
+        if (!empty($reset_code) && $request->request->count() == 0) {
+            $reset_user = $ds->getUserAuthentication(['reset_code' => $reset_code]);
+            if ($reset_user) {
+                $context['last_username'] = $reset_user->username;
+                $context['reset_code'] = $reset_code;
+                $context['message'] = ['negative' => false, 'text' => 'Please login now to set your password.'];
+                $request->getSession()->invalidate();
+                $tokenStorage->setToken(null);
+            } else {
+                $context['message'] = ['negative' => true, 'text' => 'Invalid password reset code'];
+            }
+        } else if ($this->getUser()) {
             return $this->redirect($request->request->get('last_page') ?:
                     $this->getTargetPath($session, 'main') ?:
                     $this->nav->path('app_home'));
@@ -43,11 +64,10 @@ class SecurityController extends RenoController
             return $this->redirectToRoute('app_login', ['reset_code' => $user_auth->reset_code]);
         }
 
-        $context = [
-            'message' => [],
-            'last_username' => $authenticationUtils->getLastUsername(),
+        $context += [
             'oauth2_drivers' => $ds->queryMany('\App\Entity\AuthDriver', [
-                'class' => '\App\Security\Authentication\Driver\OAuth2']),
+                'class' => '\App\Security\Authentication\Driver\OAuth2'
+            ]),
             'last_page' => $request->request->get('last_page') ?: $this->getTargetPath($session, 'main'),
             'self_register' => ($ds->count(
                 '\App\Entity\AuthDriver', ['allow_self_registration' => 1]) > 0),
@@ -55,17 +75,6 @@ class SecurityController extends RenoController
         ];
         if (($error = $authenticationUtils->getLastAuthenticationError())) {
             $context['message'] = ['negative' => true, 'text' => $error->getMessage()];
-        } elseif (!empty($reset_code) && $request->request->count() == 0) {
-            $reset_user = $ds->getUserAuthentication(['reset_code' => $reset_code]);
-            if ($reset_user) {
-                $context['last_username'] = $reset_user->username;
-                $reset_user->credential = '';
-                $reset_user->setResetCode('');
-                $ds->commit($reset_user);
-                $context['message'] = ['negative' => false, 'text' => 'Please login now to set your password.'];
-            } else {
-                $context['message'] = ['negative' => true, 'text' => 'Invalid password reset code'];
-            }
         }
 
         $count_last = 30;
@@ -176,6 +185,7 @@ class SecurityController extends RenoController
                 $user->last_login = new \DateTime();
                 $user_auth->created_by = $user;
                 $user_auth->created_date = new \DateTime();
+                $user_auth->email = $user->email;
 
                 if ($authClass instanceof OAuth2) {
                     $ds->commit($user);

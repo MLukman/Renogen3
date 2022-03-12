@@ -29,7 +29,7 @@
             <a href="javascript:window.history.go(-1)" class="ui button">Go Back</a>
         </div>
     {% else %}
-        <form method="POST" enctype="multipart/form-data" onsubmit="javascript:form_disabler(this)">
+        <form class="disable-on-submit confirm-on-leave" method="POST" enctype="multipart/form-data">
             <div class="ui form">
                 {% if activity.template is empty %}
                     <div class="ui required field basic segment">

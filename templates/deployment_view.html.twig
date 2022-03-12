@@ -31,22 +31,24 @@
                 </a>
             {% endif %}
         </span>
-        {% if security.isGranted('approval',deployment.project) %}
-            <a class="ui right floated button no-print" href="{{nav.entityPath('app_deployment_edit',deployment)}}">
-                <i class="ui pencil icon"></i>
-                <span class="hide-on-mobile">Edit</span>
+        <div class="right-buttons">
+            {% if security.isGranted('approval',deployment.project) %}
+                <a class="ui right floated button no-print" href="{{nav.entityPath('app_deployment_edit',deployment)}}">
+                    <i class="ui pencil icon"></i>
+                    <span class="hide-on-mobile">Edit</span>
+                </a>
+            {% endif %}
+            {% if security.isGranted(['approval','execute'],deployment.project) %}
+                <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_runbook_view',deployment)}}">
+                    <i class="ui checkmark box icon"></i>
+                    Run <span class="hide-on-mobile">Book</span>
+                </a>
+            {% endif %}
+            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_release_note',deployment)}}">
+                <i class="ui ordered list icon"></i>
+                <span class="hide-on-mobile">Release</span> Note
             </a>
-        {% endif %}
-        {% if security.isGranted(['approval','execute'],deployment.project) %}
-            <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_runbook_view',deployment)}}">
-                <i class="ui checkmark box icon"></i>
-                Run <span class="hide-on-mobile">Book</span>
-            </a>
-        {% endif %}
-        <a class="ui right floated primary button no-print" href="{{nav.entityPath('app_release_note',deployment)}}">
-            <i class="ui ordered list icon"></i>
-            <span class="hide-on-mobile">Release</span> Note
-        </a>
+        </div>
     </h1>
 
     {{ _self.describe(deployment.description, 'deployment') }}

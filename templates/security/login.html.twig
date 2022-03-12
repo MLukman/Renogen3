@@ -29,7 +29,7 @@
                     Renogen is a release management approval & tracking platform
                 {% endif %}
                 <div class="ui big basic segment">
-                    <form action="{{ path('app_login') }}" method="post" onsubmit="javascript:form_disabler(this)">
+                    <form class="disable-on-submit" method="POST" action="{{ path('app_login') }}">
                         <div class="required field">
                             <div class="ui left icon input">
                                 <input type="text" name="username" placeholder="Username" value="{{ last_username|default(null) }}" {% if not last_username %}autofocus{% endif %} />
@@ -47,6 +47,7 @@
                             <input type="hidden" name="last_page" value="{{ last_page }}" />
                             <input type="hidden" name="method" value="form" />
                             <input type="hidden" name="driver" value="password" />
+                            <input type="hidden" name="reset_code" value="{{ reset_code }}" />
                             <button id="login_button" class="ui big black button" type="submit"><i class="ui unlock icon"></i> Login</button>
                             {% if can_reset_password %}
                                 <div>
@@ -62,7 +63,7 @@
                         <div class="ui center aligned">
                             <h3 class="ui inverted header">Login using:</h3>
                             {% for driver in oauth2_drivers %}
-                                <form action="{{ path('app_login_oauth2', {'driver':driver.name}) }}" method="post" style="display:inline;" onsubmit="javascript:form_disabler(this)">
+                                <form class="disable-on-submit" method="POST" style="display:inline;" action="{{ path('app_login_oauth2', {'driver':driver.name}) }}">
                                     <input type="hidden" name="method" value="oauth2" />
                                     <button class="ui big black button" type="submit" name="driver" value="{{ driver.name }}" style="margin-bottom:0.5em">
                                         <i class="openid icon"></i> {{ driver.title }}

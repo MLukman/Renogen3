@@ -12,15 +12,13 @@
                 </span>
             </h2>
         </div>
-        {% if oauth2|length > 0 %}
-            <div class="item" data-tab="oauth2">
-                <h2 class="ui header">
-                    <span>
-                        <i class="ui openid icon"></i> <span class="hide-on-mobile">Login Provider</span>
-                    </span>
-                </h2>
-            </div>
-        {% endif %}
+        <div class="item" data-tab="auth">
+            <h2 class="ui header">
+                <span>
+                    <i class="ui openid icon"></i> <span class="hide-on-mobile">Login Provider</span>
+                </span>
+            </h2>
+        </div>
     </div>
 
     <div class="ui tab basic segment active" data-tab="stats">
@@ -125,20 +123,49 @@
             </div>
         </div>
     </div>
-    {% if oauth2|length > 0 %}
-        <div class="ui tab basic segment" data-tab="oauth2">
-            <p>You are registered in Renogen using the following authentication methods:</p>
-            <ul>
+    <div class="ui tab basic segment" data-tab="auth">
+        <p>You are registered in Renogen using the following authentication methods:</p>
+
+        <table class="ui sortable celled fluid table">
+            <thead>
+                <tr>
+                    <th><i class="ui lock open icon" title="Current session?"></i></th>
+                    <th>Method</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for au in user.authentications %}
-                    <li>{{ au.driver.title }}</li>
-                    {% endfor %}
-            </ul>
+                    <tr>
+                        <td class="ui collapsing">
+                            {% if au.driver.name == ds.currentSecurityUser().driver_id %}
+                                <i class="ui right pointing icon"></i>
+                            {% endif %}
+                        </td>
+                        <td>{{ au.driver.title }}</td>
+                        <td>{{ au.email }}</td>
+                        <td class="ui collapsing">
+                            <form method="POST" action="{{ nav.path('app_profile_edit_auth') }}">
+                                <input type="hidden" name="driver" value="{{ au.driver.name }}" />
+                                {% if au.driver.driverClass() is instanceof('\\App\\Security\\Authentication\\Driver\\Password') %}
+                                    <input type="submit" class="ui button" name="action" value="Reset Password" />
+                                {% elseif au.driver.driverClass() is instanceof('\\App\\Security\\Authentication\\Driver\\OAuth2') and au.driver.name != ds.currentSecurityUser().driver_id %}
+                                    <input type="submit" class="ui button" name="action" value="Delete" />
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if oauth2|length > 0 %}
             <p>Click on a button below to add another authentication method:</p>
             {% for au in oauth2 %}
                 <a class="ui button" href="{{ nav.path('app_profile_oauth2', { 'driver':au.name }) }}">{{au.title}}</a>
             {% endfor %}
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
 {% endblock %}
 
 {% macro stat(label, value, icon) %}

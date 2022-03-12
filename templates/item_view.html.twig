@@ -55,7 +55,7 @@
                 </a>
             {% endif %}
         </span>
-        <div class="ui labels" style="float:right">
+        <div class="ui labels right-buttons">
             {{ _self.itemCategoryLabel(item) }}
             {{ _self.itemModulesLabel(item) }}
             {% if editable %}
@@ -300,7 +300,7 @@
                         <em>No comments yet</em>
                     {% endfor %}
                     {% if commentable %}
-                        <form class="ui center aligned form basic segment no-print" method="POST" action="{{nav.entityPath('app_item_comment_add',item)}}" onsubmit="javascript:form_disabler(this)">
+                        <form class="ui center aligned form basic segment no-print disable-on-submit" method="POST" action="{{nav.entityPath('app_item_comment_add',item)}}">
                             <h4 class="ui horizontal divider header">
                                 Add comment
                             </h4>
