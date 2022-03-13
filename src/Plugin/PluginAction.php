@@ -81,7 +81,7 @@ class PluginAction
      *
      * @var array
      */
-    protected $renderContext = array();
+    protected $renderContext = [];
 
     /**
      *
@@ -156,7 +156,7 @@ class PluginAction
         return $this->response;
     }
 
-    public function render(string $view, $context = array())
+    public function render(string $view, $context = [])
     {
         $this->handleBy = self::HANDLEBY_RENDER;
         $this->renderView = $view;
@@ -169,7 +169,7 @@ class PluginAction
         $this->response = $response;
     }
 
-    public function redirect(string $route = '', array $params = array())
+    public function redirect(string $route = '', array $params = [])
     {
         $this->handleBy = self::HANDLEBY_REDIRECT;
         $this->redirectRoute = $route;

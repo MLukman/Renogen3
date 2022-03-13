@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class Core extends PluginCore
 {
-    protected $options = array(
+    protected $options = [
         'allow_delete_item' => false,
         'delete_fresh_item_only' => false,
         'extract_refnum_from_subject' => null,
@@ -23,14 +23,14 @@ class Core extends PluginCore
         'auto_refnum_from_id_lpad' => 1,
         'deployment_date_adjust' => '+0 day',
         'deployment_time' => '12:00 AM',
-    );
-    protected $extract_refnum_patterns = array(
+    ];
+    protected $extract_refnum_patterns = [
         '([^\-\s]+)\s*-\s*(.*)' => 'REFNUM - Item title',
         '#([^\-\s]+)\s*\-*\s*(.*)' => '#REFNUM Item title',
         '\[([^\]\s]+)\]\s*\-*\s*(.*)' => '[REFNUM] Item title',
         '\(([^\)\s]+)\)\s*\-*\s*(.*)' => '(REFNUM) Item title',
-    );
-    protected $deployment_date_adjustments = array(
+    ];
+    protected $deployment_date_adjustments = [
         '+0 day' => 'Same day',
         '-1 day' => 'The day before',
         '+1 day' => 'The next day',
@@ -42,7 +42,7 @@ class Core extends PluginCore
         'next friday' => 'The coming Friday',
         'next saturday' => 'The coming Saturday',
         'next sunday' => 'The coming Sunday',
-    );
+    ];
 
     static public function getIcon()
     {
@@ -82,11 +82,11 @@ class Core extends PluginCore
                 $this->savePluginEntity($options);
             }
         }
-        $action->render('configure.html.twig', array(
+        $action->render('configure.html.twig', [
             'plugin_entity' => $this->getPluginEntity(),
             'extract_refnum_patterns' => $this->extract_refnum_patterns,
             'deployment_date_adjustments' => $this->deployment_date_adjustments,
-        ));
+        ]);
     }
 
     public function handleAction(PluginAction $action)
@@ -103,17 +103,13 @@ class Core extends PluginCore
                             return $this->handleWebhookItem($action, $payload);
                     }
                 }
-                return new JsonResponse(array(
-                    'status' => 'success',
-                ));
+                return new JsonResponse(['status' => 'success']);
         }
     }
 
     public static function availableActions(): array
     {
-        return array(
-            'webhook' => true
-        );
+        return ['webhook' => true];
     }
 
     protected function handleWebhookDeployment(PluginAction $action, $payload)
@@ -128,17 +124,17 @@ class Core extends PluginCore
             case 'change':
                 if (!($nd = $this->findDeploymentWithTaigaId($project, $payload['data']['id'], $payload['data']['project']['permalink']))) {
                     $nd = new Deployment($project);
-                    $nd->plugin_data['Taiga'] = array(
+                    $nd->plugin_data['Taiga'] = [
                         'id' => $payload['data']['id'],
                         'project' => $payload['data']['project']['permalink'],
-                    );
+                    ];
                 }
 
-                $parameters = new ParameterBag(array(
+                $parameters = new ParameterBag([
                     'title' => $payload['data']['name'],
                     'external_url' => $payload['data']['project']['permalink'].'/taskboard/'.$payload['data']['slug'],
                     'external_url_label' => 'Taiga Taskboard',
-                ));
+                ]);
 
                 // only change execute_date if milestone end date changed
                 if (!isset($payload['change']) || !isset($payload['change']['diff'])
@@ -151,11 +147,11 @@ class Core extends PluginCore
                 } else {
                     $errors = $nd->errors;
                 }
-                $action->respond(new JsonResponse(array(
+                $action->respond(new JsonResponse([
                         'status' => empty($errors) ? 'success' : 'failed',
                         'handled_as' => 'deployment',
                         'errors' => $errors,
-                )));
+                ]));
                 break;
 
             case 'delete':
@@ -164,15 +160,15 @@ class Core extends PluginCore
                     $nd->items->count() == 0) {
                     $ds->deleteEntity($nd);
                     $ds->commit();
-                    $action->respond(new JsonResponse(array(
+                    $action->respond(new JsonResponse([
                             'status' => 'success',
                             'message' => 'deployment deleted',
-                    )));
+                    ]));
                 } else {
-                    $action->respond(new JsonResponse(array(
+                    $action->respond(new JsonResponse([
                             'status' => 'failed',
                             'message' => 'deployment not found',
-                    )));
+                    ]));
                 }
                 break;
         }
@@ -203,50 +199,48 @@ class Core extends PluginCore
                 == 0))) {
                 $ds->deleteEntity($d_item);
                 $ds->commit();
-                return new JsonResponse(array(
+                return new JsonResponse([
                     'status' => 'success',
                     'message' => 'item deleted',
-                ));
+                ]);
             } else {
-                return new JsonResponse(array(
+                return new JsonResponse([
                     'status' => 'failed',
                     'message' => 'item deletion disabled',
-                ));
+                ]);
             }
         }
 
         if (empty($payload['data']['milestone'])) {
             // do not process user story without milestone
-            return new JsonResponse(array(
+            return new JsonResponse([
                 'status' => 'failed',
                 'message' => 'milestone not defined',
-            ));
+            ]);
         }
         if (!($d_deployment = $this->findDeploymentWithTaigaId($project, $payload['data']['milestone']['id'], $payload['data']['project']['permalink']))) {
             // do not process the milestone was not integrated into Renogen
-            return new JsonResponse(array(
+            return new JsonResponse([
                 'status' => 'failed',
                 'message' => 'milestone not integrated into Renogen',
-            ));
+            ]);
         }
 
-        $parameters = new ParameterBag(array(
+        $parameters = new ParameterBag([
             'external_url' => $payload['data']['project']['permalink'].'/us/'.$payload['data']['ref'],
             'external_url_label' => 'Taiga User Story',
-        ));
+        ]);
 
         if (!$d_item) {
             $d_item = new Item($d_deployment);
             $parameters->set('category', 'N/A');
-            $parameters->set('modules', array('N/A'));
+            $parameters->set('modules', ['N/A']);
         } else {
             $d_item->deployment = $d_deployment;
         }
 
         // store taiga userstory id
-        $d_item->plugin_data['Taiga'] = array(
-            'id' => $payload['data']['id'],
-        );
+        $d_item->plugin_data['Taiga'] = ['id' => $payload['data']['id']];
 
         $title = $payload['data']['subject'];
         $matches = null;
@@ -268,7 +262,7 @@ class Core extends PluginCore
         }
 
         // read category & modules from tags
-        $modules = array();
+        $modules = [];
         foreach ($payload['data']['tags'] as $tag) {
             if (in_array($tag, $d_item->deployment->project->categories)) {
                 $parameters->set('category', $tag);
@@ -345,7 +339,7 @@ class Core extends PluginCore
             $taiga = new User();
             $taiga->username = 'taiga';
             $taiga->shortname = 'Taiga';
-            $taiga->roles = array('ROLE_NONE');
+            $taiga->roles = ['ROLE_NONE'];
             $taiga->auth = 'password';
             $taiga->password = md5(random_bytes(100));
             $ds->commit($taiga);

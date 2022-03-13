@@ -20,7 +20,7 @@ class Password extends Driver
 
     static public function getParamConfigs()
     {
-        return array();
+        return [];
     }
 
     static public function checkParams(array $params)

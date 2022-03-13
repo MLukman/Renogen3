@@ -86,7 +86,7 @@ abstract class RenoController extends Controller
     protected function checkAccess($attr, Entity $entity)
     {
         if ($attr == 'any') {
-            $attr = array('view', 'execute', 'entry', 'review', 'approval');
+            $attr = ['view', 'execute', 'entry', 'review', 'approval'];
         }
 
         if ($this->security->isGranted('ROLE_ADMIN')) {

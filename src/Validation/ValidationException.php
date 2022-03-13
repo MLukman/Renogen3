@@ -5,7 +5,7 @@ namespace App\Validation;
 class ValidationException extends \RuntimeException
 {
     private $entity;
-    private $errors = array();
+    private $errors = [];
 
     public function __construct($entity, array $errors)
     {

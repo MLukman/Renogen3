@@ -45,19 +45,19 @@ abstract class Entity implements SecuredAccessInterface
      * Validation errors if any
      * @var array
      */
-    public $errors = array();
+    public $errors = [];
 
     /**
      *
      * @var array Old values
      */
-    public $old_values = array();
+    public $old_values = [];
 
     /**
      * Cache
      * @var array
      */
-    protected $_caches = array();
+    protected $_caches = [];
 
     public function __get($property)
     {

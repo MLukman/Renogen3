@@ -45,7 +45,7 @@ class NavigationFactory
      * @param array $params
      * @return string The url
      */
-    public function url($route = 'app_home', array $params = array(), $anchor = null)
+    public function url($route = 'app_home', array $params = [], $anchor = null)
     {
         return $this->urlgen->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_URL)
             .($anchor ? "#$anchor" : '');
@@ -56,7 +56,7 @@ class NavigationFactory
      * @param array $params
      * @return string The path
      */
-    public function path($route, array $params = array(), $anchor = null)
+    public function path($route, array $params = [], $anchor = null)
     {
         return $this->urlgen->generate($route, $params, UrlGeneratorInterface::ABSOLUTE_PATH)
             .($anchor ? "#$anchor" : '');
@@ -130,7 +130,7 @@ class NavigationFactory
                 'plugin' => $entity->name,
             );
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -152,7 +152,7 @@ class NavigationFactory
      * @param string|null $anchor
      * @return RedirectResponse
      */
-    public function redirectRoute($route = null, Array $params = array(),
+    public function redirectRoute($route = null, Array $params = [],
                                   $anchor = null)
     {
         return new RedirectResponse($route ? $this->path($route, $params, $anchor)

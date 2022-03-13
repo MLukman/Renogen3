@@ -32,7 +32,7 @@ class AuthDriver extends Entity
     /**
      * @ORM\Column(type="json", nullable=true)
      */
-    public $parameters = array();
+    public $parameters = [];
 
     /**
      * @ORM\Column(type="boolean", options={"default" : 0})
@@ -51,7 +51,7 @@ class AuthDriver extends Entity
 
     public function driverClass(): Driver
     {
-        return new $this->class($this->parameters ?: array(), $this);
+        return new $this->class($this->parameters ?: [], $this);
     }
 
     public function getProject(): ?Project

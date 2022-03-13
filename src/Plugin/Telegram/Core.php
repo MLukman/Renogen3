@@ -13,7 +13,7 @@ use function GuzzleHttp\json_decode;
 
 class Core extends PluginCore
 {
-    protected $options = array(
+    protected $options = [
         'bot_token' => null,
         'group_id' => null,
         'group_name' => null,
@@ -27,7 +27,7 @@ class Core extends PluginCore
         'template_deployment_request_created' => '&#x1F514; [<b>{project}</b>] Deployment window <a href="{url}">{title}</a> has been requested for <b>{datetime}</b> by {who}',
         'template_deployment_request_approved' => '&#x1F514; [<b>{project}</b>] Deployment window <a href="{url}">{title} ({datetime})</a> has been <b>APPROVED</b> by {who}',
         'template_deployment_request_rejected' => '&#x1F514; [<b>{project}</b>] Deployment window <a href="{url}">{title} ({datetime})</a> has been <b>REJECTED</b> by {who}',
-    );
+    ];
 
     static public function getIcon()
     {
@@ -51,14 +51,14 @@ class Core extends PluginCore
             return;
         }
         $client = new Client();
-        $send = $client->postAsync("https://api.telegram.org/bot$token/sendMessage", array(
-            'json' => array(
+        $send = $client->postAsync("https://api.telegram.org/bot$token/sendMessage", [
+            'json' => [
                 'chat_id' => $group_id,
                 'text' => $message,
                 'parse_mode' => 'html',
-            )
-        ));
-        register_shutdown_function(function() use ($send) {
+            ]
+        ]);
+        register_shutdown_function(function () use ($send) {
             try {
                 $send->wait();
             } catch (\Exception $ex) {
@@ -69,8 +69,8 @@ class Core extends PluginCore
 
     protected function byWho()
     {
-        return ($this->ds->currentUserEntity() ? "by ".$this->ds->currentUserEntity()->getName()
-                : '');
+        return ($this->ds->currentUserEntity() ?
+            "by ".$this->ds->currentUserEntity()->getName() : '');
     }
 
     protected function escape($text)
@@ -238,7 +238,7 @@ class Core extends PluginCore
     {
         $request = $action->getRequest();
         $post = array_merge($this->getOptions(),
-            array('groups' => array('' => '-- Disabled --'))
+            ['groups' => ['' => '-- Disabled --']]
         );
         $options = $this->getOptions();
         $hasUpdates = false;
@@ -279,15 +279,15 @@ class Core extends PluginCore
                     $action->redirect();
                     return;
                 } else if ($token) {
-                    $noptions = array(
+                    $noptions = [
                         'bot_token' => $token,
                         'group_id' => $group_id,
                         'group_name' => ($group_id && isset($group_names[$group_id]))
                             ? $group_names[$group_id] : null,
-                    );
-                    foreach (array('template_deployment_created', 'template_deployment_date_changed',
+                    ];
+                    foreach (['template_deployment_created', 'template_deployment_date_changed',
                     'template_item_created', 'template_item_status_changed', 'template_item_moved',
-                    'template_item_deleted') as $template) {
+                    'template_item_deleted'] as $template) {
                         if ($request->request->get($template)) {
                             $noptions[$template] = $request->request->get($template);
                         }
@@ -308,6 +308,6 @@ class Core extends PluginCore
 
     public static function availableActions(): array
     {
-        return array();
+        return [];
     }
 }

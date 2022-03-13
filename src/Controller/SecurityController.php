@@ -108,10 +108,10 @@ class SecurityController extends RenoController
         }
 
         $this->title = 'Register';
-        $recaptcha_keys = array(
+        $recaptcha_keys = [
             'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
             'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
-        );
+        ];
 
         if (!$driver) {
             if (count($auths) == 1) {
@@ -177,9 +177,8 @@ class SecurityController extends RenoController
                 }
             }
 
-            $user->roles = array('ROLE_USER');
-            if ($ds->prepareValidateEntity($user, array('username', 'shortname',
-                    'email'), $post)) {
+            $user->roles = ['ROLE_USER'];
+            if ($ds->prepareValidateEntity($user, ['username', 'shortname', 'email'], $post)) {
                 $user->created_by = $user;
                 $user->created_date = new \DateTime();
                 $user->last_login = new \DateTime();
@@ -224,10 +223,10 @@ class SecurityController extends RenoController
             return $this->redirectToRoute('app_login');
         }
 
-        $recaptcha_keys = array(
+        $recaptcha_keys = [
             'sitekey' => $_ENV['GOOGLE_RECAPTCHA_SITE_KEY'] ?? null,
             'secretkey' => $_ENV['GOOGLE_RECAPTCHA_SECRET'] ?? null,
-        );
+        ];
 
         $post = $request->request;
         $errors = [];

@@ -20,7 +20,7 @@ abstract class BaseClass
      * @var DataStore
      */
     protected $ds;
-    private $_parameters = array();
+    private $_parameters = [];
 
     public function __construct(NavigationFactory $nav, DataStore $ds)
     {
@@ -60,7 +60,7 @@ abstract class BaseClass
      */
     public function describeActivityAsArray(Actionable $activity)
     {
-        $desc = array();
+        $desc = [];
         foreach ($this->_parameters as $key => $param) {
             if (empty($param->activityLabel)) {
                 continue;

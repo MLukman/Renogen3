@@ -12,8 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class DeploymentRequestController extends RenoController
 {
-    const entityFields = array('execute_date', 'title', 'description', 'duration',
-        'external_url', 'external_url_label');
+    const entityFields = ['execute_date', 'title', 'description', 'duration',
+        'external_url', 'external_url_label'];
 
     /**
      * @Route("/{project}/+request/", name="app_deployment_request_create", priority=10)
@@ -101,7 +101,7 @@ class DeploymentRequestController extends RenoController
     protected function edit_or_create(DeploymentRequest $deployment_request,
                                       ParameterBag $post)
     {
-        $context = array();
+        $context = [];
         if ($post->count() > 0) {
             switch ($post->get('_action')) {
                 case 'Delete':

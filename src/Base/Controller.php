@@ -23,10 +23,10 @@ abstract class Controller extends AbstractController
      * Base context
      * @var array
      */
-    protected $basectx = array(
-        'extra_js' => array(),
-        'extra_css' => array(),
-    );
+    protected $basectx = [
+        'extra_js' => [],
+        'extra_css' => [],
+    ];
 
     /**
      * @var  DataStore
@@ -50,15 +50,15 @@ abstract class Controller extends AbstractController
         $this->basectx['nav'] = $this->nav = $nav;
         $this->basectx['security'] = $this->security = $security;
         $this->basectx['ds'] = $this->ds = $ds;
-        $this->basectx['errors'] = array();
-        $this->basectx['crumbs'] = array();
+        $this->basectx['errors'] = [];
+        $this->basectx['crumbs'] = [];
         if (empty($this->title)) {
             $reflect = new \ReflectionClass($this);
             $this->title = $reflect->getShortName();
         }
     }
 
-    public function render(string $view, array $context = array(),
+    public function render(string $view, array $context = [],
                            ?Response $response = NULL): Response
     {
         $this->title .= ' :: '.$this->appTitle;
@@ -77,12 +77,12 @@ abstract class Controller extends AbstractController
 
     public function addCrumb($text, $url, $icon = null, $hide_on_mobile = false)
     {
-        $this->basectx['crumbs'][] = array(
+        $this->basectx['crumbs'][] = [
             'text' => $text,
             'url' => $url,
             'icon' => $icon,
             'hide_on_mobile' => $hide_on_mobile,
-        );
+        ];
     }
 
     protected function relativizeFile($file)
@@ -95,12 +95,12 @@ abstract class Controller extends AbstractController
 
     public function errorPage($title, $message)
     {
-        return $this->render('error.html.twig', array(
-                'error' => array(
+        return $this->render('error.html.twig', [
+                'error' => [
                     'title' => $title,
                     'message' => $message,
-                )
-        ));
+                ]
+        ]);
     }
 
     public function getAppTitle()

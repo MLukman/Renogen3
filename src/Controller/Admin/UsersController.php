@@ -21,7 +21,7 @@ class UsersController extends RenoController
         $this->requireAdminRole();
         $this->title = "Users";
         $this->addCrumb('Users', $this->nav->path('app_admin_users'), 'users');
-        return $this->render('admin/user_list.html.twig', array('users' => $this->ds->queryMany('\App\Entity\User')));
+        return $this->render('admin/user_list.html.twig', ['users' => $this->ds->queryMany('\App\Entity\User')]);
     }
 
     /**
@@ -45,13 +45,13 @@ class UsersController extends RenoController
         $this->title = "Edit User '$username'";
         $user = $this->ds->fetchUser($username);
         $this->addCrumb('Users', $this->nav->path('app_admin_users'), 'users');
-        $this->addEditCrumb($this->nav->path('app_admin_users_edit', array('username' => $username)));
+        $this->addEditCrumb($this->nav->path('app_admin_users_edit', ['username' => $username]));
         return $this->edit_or_create($user, $request->request);
     }
 
     protected function edit_or_create(User $user, ParameterBag $post)
     {
-        $errors = array();
+        $errors = [];
         if ($post->count() > 0) {
             switch ($post->get('_action')) {
                 case 'Block':
@@ -81,18 +81,17 @@ class UsersController extends RenoController
             }
 
             if (!$post->has('roles')) {
-                $post->set('roles', array());
+                $post->set('roles', []);
             }
-            if ($this->ds->prepareValidateEntity($user, array('username',
-                    'shortname',
-                    'email', 'admin'), $post)) {
+            if ($this->ds->prepareValidateEntity($user,
+                    ['username', 'shortname', 'email', 'admin'], $post)) {
                 $this->ds->commit($user);
                 if (($auth = $post->get('auth')) && !isset($user->authentications[$auth])) {
                     $user_auth = new \App\Entity\UserAuthentication($user);
                     $user_auth->driver_id = $auth;
                     $this->ds->commit($user_auth);
                 }
-                foreach ($post->get('project_role', array()) as $project_name => $role) {
+                foreach ($post->get('project_role', []) as $project_name => $role) {
                     try {
                         $project = $this->ds->fetchProject($project_name);
                         $project_role = $project->userProjects->containsKey($user->username)
@@ -122,7 +121,7 @@ class UsersController extends RenoController
 
         $has_contrib = false;
         if ($user->created_date) {
-            $entities = array(
+            $entities = [
                 'Activity',
                 'ActivityFile',
                 'Attachment',
@@ -140,16 +139,16 @@ class UsersController extends RenoController
                 'RunItemFile',
                 'Template',
                 'UserProject',
-            );
+            ];
             foreach ($entities as $entity) {
                 $has_contrib = $has_contrib || 0 < count($this->ds->queryUsingOr("\App\Entity\\$entity",
-                            array('created_by' => $user, 'updated_by' => $user)));
+                            ['created_by' => $user, 'updated_by' => $user]));
             }
 
             // special checking for User entity because self-registered user has created_by = himself
             if (!$has_contrib) {
                 $managed_users = $this->ds->queryUsingOr("\App\Entity\User",
-                    array('created_by' => $user, 'updated_by' => $user));
+                    ['created_by' => $user, 'updated_by' => $user]);
                 if (count($managed_users) > 1 ||
                     (count($managed_users) == 1 && $managed_users[0]->username != $user->username)) {
                     $has_contrib = true;
@@ -157,13 +156,13 @@ class UsersController extends RenoController
             }
         }
 
-        return $this->render('admin/user_form.html.twig', array(
+        return $this->render('admin/user_form.html.twig', [
                 'user' => $user,
-                'project_roles' => $post->get('project_role', array()),
+                'project_roles' => $post->get('project_role', []),
                 'has_contrib' => $has_contrib,
                 'auths' => $this->ds->queryMany('\App\Entity\AuthDriver'),
                 'projects' => $this->ds->queryMany('\App\Entity\Project'),
                 'errors' => $errors,
-        ));
+        ]);
     }
 }

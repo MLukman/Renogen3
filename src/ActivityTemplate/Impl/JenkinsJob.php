@@ -27,7 +27,7 @@ class JenkinsJob extends BaseClass
 
     public function describeActivityAsArray(Actionable $activity)
     {
-        $describe = array();
+        $describe = [];
         $describe["Jenkins Access"] = $this->getParameter('access')->displayTemplateParameter($activity->template, 'access');
         $describe["Jenkins Job"] = $this->getParameter('job')->displayActivityParameter($activity, 'job');
         if (($parameters = $this->getParameter('parameters')->displayActivityParameter($activity, 'parameters'))) {
@@ -38,19 +38,19 @@ class JenkinsJob extends BaseClass
 
     public function convertActivitiesToRunbookGroups(array $activities)
     {
-        $templates = array();
-        $activities_by_template = array();
+        $templates = [];
+        $activities_by_template = [];
 
         foreach ($activities as $activity) {
             /* @var $activity Actionable */
             if (!isset($activities_by_template[$activity->template->id])) {
                 $templates[$activity->template->id] = $activity->template;
-                $activities_by_template[$activity->template->id] = array();
+                $activities_by_template[$activity->template->id] = [];
             }
             $activities_by_template[$activity->template->id][] = $activity;
         }
 
-        $groups = array();
+        $groups = [];
         foreach ($activities_by_template as $template_id => $activities) {
             $group = new RunbookGroup($templates[$template_id]->title);
             $group->setTemplate('runbook/JenkinsJob.twig');

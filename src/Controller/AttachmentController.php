@@ -10,8 +10,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class AttachmentController extends RenoController
 {
-    const entityFields = array('description');
-    const editAccess = array('entry', 'review', 'approval');
+    const entityFields = ['description'];
+    const editAccess = ['entry', 'review', 'approval'];
 
     /**
      * @Route("/{project}/{deployment}/{item}/attachments", name="app_attachment_create", priority=10)
@@ -63,7 +63,7 @@ class AttachmentController extends RenoController
     protected function edit_or_create(Attachment $attachment, Request $request)
     {
         $post = $request->request;
-        $context = array('errors' => array());
+        $context = ['errors' => []];
         if ($post->count() > 0) {
             switch ($post->get('_action')) {
                 case 'Delete':
@@ -75,18 +75,14 @@ class AttachmentController extends RenoController
                 default:
                     $file = $request->files->get('file');
                     if ($file) {
-                        $errors = array();
+                        $errors = [];
                         $filelink = $this->ds->processFileUpload($file, $attachment, $errors);
                         $this->ds->commit($filelink);
                         if (!empty($errors)) {
-                            $context['errors'] = $context['errors'] + array(
-                                'file' => $errors,
-                            );
+                            $context['errors'] += ['file' => $errors];
                         }
                     } elseif (!$attachment->filename) {
-                        $context['errors'] = $context['errors'] + array(
-                            'file' => array('Required'),
-                        );
+                        $context['errors'] += ['file' => ['Required']];
                     }
                     if ($this->ds->prepareValidateEntity($attachment, static::entityFields, $post)
                         && empty($context['errors'])) {
@@ -94,8 +90,9 @@ class AttachmentController extends RenoController
                         $this->addFlash('info', "Attachment has been successfully saved");
                         return $this->nav->redirectForEntity('app_item_view', $attachment->item);
                     } else {
-                        $context['errors'] = $context['errors'] + $attachment->errors
-                            + array('file' => array('Your file is fine but you need to re-upload your file since other field(s) failed validations'));
+                        $context['errors'] += $attachment->errors + ['file' => [
+                                'Your file is fine but you need to re-upload your file since other field(s) failed validations'
+                        ]];
                     }
             }
         }

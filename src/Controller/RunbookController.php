@@ -24,9 +24,7 @@ class RunbookController extends RenoController
             $this->checkAccess(array('approval', 'review', 'execute'), $deployment_obj->project);
             $this->addEntityCrumb($deployment_obj);
             $this->addCrumb('Run Book', $this->nav->entityPath('app_runbook_view', $deployment_obj), 'checkmark box');
-            return $this->render('runbook_view.html.twig', array(
-                    'deployment' => $deployment_obj,
-            ));
+            return $this->render('runbook_view.html.twig', ['deployment' => $deployment_obj]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Object not found', $ex->getMessage());
         }

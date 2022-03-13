@@ -17,8 +17,8 @@ class HomeController extends RenoController
         $this->title = null;
         /** @var Project[] $projects */
         $projects = $this->ds->queryMany('\App\Entity\Project',
-            array('archived' => false),
-            array('title' => 'ASC')
+            ['archived' => false],
+            ['title' => 'ASC']
         );
 
         // No project yet and the current user is an admin so go to create project screen
@@ -26,13 +26,13 @@ class HomeController extends RenoController
             return $this->redirectToRoute('app_project_create');
         }
 
-        $contexts = array(
-            'upcoming_deployments' => array(),
-            'upcoming_deployments_hierarchy' => array(),
-            'projects_with_access' => array(),
-            'projects_no_access' => array(),
-            'need_actions' => array(),
-        );
+        $contexts = [
+            'upcoming_deployments' => [],
+            'upcoming_deployments_hierarchy' => [],
+            'projects_with_access' => [],
+            'projects_no_access' => [],
+            'need_actions' => [],
+        ];
 
         $roles = ['view', 'execute', 'entry', 'review', 'approval'];
 
@@ -56,16 +56,16 @@ class HomeController extends RenoController
         });
 
         // Need actions
-        $need_actions = array();
+        $need_actions = [];
         foreach ($contexts['projects_with_access'] as $project) {
             $project_role = $project->userProject($this->ds->currentUserEntity()->getUsername());
             foreach ($project->upcoming() as $deployment) {
-                $d = array(
+                $d = [
                     'deployment' => $deployment,
-                    'items' => array(),
-                    'checklists' => array(),
-                    'activities' => array(),
-                );
+                    'items' => [],
+                    'checklists' => [],
+                    'activities' => [],
+                ];
                 foreach ($deployment->items as $item) {
                     switch ($item->status()) {
                         case Project::ITEM_STATUS_INIT:
@@ -96,11 +96,11 @@ class HomeController extends RenoController
                                     }
                                     if (!isset($d['activities'][$activity->runitem->template->id])) {
                                         $d['activities'][$activity->runitem->template->id]
-                                            = array(
+                                            = [
                                             'status' => Project::ITEM_STATUS_READY,
                                             'template' => $activity->runitem->template,
-                                            'runitems' => array(),
-                                        );
+                                            'runitems' => [],
+                                        ];
                                     }
                                     $d['activities'][$activity->runitem->template->id]['runitems'][$activity->runitem->id]
                                         = $activity->runitem;
@@ -125,11 +125,11 @@ class HomeController extends RenoController
                 $ddate->setTime(0, 0);
                 if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()])) {
                     $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()]
-                        = array();
+                        = [];
                 }
                 if (!isset($contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()])) {
                     $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()]
-                        = array();
+                        = [];
                 }
                 $contexts['upcoming_deployments_hierarchy'][$ddate->getTimestamp()][$deployment->execute_date->getTimestamp()][]
                     = $d;
@@ -159,10 +159,10 @@ class HomeController extends RenoController
         $this->title = 'Archived Projects';
         $this->addCrumb('Archived Projects', $this->nav->path('app_archived'), 'archive');
         $projects = $this->ds->queryMany('\App\Entity\Project',
-            array('archived' => true),
-            array('title' => 'ASC')
+            ['archived' => true],
+            ['title' => 'ASC']
         );
-        return $this->render('archived.html.twig', array('projects' => $projects));
+        return $this->render('archived.html.twig', ['projects' => $projects]);
     }
 
     /**

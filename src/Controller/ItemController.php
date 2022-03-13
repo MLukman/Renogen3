@@ -17,8 +17,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ItemController extends RenoController
 {
-    const entityFields = array('refnum', 'title', 'category', 'modules',
-        'description', 'external_url', 'external_url_label');
+    const entityFields = ['refnum', 'title', 'category', 'modules',
+        'description', 'external_url', 'external_url_label'];
 
     /**
      * @Route("/{project}/{deployment}/+", name="app_item_create")
@@ -27,7 +27,7 @@ class ItemController extends RenoController
     {
         try {
             $deployment_obj = $this->ds->fetchDeployment($project, $deployment);
-            $this->checkAccess(array('entry', 'approval'), $deployment_obj);
+            $this->checkAccess(['entry', 'approval'], $deployment_obj);
             $this->addEntityCrumb($deployment_obj);
             $this->addCreateCrumb('Add deployment item', $this->nav->entityPath('app_item_create', $deployment_obj));
             return $this->edit_or_create(new Item($deployment_obj), $request->request);
@@ -50,12 +50,12 @@ class ItemController extends RenoController
                 && 0 < $item_obj->compareCurrentStatusTo(Project::ITEM_STATUS_APPROVAL));
             $commentable = $this->security->isGranted(['execute', 'entry',
                 'review', 'approval'], $item_obj->deployment->project);
-            return $this->render('item_view.html.twig', array(
+            return $this->render('item_view.html.twig', [
                     'item' => $item_obj,
                     'project' => $item_obj->deployment->project,
                     'editable' => $editable,
                     'commentable' => $commentable,
-            ));
+            ]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Object not found', $ex->getMessage());
         }
@@ -69,9 +69,9 @@ class ItemController extends RenoController
         try {
             $item_obj = $this->ds->fetchItem($project, $deployment, $item);
             if ($item_obj->approved_date) {
-                $this->checkAccess(array('approval'), $item_obj);
+                $this->checkAccess(['approval'], $item_obj);
             } else {
-                $this->checkAccess(array('entry', 'approval'), $item_obj);
+                $this->checkAccess(['entry', 'approval'], $item_obj);
             }
             $this->addEntityCrumb($item_obj);
             $this->addEditCrumb($this->nav->entityPath('app_item_edit', $item_obj));
@@ -140,7 +140,7 @@ class ItemController extends RenoController
                     }
                 }
                 // cleanup run items
-                $used_runitem_ids = array();
+                $used_runitem_ids = [];
                 foreach ($item_obj->deployment->items as $d_item) {
                     foreach ($d_item->activities as $d_activity) {
                         if ($d_activity->runitem) {
@@ -163,16 +163,16 @@ class ItemController extends RenoController
 
     protected function edit_or_create(Item $item, ParameterBag $post)
     {
-        $context = array();
+        $context = [];
         $ds = $this->ds;
         if ($post->count() > 0) {
             switch ($post->get('_action')) {
                 case 'Move':
                     $ndeployment = $ds->queryOne('\App\Entity\Deployment', $post->get('deployment'));
                     if (!$ndeployment) {
-                        $context['errors'] = array(
-                            'deployment' => array('Please select a deployment')
-                        );
+                        $context['errors'] = [
+                            'deployment' => ['Please select a deployment']
+                        ];
                     } elseif ($ndeployment != $item->deployment) {
                         if ($ndeployment->project != $item->deployment->project) {
                             // Different project = copy
@@ -188,9 +188,9 @@ class ItemController extends RenoController
                             return $this->nav->redirectForEntity('app_item_view', $item);
                         }
                     } else {
-                        $context['errors'] = array(
-                            'deployment' => array('Please select another deployment')
-                        );
+                        $context['errors'] = [
+                            'deployment' => ['Please select another deployment']
+                        ];
                     }
                     break;
 
@@ -224,7 +224,7 @@ class ItemController extends RenoController
         try {
             $item_obj = $this->ds->fetchItem($project, $deployment, $item);
             $comment = new ItemComment($item_obj);
-            if ($this->ds->prepareValidateEntity($comment, array('text'), $request->request)) {
+            if ($this->ds->prepareValidateEntity($comment, ['text'], $request->request)) {
                 $this->ds->commit($comment);
                 $this->addFlash('info', "Succesfully post a comment");
             } else {

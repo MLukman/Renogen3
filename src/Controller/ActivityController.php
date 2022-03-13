@@ -10,8 +10,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ActivityController extends RenoController
 {
-    const entityFields = array('title', 'stage', 'parameters');
-    const editAccess = array('entry', 'review', 'approval');
+    const entityFields = ['title', 'stage', 'parameters'];
+    const editAccess = ['entry', 'review', 'approval'];
 
     /**
      * @Route("/{project}/{deployment}/{item}/+", name="app_activity_create")
@@ -54,7 +54,7 @@ class ActivityController extends RenoController
     protected function edit_or_create(Activity $activity, Request $request)
     {
         $post = $request->request;
-        $context = array();
+        $context = [];
         if ($post->count() > 0) {
             switch ($post->get('_action')) {
                 case 'Delete':
@@ -69,11 +69,11 @@ class ActivityController extends RenoController
                     break;
 
                 default:
-                    $errors = array();
+                    $errors = [];
                     if ($activity->template) {
                         $activity->priority = $activity->template->priority;
                         if (($templateClass = $activity->template->templateClass($this->ds))) {
-                            $parameters = $post->get('parameters', array());
+                            $parameters = $post->get('parameters', []);
                             foreach ($templateClass->getParameters() as $param => $parameter) {
                                 $parameter->handleActivityFiles($request, $activity, $parameters, $param);
                                 $parameter->validateActivityInput($activity->template->parameters, $parameters, $param, $errors, 'parameters');

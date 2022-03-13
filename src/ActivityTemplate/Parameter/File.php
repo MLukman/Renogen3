@@ -27,7 +27,7 @@ class File extends Parameter
         $errkey = ($error_prefix ? "$error_prefix.$key" : $key);
 
         if (empty($input[$key]) && $this->templateRequired) {
-            $errors[$errkey] = array('Required');
+            $errors[$errkey] = ['Required'];
         }
 
         return empty($errors);
@@ -39,7 +39,7 @@ class File extends Parameter
     {
         $errkey = ($error_prefix ? "$error_prefix.$key" : $key);
         if (empty($input[$key]) && $this->activityRequired) {
-            $errors[$errkey] = array('Required');
+            $errors[$errkey] = ['Required'];
         }
         return empty($errors);
     }
@@ -53,16 +53,16 @@ class File extends Parameter
                                            array $parameters, $key,
                                            Actionable $activity = null)
     {
-        if ($activity && isset($parameters[$key]) && ($activity_file = $this->template->ds()->queryOne($activity->fileClass, array(
+        if ($activity && isset($parameters[$key]) && ($activity_file = $this->template->ds()->queryOne($activity->fileClass, [
             "{$activity->actionableType}" => $activity,
-            'classifier' => $parameters[$key])))) {
+            'classifier' => $parameters[$key]]))) {
             /* @var $activity_file ActivityFile */
-            return array(
+            return [
                 'fileid' => $activity_file->id,
                 'filename' => $activity_file->filename,
                 'filesize' => $activity_file->filestore->filesize,
                 'mime_type' => $activity_file->filestore->mime_type,
-            );
+            ];
         }
         return null;
     }
@@ -77,9 +77,9 @@ class File extends Parameter
             $parent = 'activity';
         }
         if (isset($activity->parameters[$key])) {
-            return $this->template->ds()->queryOne($class, array(
+            return $this->template->ds()->queryOne($class, [
                     "$parent" => $activity,
-                    'classifier' => $activity->parameters[$key]));
+                    'classifier' => $activity->parameters[$key]]);
         }
         return null;
     }

@@ -51,16 +51,16 @@ class Project extends Entity
     /**
      * @ORM\Column(type="json", nullable=true)
      */
-    public $modules = array();
+    public $modules = [];
 
     /**
      * @ORM\Column(type="json", nullable=true)
      */
-    public $categories = array(
+    public $categories = [
         'Bug Fix',
         'Enhancement',
         'New Feature',
-    );
+    ];
 
     /**
      * @ORM\Column(type="boolean", options={"default":"0"})
@@ -130,8 +130,8 @@ class Project extends Entity
     const ITEM_STATUS_REJECTED  = 'Rejected';
     const ITEM_STATUS_FAILED    = 'Failed';
 
-    public $item_statuses = array(
-        self::ITEM_STATUS_INIT => array(
+    public $item_statuses = [
+        self::ITEM_STATUS_INIT => [
             'icon' => 'edit',
             'stepicon' => 'edit',
             'proceedaction' => 'Submit For Review',
@@ -141,8 +141,8 @@ class Project extends Entity
             'requirecurrent' => [self::ITEM_STATUS_INIT],
             'color' => 'teal',
             'sequence' => 1,
-        ),
-        self::ITEM_STATUS_REVIEW => array(
+        ],
+        self::ITEM_STATUS_REVIEW => [
             'icon' => 'clipboard check',
             'stepicon' => 'clipboard check',
             'proceedaction' => 'Verified',
@@ -152,8 +152,8 @@ class Project extends Entity
             'requirecurrent' => [self::ITEM_STATUS_REVIEW],
             'color' => 'grey',
             'sequence' => 2,
-        ),
-        self::ITEM_STATUS_APPROVAL => array(
+        ],
+        self::ITEM_STATUS_APPROVAL => [
             'icon' => 'thumbs up',
             'stepicon' => 'thumbs up',
             'proceedaction' => 'Approved',
@@ -163,8 +163,8 @@ class Project extends Entity
             'requirecurrent' => [self::ITEM_STATUS_REVIEW, self::ITEM_STATUS_APPROVAL],
             'color' => 'yellow',
             'sequence' => 3,
-        ),
-        self::ITEM_STATUS_READY => array(
+        ],
+        self::ITEM_STATUS_READY => [
             'icon' => 'cloud upload',
             'stepicon' => 'cloud upload',
             'proceedaction' => 'Completed',
@@ -174,8 +174,8 @@ class Project extends Entity
             'requirecurrent' => [self::ITEM_STATUS_READY],
             'color' => 'orange',
             'sequence' => 4,
-        ),
-        self::ITEM_STATUS_COMPLETED => array(
+        ],
+        self::ITEM_STATUS_COMPLETED => [
             'icon' => 'flag checkered',
             'stepicon' => 'flag checkered',
             'proceedaction' => false,
@@ -185,8 +185,8 @@ class Project extends Entity
             'role' => null,
             'color' => 'green',
             'sequence' => 5,
-        )
-    );
+        ]
+    ];
 
     public function __construct()
     {
@@ -356,7 +356,7 @@ class Project extends Entity
 
     public function isUsernameAllowed($username, $attr = 'view')
     {
-        $this->allowedRoles = array();
+        $this->allowedRoles = [];
         if (method_exists($this, '__load')) {
             $this->__load();
         }
@@ -366,7 +366,7 @@ class Project extends Entity
             return true;
         }
         if (!is_array($attr)) {
-            $attr = array($attr);
+            $attr = [$attr];
         }
         $role = $this->userProjects->get($username)->role;
         foreach ($attr as $a) {

@@ -10,7 +10,7 @@ class RunbookGroup
     protected $instruction;
     protected $instruction_label;
     protected $template;
-    protected $data = array();
+    protected $data = [];
 
     public function __construct($title)
     {
@@ -55,10 +55,10 @@ class RunbookGroup
 
     public function addRow(RunItem $runitem, array $row)
     {
-        $this->data[] = array(
+        $this->data[] = [
             'runitem' => $runitem,
             'params' => $row,
-        );
+        ];
     }
 
     public function getData()

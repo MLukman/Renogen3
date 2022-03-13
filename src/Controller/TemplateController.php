@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class TemplateController extends RenoController
 {
-    const entityFields = array(
+    const entityFields = [
         'class',
         'title',
         'description',
@@ -23,7 +23,7 @@ class TemplateController extends RenoController
         'stage',
         'priority',
         'parameters',
-    );
+    ];
 
     /**
      * @Route("/{project}/templates/", name="app_template_list", priority=10)
@@ -35,7 +35,7 @@ class TemplateController extends RenoController
             $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
             $this->addEntityCrumb($project_obj);
             $this->addCrumb('Activity templates', $this->nav->entityPath('app_template_list', $project_obj), 'clipboard');
-            return $this->render('template_list.html.twig', array('project' => $project_obj));
+            return $this->render('template_list.html.twig', ['project' => $project_obj]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Object not found', $ex->getMessage());
         }
@@ -48,7 +48,7 @@ class TemplateController extends RenoController
     {
         try {
             $project_obj = $this->ds->fetchProject($project);
-            $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
+            $this->checkAccess(['approval', 'ROLE_ADMIN'], $project_obj);
             $this->addEntityCrumb($project_obj);
             $this->addCrumb('Activity templates', $this->nav->entityPath('app_template_list', $project_obj), 'clipboard');
             $this->addCreateCrumb('Create activity template', $this->nav->entityPath('app_template_create', $project_obj));
@@ -85,7 +85,7 @@ class TemplateController extends RenoController
     protected function edit_or_create(Request $request, Template $template,
                                       ParameterBag $post)
     {
-        $context = array();
+        $context = [];
 
         $this->setTemplateClassContext($context, $template->class);
 
@@ -93,7 +93,7 @@ class TemplateController extends RenoController
 
             case 'Next':
                 if (!$this->setTemplateClassContext($context, $post->get('class'))) {
-                    $context['errors'] = array('class' => 'Please select a category');
+                    $context['errors'] = ['class' => 'Please select a category'];
                 }
                 break;
 
@@ -101,7 +101,7 @@ class TemplateController extends RenoController
                 $file = $request->files->get('import');
                 if (!$file || !($imported = json_decode(file_get_contents($file->getRealPath()), true))
                     || !isset($imported['class']) || !$this->setTemplateClassContext($context, $imported['class'])) {
-                    $context['errors'] = array('import' => 'Please select a valid activity template exported file');
+                    $context['errors'] = ['import' => 'Please select a valid activity template exported file'];
                     break;
                 }
                 foreach (self::entityFields as $k) {
@@ -132,20 +132,20 @@ class TemplateController extends RenoController
                 return $this->nav->redirectForEntity('app_template_list', $template);
 
             case 'Test Form Validation':
-                $context['sample'] = array(
-                    'data' => array(),
-                    'errors' => array(),
-                );
+                $context['sample'] = [
+                    'data' => [],
+                    'errors' => [],
+                ];
                 $context['sample']['activity'] = new Activity(new Item(new Deployment($template->project)));
                 $context['sample']['activity']->template = $template;
-                $parameters = $post->get('parameters', array());
+                $parameters = $post->get('parameters', []);
                 foreach ($template->templateClass()->getParameters() as $param => $parameter) {
                     $parameter->handleActivityFiles($request, $context['sample']['activity'], $parameters, $param);
                     $parameter->validateActivityInput($template->parameters, $parameters, $param, $context['sample']['errors'], 'parameters');
                 }
                 $post->set('parameters', $parameters);
-                if ($this->ds->prepareValidateEntity($context['sample']['activity'], array(
-                        'parameters'), $post) && empty($context['sample']['errors'])) {
+                if ($this->ds->prepareValidateEntity($context['sample']['activity'],
+                        ['parameters'], $post) && empty($context['sample']['errors'])) {
                     $this->addFlash('info', "Form validation success");
                 } else {
                     $this->addFlash('info', "Form validation failure");
@@ -157,8 +157,8 @@ class TemplateController extends RenoController
             case 'Create activity template':
             case 'Save activity template':
                 $this->setTemplateClassContext($context, $post->get('class'));
-                $parameters = $post->get('parameters', array());
-                $errors = array();
+                $parameters = $post->get('parameters', []);
+                $errors = [];
                 foreach ($context['class_instance']->getParameters() as $param => $parameter) {
                     $parameter->validateTemplateInput($parameters, $param, $errors, 'parameters');
                 }
@@ -168,7 +168,7 @@ class TemplateController extends RenoController
 
                 if (!$this->ds->prepareValidateEntity($template, static::entityFields, $post)
                     || !empty($errors)) {
-                    $context['errors'] = $errors + $template->errors;
+                    $context['errors'] += $template->errors;
                     break;
                 }
 
@@ -244,14 +244,14 @@ class TemplateController extends RenoController
             $project_obj = $this->ds->fetchProject($project);
             $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
             $template_obj = $this->ds->fetchTemplate($template, $project_obj);
-            $export = array();
+            $export = [];
             foreach (self::entityFields as $k) {
                 $export[$k] = $template_obj->$k;
             }
             $filename = preg_replace('/[^a-z0-9]+/', '-', strtolower($template_obj->title));
-            return new JsonResponse($export, 200, array(
+            return new JsonResponse($export, 200, [
                 'Content-Disposition' => "attachment; filename=\"{$filename}.json\"",
-            ));
+            ]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Object not found', $ex->getMessage());
         }

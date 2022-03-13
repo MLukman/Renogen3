@@ -27,20 +27,20 @@ class DeployFile extends BaseClass
 
     public function convertActivitiesToRunbookGroups(array $activities)
     {
-        $templates = array();
-        $activities_by_template = array();
-        $added = array();
+        $templates = [];
+        $activities_by_template = [];
+        $added = [];
 
         foreach ($activities as $activity) {
             /* @var $activity Actionable */
             if (!isset($activities_by_template[$activity->template->id])) {
                 $templates[$activity->template->id] = $activity->template;
-                $activities_by_template[$activity->template->id] = array();
+                $activities_by_template[$activity->template->id] = [];
             }
             $activities_by_template[$activity->template->id][] = $activity;
         }
 
-        $groups = array();
+        $groups = [];
         foreach ($activities_by_template as $template_id => $activities) {
             $group = new RunbookGroup($templates[$template_id]->title);
             if (!empty($templates[$template_id]->description)) {

@@ -13,7 +13,7 @@ abstract class PluginCore
     /**
      * @var array
      */
-    protected $options = array();
+    protected $options = [];
 
     /**
      * @var DataStore
@@ -97,10 +97,10 @@ abstract class PluginCore
     {
         $ds = $this->ds;
         if (!$this->entity) {
-            if (($entity = $ds->queryOne('\App\Entity\Plugin', array(
+            if (($entity = $ds->queryOne('\App\Entity\Plugin', [
                 'project' => $this->project,
                 'name' => $this->getName(),
-                )))) {
+                ]))) {
                 $this->setPluginEntity($entity);
             } elseif ($create) {
                 $this->setPluginEntity(new Plugin($this->project, $this));

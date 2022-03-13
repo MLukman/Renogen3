@@ -83,8 +83,8 @@ abstract class FileLink extends Entity
 
     public function getHtmlLink(NavigationFactory $nav)
     {
-        $base      = log($this->filestore->filesize) / log(1024);
-        $suffix    = array(" bytes", " KB", " MB", " GB", " TB")[floor($base)];
+        $base = log($this->filestore->filesize) / log(1024);
+        $suffix = [" bytes", " KB", " MB", " GB", " TB"][floor($base)];
         $humansize = round(pow(1024, $base - floor($base)), 2).$suffix;
         return '<a href="'.htmlentities($this->downloadUrl($nav)).'" title="'.$humansize.' '.$this->filestore->mime_type.'">'.htmlentities($this->filename).'</a>';
     }
@@ -96,11 +96,10 @@ abstract class FileLink extends Entity
 
     public function returnDownload()
     {
-        return new Response(stream_get_contents($this->filestore->data), 200,
-            array(
+        return new Response(stream_get_contents($this->filestore->data), 200, [
             'Content-type' => $this->filestore->mime_type,
             'Content-Disposition' => "inline; filename=\"{$this->filename}\"",
-        ));
+        ]);
     }
 
     public static function getValidationRules(): ?array

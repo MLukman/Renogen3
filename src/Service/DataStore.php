@@ -29,7 +29,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class DataStore
 {
-    const PROJECT_ROLES = array('none', 'view', 'entry', 'review', 'approval', 'execute');
+    const PROJECT_ROLES = ['none', 'view', 'entry', 'review', 'approval', 'execute'];
 
     /**
      *
@@ -78,9 +78,9 @@ class DataStore
      * @var User
      */
     protected $overrideUser;
-    protected $_templateClasses = array();
-    protected $_pluginClasses = array();
-    protected $_authClassNames = array();
+    protected $_templateClasses = [];
+    protected $_pluginClasses = [];
+    protected $_authClassNames = [];
 
     public function __construct(EntityManagerInterface $em, Security $security,
                                 NavigationFactory $nav,
@@ -124,8 +124,7 @@ class DataStore
      * @param array $sort
      * @return array
      */
-    public function queryMany($entity, Array $criteria = array(),
-                              Array $sort = array()): array
+    public function queryMany($entity, Array $criteria = [], Array $sort = []): array
     {
         $repo = $this->em->getRepository($entity);
         return $repo->findBy($criteria, $sort);
@@ -137,7 +136,7 @@ class DataStore
      * @param array $criteria
      * @return int
      */
-    public function count($entity, Array $criteria = array()): int
+    public function count($entity, Array $criteria = []): int
     {
         $qb = $this->em->getRepository($entity)->createQueryBuilder('e')
             ->select('COUNT(1)');
@@ -156,8 +155,8 @@ class DataStore
      * @param type $limit
      * @return array
      */
-    public function queryUsingOr($entity, Array $criteria = array(),
-                                 Array $sort = array(), $limit = 0): array
+    public function queryUsingOr($entity, Array $criteria = [],
+                                 Array $sort = [], $limit = 0): array
     {
         $repo = $this->em->getRepository($entity);
         $qb = $repo->createQueryBuilder('e');
@@ -183,7 +182,7 @@ class DataStore
     {
         if (!($project instanceof Project)) {
             $name = $project;
-            if (!($project = $this->queryOne('\App\Entity\Project', array('name' => $name)))) {
+            if (!($project = $this->queryOne('\App\Entity\Project', ['name' => $name]))) {
                 throw new NoResultException("There is no such project with name '$name'");
             }
         }
@@ -258,7 +257,7 @@ class DataStore
     {
         if (!($item instanceof Item)) {
             $id = $item;
-            if (!($item = $this->queryOne('\App\Entity\Item', array('id' => $id)))) {
+            if (!($item = $this->queryOne('\App\Entity\Item', ['id' => $id]))) {
                 throw new NoResultException("There is no such deployment item with id '$id'");
             }
         }
@@ -277,8 +276,7 @@ class DataStore
     {
         if (!($checklist instanceof Entity\Checklist)) {
             $id = $checklist;
-            if (!($checklist = $this->queryOne('\App\Entity\Checklist', array(
-                'id' => $id)))) {
+            if (!($checklist = $this->queryOne('\App\Entity\Checklist', ['id' => $id]))) {
                 throw new NoResultException("There is no such deployment checklist id '$id'");
             }
         }
@@ -358,12 +356,13 @@ class DataStore
     {
         $projects = new ArrayCollection();
         if (!is_array($roles)) {
-            $roles = array($roles);
+            $roles = [$roles];
         }
         foreach ($roles as $role) {
-            foreach ($this->queryMany('\App\Entity\UserProject', array(
+            foreach ($this->queryMany('\App\Entity\UserProject', [
                 'user' => $user,
-                'role' => $role)) as $up) {
+                'role' => $role,
+            ]) as $up) {
                 if ($up->project != $exclude) {
                     $projects->add($up->project);
                 }
@@ -464,11 +463,11 @@ class DataStore
 
     public function processFileUpload(UploadedFile $file,
                                       FileLink $filelink = null,
-                                      array &$errors = array()): ?FileLink
+                                      array &$errors = []): ?FileLink
     {
         if ($file->isValid() && $filelink) {
             $sha1 = sha1_file($file->getRealPath());
-            $filestore = $this->queryOne('\\App\\Entity\\FileStore', array('id' => $sha1));
+            $filestore = $this->queryOne('\\App\\Entity\\FileStore', ['id' => $sha1]);
             if (!$filestore) {
                 $filestore = new FileStore();
                 $filestore->id = $sha1;
@@ -482,9 +481,7 @@ class DataStore
                 $filelink->classifier = $filelink->filename;
             }
         } else {
-            $errors = array(
-                'Unable to process uploaded file',
-            );
+            $errors = ['Unable to process uploaded file'];
         }
         return $filelink;
     }

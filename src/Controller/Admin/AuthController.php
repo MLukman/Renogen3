@@ -22,7 +22,9 @@ class AuthController extends RenoController
         $this->requireAdminRole();
         $this->title = 'Authentication';
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
-        return $this->render('admin/auth_list.html.twig', array('drivers' => $this->ds->queryMany('\App\Entity\AuthDriver')));
+        return $this->render('admin/auth_list.html.twig', [
+                'drivers' => $this->ds->queryMany('\App\Entity\AuthDriver'),
+        ]);
     }
 
     /**
@@ -45,14 +47,14 @@ class AuthController extends RenoController
         $this->requireAdminRole();
         $this->title = "Edit '$driver' Authentication";
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
-        $this->addEditCrumb($this->nav->path('app_admin_auth_edit', array('driver' => $driver)));
+        $this->addEditCrumb($this->nav->path('app_admin_auth_edit', ['driver' => $driver]));
         $auth = $this->ds->queryOne('\App\Entity\AuthDriver', $driver);
         return $this->edit_or_create($auth, $request->request);
     }
 
     protected function edit_or_create(AuthDriver $auth, ParameterBag $post)
     {
-        $errors = array();
+        $errors = [];
         $ds = $this->ds;
         if ($post->count() > 0) {
             if ($post->get('_action') == 'Delete') {
@@ -66,10 +68,10 @@ class AuthController extends RenoController
                 return $this->nav->redirectRoute('app_admin_auth');
             }
             if (!$post->has('parameters')) {
-                $post->set('parameters', array());
+                $post->set('parameters', []);
             }
-            $attributes = array('title', 'parameters', 'allow_self_registration',
-                'registration_explanation');
+            $attributes = ['title', 'parameters', 'allow_self_registration',
+                'registration_explanation'];
             if (!$auth->created_date) {
                 $attributes[] = 'name';
                 $attributes[] = 'class';
@@ -78,7 +80,7 @@ class AuthController extends RenoController
                 $errors = $auth->errors;
             }
             if (class_exists($auth->class) &&
-                ($p_errors = call_user_func(array($auth->class, 'checkParams'), $auth->parameters))) {
+                ($p_errors = call_user_func([$auth->class, 'checkParams'], $auth->parameters))) {
                 $errors['parameters'] = $p_errors;
             }
             if (empty($errors)) {
@@ -86,13 +88,13 @@ class AuthController extends RenoController
                 return $this->nav->redirectRoute('app_admin_auth');
             }
         }
-        return $this->render('admin/auth_form.html.twig', array(
+        return $this->render('admin/auth_form.html.twig', [
                 'auth' => $auth,
                 'classes' => $this->ds->getAuthClassNames(),
-                'paramConfigs' => ($auth->class ? call_user_func(array($auth->class,
-                    'getParamConfigs')) : null),
+                'paramConfigs' => ($auth->class ?
+                call_user_func([$auth->class, 'getParamConfigs']) : null),
                 'errors' => $errors,
-        ));
+        ]);
     }
 
     /**
@@ -104,8 +106,8 @@ class AuthController extends RenoController
         $this->requireAdminRole();
         $this->title = "Test '$driver' Authentication";
         $this->addCrumb('Authentication', $this->nav->path('app_admin_auth'), 'lock');
-        $this->addEditCrumb($this->nav->path('app_admin_auth_edit', array('driver' => $driver)));
-        $this->addCrumb('Test', $this->nav->path('app_admin_auth_test', array('driver' => $driver)), 'lock');
+        $this->addEditCrumb($this->nav->path('app_admin_auth_edit', ['driver' => $driver]));
+        $this->addCrumb('Test', $this->nav->path('app_admin_auth_test', ['driver' => $driver]), 'lock');
         $authDriver = $this->ds->queryOne('\App\Entity\AuthDriver', $driver);
         if ($authDriver && $authDriver->driverClass() instanceof OAuth2) {
             $result = $oauth2auth->process($request, $authDriver);
@@ -119,6 +121,6 @@ class AuthController extends RenoController
             return new JsonResponse($user_info);
         }
 
-        return $this->redirectToRoute('app_admin_auth_edit', array('driver' => $driver));
+        return $this->redirectToRoute('app_admin_auth_edit', ['driver' => $driver]);
     }
 }

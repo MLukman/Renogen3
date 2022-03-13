@@ -50,7 +50,7 @@ class Item extends Entity
     /**
      * @ORM\Column(type="json", nullable=true)
      */
-    public $modules = array();
+    public $modules = [];
 
     /**
      * @ORM\Column(type="text", nullable=true)
@@ -110,7 +110,7 @@ class Item extends Entity
      * @ORM\Column(type="json", nullable=true)
      * @var array
      */
-    public $plugin_data = array();
+    public $plugin_data = [];
     protected $_statuses;
 
     public function __construct(Deployment $deployment)
@@ -258,40 +258,40 @@ class Item extends Entity
 
     public function getAllowedTransitions(User $user)
     {
-        $transitions = array();
+        $transitions = [];
         foreach ($this->deployment->project->item_statuses as $status => $config) {
             $progress   = $this->compareCurrentStatusTo($status);
-            $transition = array();
+            $transition = [];
             if ($progress < 0) {
                 // iterated status is behind current status
                 if ($this->deployment->project->isUserNameAllowed($user->username,
                         $config['role'])) {
-                    $transition['Revert'] = array(
+                    $transition['Revert'] = [
                         'status' => $status,
                         'remark' => true,
                         'type' => '',
-                    );
+                    ];
                 }
             } else if (in_array($this->status(), $config['requirecurrent'])) {
                 // current status is compatible with this transition
                 if ($this->deployment->project->isUserNameAllowed($user->username,
                         $config['role'])) {
-                    $transition[$config['proceedaction']] = array(
+                    $transition[$config['proceedaction']] = [
                         'status' => $config['proceedstatus'],
                         'remark' => false,
                         'type' => 'primary',
-                    );
+                    ];
                     if ($config['rejectaction']) {
-                        $transition[$config['rejectaction']] = array(
+                        $transition[$config['rejectaction']] = [
                             'status' => $config['rejectaction'],
                             'remark' => true,
                             'type' => '',
-                        );
+                        ];
                     }
                     // Special condition: Ready For Release cannot be completed here if there are activities
                     if ($this->status() == Project::ITEM_STATUS_READY &&
                         $this->activities->count() > 0) {
-                        $transition = array();
+                        $transition = [];
                     }
                 }
             }

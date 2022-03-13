@@ -36,19 +36,19 @@ class MultiField extends Parameter
         $errkey = ($error_prefix ? "$error_prefix.$key" : $key);
 
         if (empty($input[$key]) && $this->templateRequired) {
-            $errors[$errkey] = array('Required');
+            $errors[$errkey] = ['Required'];
         }
 
-        $keys = array();
+        $keys = [];
         foreach ($input[$key] as $i => $p) {
             foreach (array('id', 'title', 'type') as $f) {
                 if (empty($p[$f])) {
-                    $errors[$errkey.'.'.$i.'.'.$f] = array('Required');
+                    $errors[$errkey.'.'.$i.'.'.$f] = ['Required'];
                 }
             }
             if (!empty($p['id'])) {
                 if (isset($keys[$p['id']])) {
-                    $errors[$errkey.'.'.$i.'.id'] = array('Must be unique');
+                    $errors[$errkey.'.'.$i.'.id'] = ['Must be unique'];
                 } else {
                     $keys[$p['id']] = 1;
                 }
@@ -68,11 +68,11 @@ class MultiField extends Parameter
                 $input[$key][$p['id']] = trim($input[$key][$p['id']]);
             }
             if ($p['required'] && empty($input[$key][$p['id']])) {
-                $errors[$errkey.'.'.$p['id']] = array('Required');
+                $errors[$errkey.'.'.$p['id']] = ['Required'];
             } elseif ($p['type'] == 'url' && !filter_var($input[$key][$p['id']], FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED)) {
-                $errors[$errkey.'.'.$p['id']] = array('Must be a valid URL');
+                $errors[$errkey.'.'.$p['id']] = ['Must be a valid URL'];
             } elseif ($p['type'] == 'formatted' && !preg_match("/^{$p['details']}$/", $input[$key][$p['id']])) {
-                $errors[$errkey.'.'.$p['id']] = array('Invalid format');
+                $errors[$errkey.'.'.$p['id']] = ['Invalid format'];
             }
         }
         return empty($errors);
@@ -80,7 +80,7 @@ class MultiField extends Parameter
 
     public function templateFormToDatabase($parameter)
     {
-        $cfg = array();
+        $cfg = [];
         foreach ($parameter as $p) {
             if (empty($p['id']) && empty($p['title']) && empty($p['details']) && !isset($p['required'])) {
                 continue;
@@ -90,7 +90,7 @@ class MultiField extends Parameter
             } elseif ($p['type'] == 'jsondropdown') {
                 $p['details'] = \json_decode($p['details'], true);
             }
-            $cfg[] = array_merge(array('required' => 0), $p);
+            $cfg[] = array_merge(['required' => 0], $p);
         }
         return $cfg;
     }
@@ -111,23 +111,23 @@ class MultiField extends Parameter
                                            array $parameters, $key,
                                            Actionable $activity = null)
     {
-        $data = array();
+        $data = [];
         foreach ($template_parameters[$key] as $p) {
             if (!isset($parameters[$key]) || !isset($parameters[$key][$p['id']])) {
                 continue;
             }
             switch ($p['type']) {
                 case 'file':
-                    if (($activity_file = $this->template->ds()->queryOne($activity->fileClass, array(
+                    if (($activity_file = $this->template->ds()->queryOne($activity->fileClass, [
                         "{$activity->actionableType}" => $activity,
-                        'classifier' => $parameters[$key][$p['id']])))) {
+                        'classifier' => $parameters[$key][$p['id']]]))) {
                         /* @var $activity_file ActivityFile */
-                        $data[$p['id']] = array(
+                        $data[$p['id']] = [
                             'fileid' => $activity_file->id,
                             'filename' => $activity_file->filename,
                             'filesize' => $activity_file->filestore->filesize,
                             'mime_type' => $activity_file->filestore->mime_type,
-                        );
+                        ];
                     }
                     break;
                 default:
@@ -178,7 +178,7 @@ class MultiField extends Parameter
     public function displayActivityParameter(Actionable $activity, $key)
     {
         $isForRunbook = ($activity instanceof RunItem);
-        $options = array();
+        $options = [];
         $data = $this->activityDatabaseToForm($activity->template->parameters, $activity->parameters, $key, $activity);
         foreach ($activity->template->parameters[$key] as $p) {
             if (!isset($data[$p['id']])) {
@@ -195,10 +195,10 @@ class MultiField extends Parameter
 
             switch ($p['type']) {
                 case 'file':
-                    $file = $this->template->ds()->queryOne($activity->fileClass, array(
+                    $file = $this->template->ds()->queryOne($activity->fileClass, [
                         "{$activity->actionableType}" => $activity,
                         'classifier' => $key.'.'.$p['id'],
-                    ));
+                    ]);
                     if ($file) {
                         $options[$d] = [
                             'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.textLink(text, link) }}',

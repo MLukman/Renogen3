@@ -93,7 +93,7 @@ class Deployment extends Entity
      * @ORM\Column(type="json", nullable=true)
      * @var array
      */
-    public $plugin_data = array();
+    public $plugin_data = [];
     protected $_caches  = [];
 
     public function __construct(Project $project)
@@ -156,26 +156,26 @@ class Deployment extends Entity
 
     public function generateRunbooks(DataStore $ds)
     {
-        $activities = array(
-            -1 => array(),
-            0 => array(),
-            1 => array(),
-        );
+        $activities = [
+            -1 => [],
+            0 => [],
+            1 => [],
+        ];
         foreach ($this->runitems as $runitem) {
             $tid   = sprintf("%03d:%s", $runitem->template->priority,
                 $runitem->template->id);
             $array = &$activities[$runitem->stage ?: 0];
             if (!isset($array[$tid])) {
-                $array[$tid] = array();
+                $array[$tid] = [];
             }
             $array[$tid][] = $runitem;
         }
 
-        $rungroups = array(
-            -1 => array(),
-            0 => array(),
-            1 => array(),
-        );
+        $rungroups = [
+            -1 => [],
+            0 => [],
+            1 => [],
+        ];
         foreach (array_keys($rungroups) as $stage) {
             ksort($activities[$stage]);
             foreach ($activities[$stage] as $acts) {
@@ -196,7 +196,7 @@ class Deployment extends Entity
     public function getChecklistTemplates()
     {
         if (empty($this->project->checklist_templates)) {
-            return array();
+            return [];
         }
         $checklists = array_map(function ($c) {
             return $c->title;

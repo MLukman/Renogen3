@@ -14,7 +14,7 @@ class SubjectPrefixVoter extends Voter
      * Subject prefixes
      * @var string[]
      */
-    protected $subjectPrefixes = array();
+    protected $subjectPrefixes = [];
 
     /**
      * Get singleton instance
@@ -39,7 +39,7 @@ class SubjectPrefixVoter extends Voter
     public function addSubjectPrefix($subjectPrefix, $roles)
     {
         if (!is_array($roles)) {
-            $roles = array($roles);
+            $roles = [$roles];
         }
         if (is_array($subjectPrefix)) {
             foreach ($subjectPrefix as $oneSubjectPrefix) {
@@ -90,7 +90,7 @@ class SubjectPrefixVoter extends Voter
                                        TokenInterface $token)
     {
         $granted = true;
-        $uroles = array();
+        $uroles = [];
         foreach ($token->getRoles() as $role) {
             $uroles[] = $role->getRole();
         }

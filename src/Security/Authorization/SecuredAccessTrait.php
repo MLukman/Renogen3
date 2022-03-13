@@ -11,13 +11,13 @@ trait SecuredAccessTrait
      * The list of user roles who can access
      * @var string[]
      */
-    protected $allowedRoles = array('ROLE_ADMIN' => array('any' => true));
+    protected $allowedRoles = ['ROLE_ADMIN' => ['any' => true]];
 
     /**
      * The list of usernames who can manage this context
      * @var string[]
      */
-    protected $allowedUsernames = array();
+    protected $allowedUsernames = [];
 
     /**
      * Allow user role to access
@@ -29,7 +29,7 @@ trait SecuredAccessTrait
     {
         $roleStr = (string) $role;
         if (!isset($this->allowedRoles[$roleStr])) {
-            $this->allowedRoles[$roleStr] = array();
+            $this->allowedRoles[$roleStr] = [];
         }
         $this->allowedRoles[$roleStr][(string) $attribute] = true;
         return $this;
@@ -81,7 +81,7 @@ trait SecuredAccessTrait
     {
         $usernameStr = (string) $username;
         if (!isset($this->allowedUsernames[$usernameStr])) {
-            $this->allowedUsernames[$usernameStr] = array();
+            $this->allowedUsernames[$usernameStr] = [];
         }
         $this->allowedUsernames[$usernameStr][(string) $attribute] = true;
         return $this;

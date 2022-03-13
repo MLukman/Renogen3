@@ -7,7 +7,7 @@ use App\Entity\UserAuthentication;
 
 abstract class Driver
 {
-    protected $params = array();
+    protected $params = [];
     protected $instance;
 
     public function __construct(array $params, AuthDriver $instance)
@@ -25,7 +25,7 @@ abstract class Driver
     abstract static public function getTitle();
 
     /**
-     * @return array Parameters = array of array(id, label, placeholder)
+     * @return array Parameters = array of [id, label, placeholder]
      */
     abstract static public function getParamConfigs();
 

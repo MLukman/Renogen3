@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ChecklistController extends RenoController
 {
-    const entityFields = array('title', 'start_datetime', 'end_datetime', 'status');
+    const entityFields = ['title', 'start_datetime', 'end_datetime', 'status'];
 
     /**
      * @Route("/{project}/{deployment}/checklist", name="app_checklist_create")
@@ -21,7 +21,7 @@ class ChecklistController extends RenoController
     {
         try {
             $deployment_obj = $this->ds->fetchDeployment($project, $deployment);
-            $this->checkAccess(array('entry', 'approval'), $deployment_obj);
+            $this->checkAccess(['entry', 'approval'], $deployment_obj);
             $this->addEntityCrumb($deployment_obj);
             $this->addCreateCrumb('Add checklist task', $this->nav->entityPath('app_checklist_create', $deployment_obj));
             $checklist = new ChecklistEntity($deployment_obj);
@@ -50,9 +50,7 @@ class ChecklistController extends RenoController
     protected function edit_or_create(ChecklistEntity $checklist,
                                       ParameterBag $post)
     {
-        $context = array(
-            'post' => $post,
-        );
+        $context = [ 'post' => $post ];
         $ds = $this->ds;
         if ($post->count() > 0) {
             switch ($post->get('_action')) {
@@ -74,10 +72,10 @@ class ChecklistController extends RenoController
                     if (empty($post->get('title'))) {
                         $post->set('title', $post->get('template'));
                     }
-                    $errors = array();
+                    $errors = [];
                     $fields = static::entityFields;
                     if ($checklist->created_by && !$this->security->isGranted('edit_title', $checklist)) {
-                        $fields = array_diff($fields, array('title'));
+                        $fields = array_diff($fields, ['title']);
                     }
                     if ($ds->prepareValidateEntity($checklist, $fields, $post)) {
                         if ($checklist->id) {

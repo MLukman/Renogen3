@@ -77,7 +77,7 @@ class DeploymentRequest extends Entity
 
     public function __construct(Project $project)
     {
-        $this->project  = $project;
+        $this->project = $project;
         $this->duration = $this->project->approx_deployment_duration;
     }
 
@@ -107,8 +107,8 @@ class DeploymentRequest extends Entity
                 }
                 return true;
             }),
-            'external_url' => array('trim' => 1, 'maxlen' => 2000, 'url' => 1),
-            'external_url_label' => array('trim' => 1, 'truncate' => 30),
+            'external_url' => Rules::new()->trim()->maxvalue(2000)->url(),
+            'external_url_label' => Rules::new()->trim()->truncate(30),
         ];
     }
 }

@@ -20,7 +20,7 @@ class DoctrineValidator
     }
 
     public function validate(&$entity, array $validation_rules,
-                             array $initErrors = array())
+                             array $initErrors = [])
     {
         $errors = $initErrors;
         foreach ($validation_rules as $field => $rules) {
@@ -36,9 +36,9 @@ class DoctrineValidator
                 $criteria = Criteria::create()->where(new Comparison($field, '=', $value));
                 if (is_string($rules['unique'])) {
                     // require uniqueness among all records with same value of a particular column
-                    $rules['unique'] = array($rules['unique']);
+                    $rules['unique'] = [$rules['unique']];
                 }
-                $unique_messages = array();
+                $unique_messages = [];
                 $skip = false;
                 if (is_array($rules['unique'])) {
                     // require uniqueness among all records with same value of particular list of columns
@@ -92,7 +92,7 @@ class DoctrineValidator
 
     static public function validateValue(&$value, array $rules)
     {
-        $errors = array();
+        $errors = [];
 
         if (isset($rules['trim']) && $rules['trim'] && is_string($value)) {
             $value = trim($value);
@@ -192,12 +192,12 @@ class DoctrineValidator
     }
 
     public function validateThrowingException(&$entity, array $validation_rules,
-                                              array $initErrors = array())
+                                              array $initErrors = [])
     {
         $errors = $this->validate($entity, $validation_rules, $initErrors);
         if (!empty($errors)) {
             throw new ValidationException($entity, $errors);
         }
-        return array();
+        return [];
     }
 }

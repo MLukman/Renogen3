@@ -12,8 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class DeploymentController extends RenoController
 {
-    const entityFields = array('execute_date', 'title', 'description', 'duration',
-        'external_url', 'external_url_label');
+    const entityFields = ['execute_date', 'title', 'description', 'duration',
+        'external_url', 'external_url_label'];
 
     /**
      * @Route("/{project}/+", name="app_deployment_create", priority=10)
@@ -43,10 +43,10 @@ class DeploymentController extends RenoController
             }
             $this->checkAccess('any', $deployment_obj);
             $this->addEntityCrumb($deployment_obj);
-            return $this->render('deployment_view.html.twig', array(
+            return $this->render('deployment_view.html.twig', [
                     'deployment' => $deployment_obj,
                     'project' => $deployment_obj->project,
-            ));
+            ]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Object not found', $ex->getMessage());
         }
@@ -74,7 +74,7 @@ class DeploymentController extends RenoController
     protected function edit_or_create(DeploymentEntity $deployment,
                                       ParameterBag $post)
     {
-        $context = array();
+        $context = [];
         if ($post->count() > 0) {
             if ($post->get('_action') == 'Delete') {
                 if ($deployment->items->count() == 0) {
@@ -114,14 +114,14 @@ class DeploymentController extends RenoController
         }
         $this->addEntityCrumb($deployment_obj);
         $this->addCrumb('Release Note', $this->nav->entityPath('app_release_note', $deployment_obj), 'ordered list');
-        $context = array(
+        $context = [
             'deployment' => $deployment_obj,
             'project' => $deployment_obj->project,
-            'items' => array(),
-        );
+            'items' => [],
+        ];
 
         foreach ($deployment_obj->project->categories as $category) {
-            $context['items'][$category] = array();
+            $context['items'][$category] = [];
         }
 
         foreach ($deployment_obj->items as $item) {

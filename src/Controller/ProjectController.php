@@ -12,8 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProjectController extends RenoController
 {
-    const entityFields = array('name', 'title', 'icon', 'description', 'approx_deployment_duration',
-        'attachment_file_exts');
+    const entityFields = ['name', 'title', 'icon', 'description', 'approx_deployment_duration',
+        'attachment_file_exts'];
 
     /**
      * @Route("/+", name="app_project_create")
@@ -35,9 +35,7 @@ class ProjectController extends RenoController
             $project = $this->ds->fetchProject($project);
             $this->checkAccess('any', $project);
             $this->addEntityCrumb($project);
-            return $this->render('project_view.html.twig', array(
-                    'project' => $project
-            ));
+            return $this->render('project_view.html.twig', ['project' => $project]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Project not found', $ex->getMessage());
         }
@@ -53,9 +51,7 @@ class ProjectController extends RenoController
             $this->checkAccess(array('view', 'execute', 'entry', 'review', 'approval'), $project);
             $this->addEntityCrumb($project);
             $this->addCrumb('Past deployments', $this->nav->entityPath('app_project_past', $project), 'clock');
-            return $this->render('project_past.html.twig', array(
-                    'project' => $project
-            ));
+            return $this->render('project_past.html.twig', ['project' => $project]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Project not found', $ex->getMessage());
         }
@@ -71,7 +67,7 @@ class ProjectController extends RenoController
             $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
 
             if ($request->request->get('_action')) {
-                foreach ($request->request->get('role', array()) as $username => $role) {
+                foreach ($request->request->get('role', []) as $username => $role) {
                     try {
                         $project_role = $project_obj->userProjects->containsKey($username)
                                 ? $project_obj->userProjects->get($username) : null;
@@ -96,10 +92,10 @@ class ProjectController extends RenoController
 
             $this->addEntityCrumb($project_obj);
             $this->addCrumb('Users', $this->nav->entityPath('app_project_users', $project_obj), 'users');
-            return $this->render('project_users.html.twig', array(
+            return $this->render('project_users.html.twig', [
                     'project' => $project_obj,
                     'users' => $this->ds->queryMany('\App\Entity\User'),
-            ));
+            ]);
         } catch (NoResultException $ex) {
             return $this->errorPage('Project not found', $ex->getMessage());
         }
@@ -112,7 +108,7 @@ class ProjectController extends RenoController
     {
         try {
             $project_obj = $this->ds->fetchProject($project);
-            $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
+            $this->checkAccess(['approval', 'ROLE_ADMIN'], $project_obj);
 
             $this->addEntityCrumb($project_obj);
             $this->addEditCrumb($this->nav->entityPath('app_project_edit', $project_obj));
@@ -125,7 +121,7 @@ class ProjectController extends RenoController
     protected function edit_or_create(ParameterBag $post,
                                       Project $project = null)
     {
-        $context = array();
+        $context = [];
         if ($post->count() > 0) {
             if ($project && $post->get('_action') == 'Delete') {
                 $this->ds->deleteEntity($project);
@@ -152,7 +148,7 @@ class ProjectController extends RenoController
                 $project->userProjects->add($nuser);
             }
 
-            $multiline2array = function($multiline) {
+            $multiline2array = function ($multiline) {
                 return empty($multiline) ? null : explode("\n", str_replace("\r\n", "\n", $multiline));
             };
             $project->categories = $multiline2array(trim($post->get('categories')));
@@ -228,7 +224,6 @@ class ProjectController extends RenoController
             'attachment_uploaded' => 'SELECT u.username, u.shortname, COUNT(DISTINCT a.id) AS contribs FROM \App\Entity\Attachment a JOIN \App\Entity\Item i WITH a.item = i JOIN \App\Entity\Deployment d WITH d.project = :project AND i.deployment = d JOIN \App\Entity\User u WITH a.created_by = u GROUP BY u.username',
         ];
 
-
         $results = [];
         foreach ($queries as $q => $dql) {
             $query = $this->ds->em()
@@ -271,7 +266,7 @@ class ProjectController extends RenoController
                 $role_counts[$up->role]++;
             }
         }
-        usort($contribs, function($a, $b) {
+        usort($contribs, function ($a, $b) {
             return $b['score'] <=> $a['score'];
         });
         ksort($role_counts);
