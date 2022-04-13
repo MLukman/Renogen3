@@ -27,6 +27,7 @@ class HomeController extends RenoController
         }
 
         $contexts = [
+            'deployment_requests' => [],
             'upcoming_deployments' => [],
             'upcoming_deployments_hierarchy' => [],
             'projects_with_access' => [],
@@ -58,7 +59,18 @@ class HomeController extends RenoController
         // Need actions
         $need_actions = [];
         foreach ($contexts['projects_with_access'] as $project) {
-            $project_role = $project->userProject($this->ds->currentUserEntity()->getUsername());
+            $project_role = $project->userProject($this->ds->currentUserEntity()->getUsername())->role;
+            if ($project_role == 'approval') {
+                foreach ($project->upcomingDeploymentRequests() as $request) {
+                    if ($request->status == 'Approved' || $request->status == 'Failed') {
+                        continue;
+                    }
+                    $d = ['deployment_request' => $request];
+                    $k = $request->execute_date->getTimestamp()."R-".$project->name;
+                    $need_actions[$k] = $d;
+                    $contexts['deployment_requests'][] = $d;
+                }
+            }
             foreach ($project->upcoming() as $deployment) {
                 $d = [
                     'deployment' => $deployment,

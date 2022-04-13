@@ -239,64 +239,77 @@
         <div class="ui tab basic segment" data-tab="actions">
             <div class="ui raised cards yellow">
                 {% for d in need_actions %}
-                    <div class="ui fluid card" style="background-color: #ffffcc">
-                        <div class="ui content">
-                            <h4>
-                                <span><i class="ui {{d.deployment.project.icon}} icon" title="Project"></i> {{ d.deployment.project.title }} &raquo;</span>
-                                <span class="nowrap"><i class="ui calendar check o icon" title="Deployment"></i> <a href="{{ nav.entityPath('app_deployment_view', d.deployment) }}">{{ _self.displayDateTime(d.deployment.execute_date) }}</a></span>
-                            </h4>
-                            <div class="ui celled list">
-                                {% if d.items|length > 10 %}
-                                    <div class="item">Showing 10 of {{ d.items|length }} items only</div>
-                                {% endif %}
-                                {% for item in d.items %}
-                                    {% if loop.index0 < 10 %}
-                                        <a class="item" href="{{ nav.entityPath('app_item_view', item) }}">
-                                            <i class="flag icon" title="{{ item.status }}"></i>
-                                            <div class="content">
-                                                <div class="header">{{ item.title }}</div>
-                                                <div class="description">{{ item.status }}</div>
-                                                <div class="description">
-                                                    <i class="add to cart icon" title="Activities"></i>{{ item.activities|length }} &nbsp;
-                                                    <i class="attach icon" title="Attachments"></i>{{ item.attachments|length }} &nbsp;
-                                                    <i class="comments icon" title="Comments"></i>{{ item.comments|length }}
-                                                </div>
-                                            </div>
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-                                {% if d.checklists|length > 10 %}
-                                    <div class="item">Showing 10 of {{ d.checklists|length }} tasks only</div>
-                                {% endif %}
-                                {%  for checklist in d.checklists %}
-                                    {% if loop.index0 < 10 %}
-                                        <a class="item" href="{{ nav.entityPath('app_checklist_edit', checklist) }}#checklist">
-                                            <i class="tasks icon" title="Checklist Task"></i>
-                                            <div class="content">
-                                                <div class="header">{{ checklist.title }}</div>
-                                                <div class="description">{{ checklist.status }}</div>
-                                                <div class="description">{{ checklist.start_datetime|date('d-m-Y h:i A') }}</div>
-                                            </div>
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-                                {% if d.activities|length > 10 %}
-                                    <div class="item">Showing 10 of {{ d.activities|length }} activities only</div>
-                                {% endif %}
-                                {%  for activity in d.activities %}
-                                    {% if loop.index0 < 10 %}
-                                        <a class="item" href="{{ nav.entityPath('app_runbook_view', d.deployment) }}">
-                                            <i class="cloud upload icon" title="{{ activity.status }}"></i>
-                                            <div class="content">
-                                                <div class="header">{{ activity.template.title }}</div>
-                                                <div class="description">{{ activity.runitems|length }} pending</div>
-                                            </div>
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
+                    {% if d.deployment_request is defined %}
+                        <div class="ui fluid card" style="background-color: #ffffcc">
+                            <div class="ui content">
+                                <h4>
+                                    <span><i class="ui {{d.deployment_request.project.icon}} icon" title="Project"></i> {{ d.deployment_request.project.title }} &raquo;</span>
+                                    <span><i class="ui calendar plus outline icon"></i> Deployment Request &raquo;</span>
+                                    <span class="nowrap"><i class="ui calendar check o icon" title="Deployment Request"></i> <a href="{{ nav.entityPath('app_project_view', d.deployment_request.project, [], '/requests') }}">{{ _self.displayDateTime(d.deployment_request.execute_date) }}</a></span>
+                                </h4>
                             </div>
                         </div>
-                    </div>
+                    {% endif %}
+                    {% if d.deployment is defined %}
+                        <div class="ui fluid card" style="background-color: #ffffcc">
+                            <div class="ui content">
+                                <h4>
+                                    <span><i class="ui {{d.deployment.project.icon}} icon" title="Project"></i> {{ d.deployment.project.title }} &raquo;</span>
+                                    <span class="nowrap"><i class="ui calendar check o icon" title="Deployment"></i> <a href="{{ nav.entityPath('app_deployment_view', d.deployment) }}">{{ _self.displayDateTime(d.deployment.execute_date) }}</a></span>
+                                </h4>
+                                <div class="ui celled list">
+                                    {% if d.items|length > 10 %}
+                                        <div class="item">Showing 10 of {{ d.items|length }} items only</div>
+                                    {% endif %}
+                                    {% for item in d.items %}
+                                        {% if loop.index0 < 10 %}
+                                            <a class="item" href="{{ nav.entityPath('app_item_view', item) }}">
+                                                <i class="flag icon" title="{{ item.status }}"></i>
+                                                <div class="content">
+                                                    <div class="header">{{ item.title }}</div>
+                                                    <div class="description">{{ item.status }}</div>
+                                                    <div class="description">
+                                                        <i class="add to cart icon" title="Activities"></i>{{ item.activities|length }} &nbsp;
+                                                        <i class="attach icon" title="Attachments"></i>{{ item.attachments|length }} &nbsp;
+                                                        <i class="comments icon" title="Comments"></i>{{ item.comments|length }}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if d.checklists|length > 10 %}
+                                        <div class="item">Showing 10 of {{ d.checklists|length }} tasks only</div>
+                                    {% endif %}
+                                    {%  for checklist in d.checklists %}
+                                        {% if loop.index0 < 10 %}
+                                            <a class="item" href="{{ nav.entityPath('app_checklist_edit', checklist) }}#checklist">
+                                                <i class="tasks icon" title="Checklist Activity"></i>
+                                                <div class="content">
+                                                    <div class="header">{{ checklist.title }}</div>
+                                                    <div class="description">{{ checklist.status }}</div>
+                                                    <div class="description">{{ checklist.start_datetime|date('d-m-Y h:i A') }}</div>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if d.activities|length > 10 %}
+                                        <div class="item">Showing 10 of {{ d.activities|length }} activities only</div>
+                                    {% endif %}
+                                    {%  for activity in d.activities %}
+                                        {% if loop.index0 < 10 %}
+                                            <a class="item" href="{{ nav.entityPath('app_runbook_view', d.deployment) }}">
+                                                <i class="cloud upload icon" title="{{ activity.status }}"></i>
+                                                <div class="content">
+                                                    <div class="header">{{ activity.template.title }}</div>
+                                                    <div class="description">{{ activity.runitems|length }} pending</div>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>

@@ -189,7 +189,7 @@ class MultiField extends Parameter
 
             if (!$isForRunbook &&
                 ($p['type'] == 'password' || (isset($p['sensitive']) && $p['sensitive']))) {
-                $options[$d] = '<em>-- Redacted due to sensitive info --</em>';
+                $options[$d] = '<em>-- Redacted Due to Sensitive Info --</em>';
                 continue;
             }
 
@@ -221,7 +221,8 @@ class MultiField extends Parameter
                     break;
 
                 case 'script':
-                    $options[$d] = [
+                    $options[$d] = empty($data[$p['id']]) ?
+                        '<em>-- Empty / Not Specified --</em>' : [
                         'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.copyableSourceField(label, value) }}',
                         'templateContext' => [
                             'label' => $d,
@@ -240,8 +241,8 @@ class MultiField extends Parameter
                     break;
 
                 default:
-
-                    $options[$d] = [
+                    $options[$d] = empty($data[$p['id']]) ?
+                        '<em>-- Empty / Not Specified --</em>' : [
                         'templateString' => '{% import "parameter/macros.html.twig" as r %}{{ r.copyableTextField(label, value) }}',
                         'templateContext' => [
                             'label' => $d,

@@ -8,7 +8,7 @@
             <span>{{_self.crumb_project(checklist.deployment.project, true)}} &raquo;</span>
             <span>{{_self.crumb_deployment(checklist.deployment, true, '#checklist')}} &raquo;</span>
         </div>
-        {% if is_existing %}Edit{% else %}Add{% endif %} checklist task
+        {% if is_existing %}Edit{% else %}Add{% endif %} checklist activity
     </h1>
 
     {% if errors|default(false) %}
@@ -82,7 +82,7 @@
                 </div>
             {% endif %}
             <div class="ui field">
-                <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Add{% endif %} checklist task" />
+                <input type="submit" class="ui submit primary button" name="_action" value="{% if is_existing %}Save{% else %}Add{% endif %} checklist activity" />
                 <a href="{{cancel_path|default('javascript:window.history.go(-1)')}}" class="ui secondary button">Cancel</a>
                 {% if is_existing and security.isGranted('delete',checklist) %}
                     <input type="submit" class="ui red right floated button" name="_action" value="Delete"

@@ -67,7 +67,7 @@ class ProjectController extends RenoController
             $this->checkAccess(array('approval', 'ROLE_ADMIN'), $project_obj);
 
             if ($request->request->get('_action')) {
-                foreach ($request->request->get('role', []) as $username => $role) {
+                foreach ($request->request->all('role') ?? [] as $username => $role) {
                     try {
                         $project_role = $project_obj->userProjects->containsKey($username)
                                 ? $project_obj->userProjects->get($username) : null;

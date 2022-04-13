@@ -16,7 +16,7 @@ class JenkinsJob extends BaseClass
     {
         parent::__construct($nav, $ds);
         $this->addParameter('access', Parameter\Markdown::createForTemplateOnly($this, 'Jenkins Access Info', 'Numbered steps on how to access Jenkins, or simply the URL', true, 'Jenkins Access Info'));
-        $this->addParameter('job', Parameter::Dropdown($this, 'Jobs Dropdown Options', 'A dropdown containing the list of the jobs defined here will be available when creating activities', true, 'Jenkin Job', 'The job path & name to execute', true));
+        $this->addParameter('job', Parameter::Dropdown($this, 'Jobs Dropdown Options', 'A dropdown containing the list of the jobs defined here will be available when creating activities', true, 'Jenkins Job', 'The job path & name to execute', true));
         $this->addParameter('parameters', Parameter\MultiField::create($this, 'Job Parameters', 'Define the job parameters needed when executing the jobs', false, 'Job Parameters', '', false));
     }
 
@@ -54,7 +54,7 @@ class JenkinsJob extends BaseClass
         foreach ($activities_by_template as $template_id => $activities) {
             $group = new RunbookGroup($templates[$template_id]->title);
             $group->setTemplate('runbook/JenkinsJob.twig');
-            $group->setInstructionLabel("Jenkin Access");
+            $group->setInstructionLabel("Jenkins Access");
             $group->setInstruction($this->getParameter('access')->displayTemplateParameter($templates[$template_id], 'access'));
             foreach ($activities as $activity) {
                 $row = [];

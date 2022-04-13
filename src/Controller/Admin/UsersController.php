@@ -158,7 +158,7 @@ class UsersController extends RenoController
 
         return $this->render('admin/user_form.html.twig', [
                 'user' => $user,
-                'project_roles' => $post->get('project_role', []),
+                'project_roles' => $post->all('project_role') ?? [],
                 'has_contrib' => $has_contrib,
                 'auths' => $this->ds->queryMany('\App\Entity\AuthDriver'),
                 'projects' => $this->ds->queryMany('\App\Entity\Project'),

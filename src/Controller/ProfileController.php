@@ -151,6 +151,7 @@ class ProfileController extends RenoController
         }
 
         $user_auth = new UserAuthentication($ds->currentUserEntity(), $authDriver, $user_info['username']);
+        $user_auth->email = $user_info['email'];
         $ds->commit($user_auth);
         $this->addFlash('info', "Your {$user_auth->driver->title} login has been added");
 

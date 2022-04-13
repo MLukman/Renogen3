@@ -67,10 +67,10 @@
                     <label>This user is an administrator</label>
                 </div>
             </div>
-            {%  set project_roles = [] %}
+            {% set sorted_project_roles = [] %}
             {% for project in projects|psort('title') %}
                 {% set user_role = project_roles[project.name]|default(project.userProjects[user.username].role|default('zzz')) %}
-                {%  set project_roles = project_roles|merge([{'project':project,'role':user_role}]) %}
+                {% set sorted_project_roles = sorted_project_roles|merge([{'project':project,'role':user_role, 'sort':user_role ~ '.' ~ project.title}]) %}
             {% endfor %}
             <div class="ui field basic segment">
                 <label class="ui top attached large label">Project Access</label>
@@ -82,7 +82,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for pr in project_roles|psort('role') %}
+                        {% for pr in sorted_project_roles|psort('sort') %}
                             <tr>
                                 <td>{{pr.project.title}}</td>
                                 {% for lbl,role in {'None':'zzz','View':'view','Entry':'entry','Review':'review','Approval':'approval','Execute':'execute'} %}

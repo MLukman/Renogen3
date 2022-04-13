@@ -73,7 +73,7 @@ class ActivityController extends RenoController
                     if ($activity->template) {
                         $activity->priority = $activity->template->priority;
                         if (($templateClass = $activity->template->templateClass($this->ds))) {
-                            $parameters = $post->get('parameters', []);
+                            $parameters = $post->all('parameters') ?? [];
                             foreach ($templateClass->getParameters() as $param => $parameter) {
                                 $parameter->handleActivityFiles($request, $activity, $parameters, $param);
                                 $parameter->validateActivityInput($activity->template->parameters, $parameters, $param, $errors, 'parameters');

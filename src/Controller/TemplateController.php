@@ -85,7 +85,9 @@ class TemplateController extends RenoController
     protected function edit_or_create(Request $request, Template $template,
                                       ParameterBag $post)
     {
-        $context = [];
+        $context = [
+            'errors' => []
+        ];
 
         $this->setTemplateClassContext($context, $template->class);
 
@@ -138,7 +140,7 @@ class TemplateController extends RenoController
                 ];
                 $context['sample']['activity'] = new Activity(new Item(new Deployment($template->project)));
                 $context['sample']['activity']->template = $template;
-                $parameters = $post->get('parameters', []);
+                $parameters = $post->all('parameters') ?? [];
                 foreach ($template->templateClass()->getParameters() as $param => $parameter) {
                     $parameter->handleActivityFiles($request, $context['sample']['activity'], $parameters, $param);
                     $parameter->validateActivityInput($template->parameters, $parameters, $param, $context['sample']['errors'], 'parameters');
@@ -157,18 +159,21 @@ class TemplateController extends RenoController
             case 'Create activity template':
             case 'Save activity template':
                 $this->setTemplateClassContext($context, $post->get('class'));
-                $parameters = $post->get('parameters', []);
-                $errors = [];
+                $parameters = $post->all('parameters') ?? [];
                 foreach ($context['class_instance']->getParameters() as $param => $parameter) {
-                    $parameter->validateTemplateInput($parameters, $param, $errors, 'parameters');
+                    $parameter->validateTemplateInput($parameters, $param, $context['errors'], 'parameters');
                 }
                 $post->set('parameters', $parameters);
                 $oldpriority = $template->priority ?:
                     $template->project->templates->count() + 1;
 
-                if (!$this->ds->prepareValidateEntity($template, static::entityFields, $post)
-                    || !empty($errors)) {
-                    $context['errors'] += $template->errors;
+                // validate entity fields
+                if (!$this->ds->prepareValidateEntity($template, static::entityFields, $post)) {
+                    $context['errors'] = array_merge($context['errors'], $template->errors);
+                }
+
+                // stop from saving
+                if (!empty($context['errors'])) {
                     break;
                 }
 
