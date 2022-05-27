@@ -85,6 +85,7 @@ class UsersController extends RenoController
             }
             if ($this->ds->prepareValidateEntity($user,
                     ['username', 'shortname', 'email', 'admin'], $post)) {
+                $user->roles = ($user->admin ? ['ROLE_USER', 'ROLE_ADMIN'] : ['ROLE_USER']);
                 $this->ds->commit($user);
                 if (($auth = $post->get('auth')) && !isset($user->authentications[$auth])) {
                     $user_auth = new \App\Entity\UserAuthentication($user);

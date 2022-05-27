@@ -244,8 +244,8 @@ class SecurityController extends RenoController
             } else {
                 $reset_email = $post->get('email');
                 $reset_user = $this->ds->queryOne('\\App\\Entity\\User', ['email' => $reset_email]);
-                if (!$reset_user && $reset_user->authentications['password']) {
-                    $errors['email'] = 'Not found';
+                if (!$reset_user || !isset($reset_user->authentications['password'])) {
+                    $errors['email'] = 'Email is not found or was registered using a third-party login provider';
                 }
             }
 
