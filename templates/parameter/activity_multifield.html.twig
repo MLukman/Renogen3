@@ -61,7 +61,7 @@
                 {% elseif p.type == 'url' %}
                     <input id="{{pid}}" type="text" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]|default(p.details|split('\n')|first)}}" placeholder="http://"  />
                 {% elseif p.type == 'formatted' %}
-                    <input id="{{pid}}" type="text" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]}}" onkeyup="if (new RegExp('^{{p.details|escape('js')}}$').test(this.value)) {
+                    <input id="{{pid}}" type="text" name="parameters[{{param}}][{{p.id}}]" value="{{paramval[p.id]|default(null)}}" onkeyup="if (new RegExp('^{{p.details|escape('js')}}$').test(this.value)) {
                                 $(this).parent('.field').removeClass('error');
                             } else {
                                 $(this).parent('.field').addClass('error');

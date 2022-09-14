@@ -1,4 +1,4 @@
-ARG PHP_VERSION=7.4
+ARG PHP_VERSION=8.1
 FROM php:${PHP_VERSION}-apache AS symfony_php
 
 RUN apt-get update && apt-get install -y libldap2-dev libonig-dev libicu-dev wget vim git zip unzip \
@@ -31,10 +31,6 @@ ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
-# install Symfony Flex globally to speed up download of Composer packages (parallelized prefetching)
-RUN set -eux; \
-	composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative; \
-	composer clear-cache
 ENV PATH="${PATH}:/root/.composer/vendor/bin"
 
 # build for production

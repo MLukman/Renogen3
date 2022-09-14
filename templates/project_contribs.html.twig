@@ -42,7 +42,7 @@
                         <td>{{ user.user }}</td>
                         <td>{{ user.role }}</td>
                         {% for cat in contrib_categories %}
-                            <td class="ui center aligned" data-sort-value="{{ user.contribs[cat] }}">{{ user.contribs[cat] }}</td>
+                            <td class="ui center aligned" data-sort-value="{{ user.contribs[cat] }}">{{ user.contribs[cat] > 0 ? user.contribs[cat] : '' }}</td>
                         {% endfor %}
                         <td class="ui center aligned" data-sort-value="{{ user.score }}">{{ user.score }}</td>
                     </tr>

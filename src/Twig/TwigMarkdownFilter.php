@@ -11,7 +11,7 @@ class TwigMarkdownFilter extends AbstractExtension
     public function getFilters(): array
     {
         return [
-            new TwigFilter('markdown', [$this, 'markdown']),
+            new TwigFilter('markdown', [$this, 'markdown'], ['is_safe' => ['html']]),
         ];
     }
 
@@ -36,6 +36,6 @@ class TwigMarkdownFilter extends AbstractExtension
         $parser->setSafeMode(true);
         $parser->table_class = 'ui celled table';
         $html = $parser->text(trim($var));
-        return '<!-- '.json_encode($parser->array_lines, JSON_PRETTY_PRINT).' -->'.$html;
+        return new \Twig\Markup($html, 'UTF-8');
     }
 }

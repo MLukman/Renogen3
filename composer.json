@@ -12,6 +12,7 @@
         "doctrine/orm": "^2.7",
         "google/recaptcha": "^1.2",
         "guzzlehttp/guzzle": "^7.0",
+        "laravelfy/parsedown-extra-plugin": "^0.01.0",
         "phpdocumentor/reflection-docblock": "^5.2",
         "ramsey/uuid-doctrine": "^1.8",
         "sensio/framework-extra-bundle": "^5.0|^6.0",
@@ -41,7 +42,6 @@
         "symfony/validator": "5.4.*",
         "symfony/web-link": "5.4.*",
         "symfony/yaml": "5.4.*",
-        "laravelfy/parsedown-extra-plugin": "^0.01.0",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0"
     },
@@ -60,7 +60,10 @@
         "preferred-install": {
             "*": "dist"
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "symfony/flex": true
+        }
     },
     "autoload": {
         "psr-4": {

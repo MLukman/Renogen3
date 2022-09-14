@@ -34,9 +34,15 @@
         });
 
         $(function () {
-            setTimeout(function () {
-                activitiesOpenClose(false);
-            }, 3000);
+            $('.activities.accordion').each(function () {
+                var elem = $(this);
+                var autoclosing = setTimeout(function () {
+                    elem.accordion('close', 0);
+                }, 3000);
+                elem.on('mouseover', function () {
+                    clearTimeout(autoclosing);
+                });
+            });
         });
     </script>
 {% endblock %}
@@ -162,7 +168,7 @@
                         <tr style="position:relative">
                             <td class="ui top aligned">{{loop.index}}</td>
                             <td class="ui top aligned" style="position:relative; overflow: auto; max-width: inherit;">
-                                <div class="ui fluid activities accordion">
+                                <div class="ui fluid activities accordion" id="">
                                     <div class="title active" style="padding:0">
                                         <h4>
                                             <i class="dropdown icon"></i>
@@ -266,7 +272,7 @@
                     {% for comment in item.comments %}
                         <div class="comment">
                             <div class="content">
-                                {% if comment.created_by == ds.currentUserEntity() and comment.event is empty %}
+                                {% if comment.created_by is same as ds.currentUserEntity() and comment.event is empty %}
                                     {% if comment.deleted_date %}
                                         <a class="ui right floated compact very tiny icon button" 
                                            href="{{nav.entityPath('app_item_comment_undelete',comment)}}" title="Undo delete"><i class="ui undo icon"></i>

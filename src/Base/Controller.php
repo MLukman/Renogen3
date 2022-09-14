@@ -4,6 +4,7 @@ namespace App\Base;
 
 use App\Service\DataStore;
 use App\Service\NavigationFactory;
+use ReflectionClass;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Security;
@@ -53,7 +54,7 @@ abstract class Controller extends AbstractController
         $this->basectx['errors'] = [];
         $this->basectx['crumbs'] = [];
         if (empty($this->title)) {
-            $reflect = new \ReflectionClass($this);
+            $reflect = new ReflectionClass($this);
             $this->title = $reflect->getShortName();
         }
     }
