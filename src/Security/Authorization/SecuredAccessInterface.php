@@ -15,7 +15,7 @@ interface SecuredAccessInterface
      * @param string $attribute Attribute
      * @return self $this object (to allow method chaining)
      */
-    public function addAllowedRole($role, $attribute);
+    public function addAllowedRole($role, $attribute): self;
 
     /**
      * Check if a specific user role is allowed to access
@@ -23,7 +23,7 @@ interface SecuredAccessInterface
      * @param string $attribute Attribute
      * @return bool
      */
-    public function isRoleAllowed($role, $attribute);
+    public function isRoleAllowed($role, $attribute): bool;
 
     /**
      * Allow username to access
@@ -31,7 +31,7 @@ interface SecuredAccessInterface
      * @param string $attribute Attribute
      * @return self $this object (to allow method chaining)
      */
-    public function addAllowedUsername($username, $attribute);
+    public function addAllowedUsername($username, $attribute): self;
 
     /**
      * Check if a specific username is allowed to access this context
@@ -39,5 +39,5 @@ interface SecuredAccessInterface
      * @param string $attribute Attribute
      * @return bool
      */
-    public function isUsernameAllowed($username, $attribute);
+    public function isUsernameAllowed($username, $attribute): bool;
 }

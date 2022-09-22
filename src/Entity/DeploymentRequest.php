@@ -86,12 +86,12 @@ class DeploymentRequest extends Entity
         return $this->project;
     }
 
-    public function datetimeString($pretty = false)
+    public function datetimeString($pretty = false): string
     {
         return static::generateDatetimeString($this->execute_date, $pretty);
     }
 
-    public function isUsernameAllowed($username, $attribute)
+    public function isUsernameAllowed($username, $attribute): bool
     {
         return $this->project->isUsernameAllowed($username, $attribute);
     }

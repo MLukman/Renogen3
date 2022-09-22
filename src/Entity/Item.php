@@ -115,19 +115,19 @@ class Item extends Entity
 
     public function __construct(Deployment $deployment)
     {
-        $this->deployment  = $deployment;
-        $this->activities  = new ArrayCollection();
+        $this->deployment = $deployment;
+        $this->activities = new ArrayCollection();
         $this->attachments = new ArrayCollection();
         $this->status_logs = new ArrayCollection();
         $this->status_logs->add(new ItemStatusLog($this, $this->status));
     }
 
-    public function displayTitle()
+    public function displayTitle(): string
     {
         return ($this->refnum ? $this->refnum.' - ' : '').$this->title;
     }
 
-    public function status()
+    public function status(): string
     {
         if (isset($this->deployment->project->item_statuses[$this->status])) {
             return $this->status;
@@ -135,7 +135,7 @@ class Item extends Entity
         return array_keys($this->deployment->project->item_statuses)[0];
     }
 
-    public function statusIcon()
+    public function statusIcon(): string
     {
         $status = $this->status;
         if (isset($this->deployment->project->item_statuses[$status])) {
@@ -157,7 +157,7 @@ class Item extends Entity
 
     static public function compareStatuses(Project $project, $status1, $status2)
     {
-        $_statuses      = array_keys($project->item_statuses);
+        $_statuses = array_keys($project->item_statuses);
         $compare_status = array_search($status1, $_statuses);
         if ($compare_status === FALSE) {
             return -1;
@@ -172,7 +172,7 @@ class Item extends Entity
     public function getNextStatus()
     {
         $this->_statuses = array_keys($this->deployment->project->item_statuses);
-        $compare_status  = array_search($this->status(), $this->_statuses);
+        $compare_status = array_search($this->status(), $this->_statuses);
         if ($compare_status === FALSE) {
             return $this->_statuses[0];
         } elseif ($compare_status < count($this->_statuses) - 1) {
@@ -184,7 +184,7 @@ class Item extends Entity
 
     public function changeStatus($status, $remark = null)
     {
-        $project         = $this->deployment->project;
+        $project = $this->deployment->project;
         $old_status_real = $this->status();
         if ($status == Project::ITEM_STATUS_READY &&
             static::compareStatuses($project, $old_status_real, $status) > 0) {
@@ -195,14 +195,14 @@ class Item extends Entity
             $this->approved_date = null;
         }
 
-        $old_status   = $this->status;
+        $old_status = $this->status;
         $this->storeOldValues(array('status'));
         $this->status = $status;
-        $status_log   = new ItemStatusLog($this, $this->status);
+        $status_log = new ItemStatusLog($this, $this->status);
         if (!empty($remark)) {
-            $comment            = new ItemComment($this);
-            $comment->event     = "$old_status > $this->status";
-            $comment->text      = $remark;
+            $comment = new ItemComment($this);
+            $comment->event = "$old_status > $this->status";
+            $comment->text = $remark;
             $this->comments->add($comment);
             $status_log->remark = $remark;
         }
@@ -214,7 +214,7 @@ class Item extends Entity
     {
         static $crit = null;
         if (!$crit) {
-            $eb   = new ExpressionBuilder();
+            $eb = new ExpressionBuilder();
             $crit = new Criteria($eb->eq('status', $status));
         }
         return $this->status_logs->matching($crit)->last();
@@ -232,14 +232,14 @@ class Item extends Entity
         }
     }
 
-    public function isUsernameAllowed($username, $attribute)
+    public function isUsernameAllowed($username, $attribute): bool
     {
         $allowed = false;
 
         switch ($attribute) {
             case 'delete':
             case 'move':
-                $allowed   = ($this->created_by->username == $username);
+                $allowed = ($this->created_by->username == $username);
                 $attribute = 'approval';
                 break;
         }
@@ -260,7 +260,7 @@ class Item extends Entity
     {
         $transitions = [];
         foreach ($this->deployment->project->item_statuses as $status => $config) {
-            $progress   = $this->compareCurrentStatusTo($status);
+            $progress = $this->compareCurrentStatusTo($status);
             $transition = [];
             if ($progress < 0) {
                 // iterated status is behind current status

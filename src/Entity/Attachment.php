@@ -18,13 +18,13 @@ class Attachment extends FileLink
         $this->item = $item;
     }
 
-    public function isUsernameAllowed($username, $attribute)
+    public function isUsernameAllowed($username, $attribute): bool
     {
         return parent::isUsernameAllowed($username, $attribute) ||
             $this->item->isUsernameAllowed($username, $attribute);
     }
 
-    public function downloadUrl(\App\Service\NavigationFactory $nav)
+    public function downloadUrl(\App\Service\NavigationFactory $nav): string
     {
         return $nav->entityPath('attachment_download', $this);
     }

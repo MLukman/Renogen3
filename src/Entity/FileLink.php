@@ -79,9 +79,9 @@ abstract class FileLink extends Entity
         return $cascade;
     }
 
-    abstract public function downloadUrl(NavigationFactory $nav);
+    abstract public function downloadUrl(NavigationFactory $nav): string;
 
-    public function getHtmlLink(NavigationFactory $nav)
+    public function getHtmlLink(NavigationFactory $nav): string
     {
         $base = log($this->filestore->filesize) / log(1024);
         $suffix = [" bytes", " KB", " MB", " GB", " TB"][floor($base)];
@@ -89,12 +89,12 @@ abstract class FileLink extends Entity
         return '<a href="'.htmlentities($this->downloadUrl($nav)).'" title="'.$humansize.' '.$this->filestore->mime_type.'">'.htmlentities($this->filename).'</a>';
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->filename;
     }
 
-    public function returnDownload()
+    public function returnDownload(): Response
     {
         return new Response(stream_get_contents($this->filestore->data), 200, [
             'Content-type' => $this->filestore->mime_type,

@@ -46,7 +46,7 @@ class DoctrineValidator
                         if (is_int($among_key)) {
                             $criteria = $criteria->andWhere(new Comparison($among_value, '=', $entity->$among_value));
                             $unique_messages[] = $among_value;
-                        } elseif ($entity->$among_key == $among_value) {
+                        } elseif ($entity->$among_key === $among_value) {
                             $criteria = $criteria->andWhere(new Comparison($among_key, '=', $among_value));
                             $unique_messages[] = "($among_key = $among_value)";
                         } else {
@@ -57,7 +57,7 @@ class DoctrineValidator
                 if (!$skip) {
                     $list = $this->em->getRepository(get_class($entity))->matching($criteria);
                     foreach ($list as $item) {
-                        if ($item != $entity) {
+                        if ($item !== $entity) {
                             $error = 'Value must be unique';
                             if (!empty($unique_messages)) {
                                 $error .= ' for each '.implode(' + ', $unique_messages);

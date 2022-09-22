@@ -23,9 +23,9 @@ trait SecuredAccessTrait
      * Allow user role to access
      * @param string $role User role to allow access
      * @param string $attribute Attribute
-     * @return self $this object (to allow method chaining)
+     * @return SecuredAccessInterface $this object (to allow method chaining)
      */
-    public function addAllowedRole($role, $attribute = 'access')
+    public function addAllowedRole($role, $attribute = 'access'): SecuredAccessInterface
     {
         $roleStr = (string) $role;
         if (!isset($this->allowedRoles[$roleStr])) {
@@ -41,7 +41,7 @@ trait SecuredAccessTrait
      * @param string $attribute Attribute
      * @return bool
      */
-    public function isRoleAllowed($role, $attribute = 'access')
+    public function isRoleAllowed($role, $attribute = 'access'): bool
     {
         if (is_array($role)) {
             foreach ($role as $r) {
@@ -75,9 +75,9 @@ trait SecuredAccessTrait
      * Allow username to access
      * @param string $username Username to allow access
      * @param string $attribute Attribute
-     * @return self $this object (to allow method chaining)
+     * @return SecuredAccessInterface $this object (to allow method chaining)
      */
-    public function addAllowedUsername($username, $attribute = 'access')
+    public function addAllowedUsername($username, $attribute = 'access'): SecuredAccessInterface
     {
         $usernameStr = (string) $username;
         if (!isset($this->allowedUsernames[$usernameStr])) {
@@ -93,7 +93,7 @@ trait SecuredAccessTrait
      * @param string $attribute Attribute
      * @return bool
      */
-    public function isUsernameAllowed($username, $attribute = 'access')
+    public function isUsernameAllowed($username, $attribute = 'access'): bool
     {
         $usernameStr = (string) $username;
         $attrStr = (string) $attribute;

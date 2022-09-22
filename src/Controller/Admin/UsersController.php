@@ -151,7 +151,7 @@ class UsersController extends RenoController
                 $managed_users = $this->ds->queryUsingOr("\App\Entity\User",
                     ['created_by' => $user, 'updated_by' => $user]);
                 if (count($managed_users) > 1 ||
-                    (count($managed_users) == 1 && $managed_users[0]->username != $user->username)) {
+                    (count($managed_users) == 1 && $managed_users[0]->username !== $user->username)) {
                     $has_contrib = true;
                 }
             }

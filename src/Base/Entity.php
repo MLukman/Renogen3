@@ -69,7 +69,7 @@ abstract class Entity implements SecuredAccessInterface
         $this->$property = $value;
     }
 
-    static public function createCondition($f, $c, $v)
+    static public function createCondition($f, $c, $v): Criteria
     {
         return Criteria::create()->where(new Comparison($f, $c, $v));
     }
@@ -98,13 +98,13 @@ abstract class Entity implements SecuredAccessInterface
         return [];
     }
 
-    public function isUsernameAllowed($username, $attribute)
+    public function isUsernameAllowed($username, $attribute): bool
     {
         $allowed = false;
 
         switch ($attribute) {
             case 'delete':
-                $allowed = ($this->created_by->username == $username) && $this->isSafeToDelete();
+                $allowed = ($this->created_by->username === $username) && $this->isSafeToDelete();
                 break;
         }
 
@@ -112,7 +112,7 @@ abstract class Entity implements SecuredAccessInterface
     }
 
     static public function generateDatetimeString(\DateTime $ddate,
-                                                  $pretty = false)
+                                                  $pretty = false): string
     {
         if ($ddate->format('Hi') == '0000') {
             return $ddate->format($pretty ? 'd/m/Y' : 'Ymd');

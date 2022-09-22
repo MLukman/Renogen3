@@ -90,7 +90,6 @@ class Rules implements \ArrayAccess
 
     /**
      * Must be valid IP address
-     * @return \self
      */
     public function ip(): self
     {
@@ -103,7 +102,7 @@ class Rules implements \ArrayAccess
      * @param int $hours Force date must be at least this many hours after now.
      * @return $this
      */
-    public function future(int $hours = 0)
+    public function future(int $hours = 0): self
     {
         $this->rules['future'] = $hours;
         return $this;
@@ -114,13 +113,13 @@ class Rules implements \ArrayAccess
      * @param type $default
      * @return $this
      */
-    public function default($default)
+    public function default($default): self
     {
         $this->rules['default'] = $default;
         return $this;
     }
 
-    public function callback(\Closure $callback)
+    public function callback(\Closure $callback): self
     {
         if (!isset($this->rules['callbacks'])) {
             $this->rules['callbacks'] = [];
@@ -134,7 +133,7 @@ class Rules implements \ArrayAccess
         return isset($this->rules[$offset]);
     }
 
-    public function offsetGet($offset) : mixed
+    public function offsetGet($offset): mixed
     {
         return $this->rules[$offset];
     }

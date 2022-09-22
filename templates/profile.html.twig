@@ -86,7 +86,7 @@
                                             <i class="ui {{role_icon[role]}} icon"></i> {{ role }}
                                         </td>
                                         {% for cat in contrib_categories|keys %}
-                                            <td class="ui center aligned" data-sort-value="{{ contribs[project.name][cat]|default(0) }}">{{ contribs[project.name][cat]|default(0) }}</td>
+                                            <td class="ui center aligned" data-sort-value="{{ contribs[project.name][cat]|default(0) }}">{{ contribs[project.name][cat]|default('-') }}</td>
                                         {% endfor %}
                                         <td class="ui center aligned" data-sort-value="{{ contribs[project.name].total }}">{{ contribs[project.name].total }}</td>
                                     </tr>

@@ -56,7 +56,7 @@ class Plugin extends Entity
      *
      * @return PluginCore
      */
-    public function instance(DataStore $ds, NavigationFactory $nav)
+    public function instance(DataStore $ds, NavigationFactory $nav): PluginCore
     {
         if (!$this->instance) {
             $cls = $this->class;

@@ -18,7 +18,7 @@ class ActivityFile extends FileLink
         $this->activity = $activity;
     }
 
-    public function downloadUrl(\App\Service\NavigationFactory $nav)
+    public function downloadUrl(\App\Service\NavigationFactory $nav): string
     {
         return $nav->entityPath('app_activity_file_download', $this);
     }

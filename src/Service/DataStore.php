@@ -7,6 +7,7 @@ use App\Base\Entity;
 use App\Entity\Activity;
 use App\Entity\Attachment;
 use App\Entity\AuthDriver;
+use App\Entity\Checklist;
 use App\Entity\Deployment;
 use App\Entity\DeploymentRequest;
 use App\Entity\FileLink;
@@ -16,8 +17,10 @@ use App\Entity\Project;
 use App\Entity\Template;
 use App\Entity\User;
 use App\Entity\UserAuthentication;
+use App\Entity\UserProject;
 use App\Exception\NoResultException;
 use App\Security\Authentication\Driver\Password;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -269,12 +272,12 @@ class DataStore
      * @param type $project
      * @param type $deployment
      * @param type $item
-     * @return Item
+     * @return Checklist
      * @throws NoResultException
      */
-    public function fetchChecklist($project, $deployment, $checklist): \App\Entity\Checklist
+    public function fetchChecklist($project, $deployment, $checklist): Checklist
     {
-        if (!($checklist instanceof Entity\Checklist)) {
+        if (!($checklist instanceof Checklist)) {
             $id = $checklist;
             if (!($checklist = $this->queryOne('\App\Entity\Checklist', ['id' => $id]))) {
                 throw new NoResultException("There is no such deployment checklist id '$id'");
@@ -363,7 +366,8 @@ class DataStore
                 'user' => $user,
                 'role' => $role,
             ]) as $up) {
-                if ($up->project != $exclude) {
+                /** @var UserProject $up */
+                if ($up->getProject() !== $exclude) {
                     $projects->add($up->project);
                 }
             }
@@ -413,11 +417,11 @@ class DataStore
             $entity->storeOldValues(array($field));
             $field_value = $data->get($field);
             if ((substr($field, -5) == '_date' || substr($field, -9) == '_datetime')
-                && !($field_value instanceof \DateTime)) {
+                && !($field_value instanceof DateTime)) {
                 if (!empty($field_value) && strlen($field_value) <= 10) {
                     $field_value .= ' 00:00 AM';
                 }
-                $entity->$field = (!$field_value ? null : \DateTime::createFromFormat('d/m/Y h:i A', $field_value));
+                $entity->$field = (!$field_value ? null : DateTime::createFromFormat('d/m/Y h:i A', $field_value));
             } elseif (substr($field, -3) == '_by') {
                 try {
                     $entity->$field = $this->fetchUser($field_value);
@@ -521,7 +525,7 @@ class DataStore
      * @param string $classId
      * @return Driver|null
      */
-    public function getAuthDriver($classId): ?AuthDriver
+    public function getAuthDriver($classId): ?Driver
     {
         if (empty($this->em->getRepository('\App\Entity\AuthDriver')->find('password'))) {
             $auth_password = new AuthDriver('password');
@@ -590,7 +594,7 @@ class DataStore
             $user->shortname = 'Administrator';
             $user->admin = 1;
             $user->created_by = $user;
-            $user->created_date = new \DateTime();
+            $user->created_date = new DateTime();
             $user_auth = new UserAuthentication($user, $this->getAuthDriver('password'));
             $user_auth->generateResetCode();
             $this->commit($user);

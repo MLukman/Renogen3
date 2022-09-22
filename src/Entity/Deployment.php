@@ -94,28 +94,28 @@ class Deployment extends Entity
      * @var array
      */
     public $plugin_data = [];
-    protected $_caches  = [];
+    protected $_caches = [];
 
     public function __construct(Project $project)
     {
-        $this->project    = $project;
-        $this->duration   = $this->project->approx_deployment_duration;
-        $this->items      = new ArrayCollection();
-        $this->runitems   = new ArrayCollection();
+        $this->project = $project;
+        $this->duration = $this->project->approx_deployment_duration;
+        $this->items = new ArrayCollection();
+        $this->runitems = new ArrayCollection();
         $this->checklists = new ArrayCollection();
     }
 
-    public function name()
+    public function name(): string
     {
         return $this->datetimeString();
     }
 
-    public function displayTitle()
+    public function displayTitle(): string
     {
         return $this->datetimeString(true).' - '.$this->title;
     }
 
-    public function datetimeString($pretty = false, \DateTime $ddate = null)
+    public function datetimeString($pretty = false, \DateTime $ddate = null): string
     {
         if (!$ddate) {
             $ddate = $this->execute_date;
@@ -123,38 +123,38 @@ class Deployment extends Entity
         return static::generateDatetimeString($ddate, $pretty);
     }
 
-    public function isActive()
+    public function isActive(): bool
     {
         return !$this->project->archived && ($this->execute_date >= date_create(sprintf("-%d hours",
                     $this->duration ?: $this->project->approx_deployment_duration)));
     }
 
-    public function isRunning()
+    public function isRunning(): bool
     {
         return $this->isActive() && $this->execute_date <= date_create();
     }
 
     /**
      *
-     * @return ArrayCollection
+     * @return array
      */
-    public function getItemsWithStatus($status)
+    public function getItemsWithStatus($status): array
     {
         $status_items = $this->cached("items",
-            function () use ($status) {
-            $status_items = [];
-            foreach ($this->items as $item) {
-                if (!isset($status_items[$item->status])) {
-                    $status_items[$item->status] = [];
+            function () {
+                $status_items = [];
+                foreach ($this->items as $item) {
+                    if (!isset($status_items[$item->status])) {
+                        $status_items[$item->status] = [];
+                    }
+                    $status_items[$item->status][] = $item;
                 }
-                $status_items[$item->status][] = $item;
-            }
-            return $status_items;
-        });
+                return $status_items;
+            });
         return $status_items[$status] ?? [];
     }
 
-    public function generateRunbooks(DataStore $ds)
+    public function generateRunbooks(DataStore $ds): array
     {
         $activities = [
             -1 => [],
@@ -162,7 +162,7 @@ class Deployment extends Entity
             1 => [],
         ];
         foreach ($this->runitems as $runitem) {
-            $tid   = sprintf("%03d:%s", $runitem->template->priority,
+            $tid = sprintf("%03d:%s", $runitem->template->priority,
                 $runitem->template->id);
             $array = &$activities[$runitem->stage ?: 0];
             if (!isset($array[$tid])) {
@@ -188,12 +188,12 @@ class Deployment extends Entity
         return $rungroups;
     }
 
-    public function isUsernameAllowed($username, $attribute)
+    public function isUsernameAllowed($username, $attribute): bool
     {
         return $this->project->isUsernameAllowed($username, $attribute);
     }
 
-    public function getChecklistTemplates()
+    public function getChecklistTemplates(): array
     {
         if (empty($this->project->checklist_templates)) {
             return [];
@@ -203,8 +203,8 @@ class Deployment extends Entity
         }, $this->checklists->toArray());
         return array_values(array_filter($this->project->checklist_templates,
                 function ($a) use ($checklists) {
-                return !in_array($a, $checklists);
-            }));
+                    return !in_array($a, $checklists);
+                }));
     }
 
     public function getProject(): ?Project
@@ -230,7 +230,7 @@ class Deployment extends Entity
     /** @ORM\PostLoad @ORM\PrePersist @ORM\PreUpdate */
     public function populateEndDate()
     {
-        $hour           = $this->duration ?: $this->project->approx_deployment_duration;
+        $hour = $this->duration ?: $this->project->approx_deployment_duration;
         $this->end_date = (clone $this->execute_date)->add(new \DateInterval("PT{$hour}H"));
     }
 }

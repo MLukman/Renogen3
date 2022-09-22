@@ -18,7 +18,7 @@ class RunItemFile extends FileLink
         $this->runitem = $runitem;
     }
 
-    public function downloadUrl(\App\Service\NavigationFactory $nav)
+    public function downloadUrl(\App\Service\NavigationFactory $nav): string
     {
         return $nav->entityPath('app_runitem_file_download', $this);
     }

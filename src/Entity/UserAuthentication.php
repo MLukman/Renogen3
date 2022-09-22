@@ -57,10 +57,10 @@ class UserAuthentication extends Entity implements UserInterface, PasswordAuthen
     public function __construct(User $user, AuthDriver $driver = null,
                                 $credential = null)
     {
-        $this->user       = $user;
-        $this->username   = $user->getUsername();
-        $this->driver     = $driver;
-        $this->driver_id  = $driver->name;
+        $this->user = $user;
+        $this->username = $user->getUsername();
+        $this->driver = $driver;
+        $this->driver_id = $driver->name;
         $this->credential = $credential;
     }
 
@@ -94,7 +94,7 @@ class UserAuthentication extends Entity implements UserInterface, PasswordAuthen
         return null;
     }
 
-    public function getResetCode()
+    public function getResetCode(): ?string
     {
         return $this->reset_code;
     }

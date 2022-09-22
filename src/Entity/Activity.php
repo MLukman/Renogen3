@@ -51,7 +51,7 @@ class Activity extends Actionable
         return $this->title ?: $this->template->title;
     }
 
-    public function isUsernameAllowed($username, $attribute)
+    public function isUsernameAllowed($username, $attribute):bool
     {
         return parent::isUsernameAllowed($username, $attribute) ||
             $this->item->isUsernameAllowed($username, $attribute);

@@ -181,14 +181,14 @@ class User extends Entity
         return null;
     }
 
-    public function getName()
+    public function getName(): string
     {
         return $this->shortname ?: $this->username;
     }
 
-    public function isAdmin()
+    public function isAdmin(): bool
     {
-        return $this->admin;
+        return !empty($this->admin);
     }
 
     public static function getValidationRules(): ?array

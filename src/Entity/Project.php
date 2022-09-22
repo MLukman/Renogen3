@@ -25,36 +25,43 @@ class Project extends Entity
      * @ORM\Column(type="string")
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class=Ramsey\Uuid\Doctrine\UuidGenerator::class)
+     * @var string
      */
     public $id;
 
     /**
      * @ORM\Column(type="string", length=30)
+     * @var string
      */
     public $name;
 
     /**
      * @ORM\Column(type="string", length=100)
+     * @var string
      */
     public $title;
 
     /**
      * @ORM\Column(type="string", length=30, options={"default":"cube"})
+     * @var string
      */
     public $icon = 'cube';
 
     /**
      * @ORM\Column(type="text", nullable=true)
+     * @var string
      */
     public $description;
 
     /**
      * @ORM\Column(type="json", nullable=true)
+     * @var string[]
      */
     public $modules = [];
 
     /**
      * @ORM\Column(type="json", nullable=true)
+     * @var string[]
      */
     public $categories = [
         'Bug Fix',
@@ -64,16 +71,19 @@ class Project extends Entity
 
     /**
      * @ORM\Column(type="boolean", options={"default":"0"})
+     * @var bool
      */
     public $private = false;
 
     /**
      * @ORM\Column(type="json", nullable=true)
+     * @var string[]
      */
     public $checklist_templates;
 
     /**
      * @ORM\Column(type="boolean", options={"default":"0"})
+     * @var bool
      */
     public $archived = false;
 
@@ -113,22 +123,24 @@ class Project extends Entity
     /**
      * Approximation of how many hours a deployment will take. Will be used to determine which deployment is ongoing.
      * @ORM\Column(type="integer", options={"default" : 6})
+     * @var int
      */
     public $approx_deployment_duration = 6;
 
     /**
      * Comma-delimited list of acceptable file extensions for deployment item attachments.
      * @ORM\Column(type="string", length=255, options={"default":Project::DEFAULT_ATTACHMENT_FILE_EXTS})
+     * @var string
      */
     public $attachment_file_exts;
 
-    const ITEM_STATUS_INIT      = 'Documentation';
-    const ITEM_STATUS_REVIEW    = 'Review';
-    const ITEM_STATUS_APPROVAL  = 'Go No Go';
-    const ITEM_STATUS_READY     = 'Ready For Release';
+    const ITEM_STATUS_INIT = 'Documentation';
+    const ITEM_STATUS_REVIEW = 'Review';
+    const ITEM_STATUS_APPROVAL = 'Go No Go';
+    const ITEM_STATUS_READY = 'Ready For Release';
     const ITEM_STATUS_COMPLETED = 'Completed';
-    const ITEM_STATUS_REJECTED  = 'Rejected';
-    const ITEM_STATUS_FAILED    = 'Failed';
+    const ITEM_STATUS_REJECTED = 'Rejected';
+    const ITEM_STATUS_FAILED = 'Failed';
 
     public $item_statuses = [
         self::ITEM_STATUS_INIT => [
@@ -190,12 +202,12 @@ class Project extends Entity
 
     public function __construct()
     {
-        $this->created_date        = new \DateTime();
-        $this->deployments         = new ArrayCollection();
+        $this->created_date = new \DateTime();
+        $this->deployments = new ArrayCollection();
         $this->deployment_requests = new ArrayCollection();
-        $this->templates           = new ArrayCollection();
-        $this->plugins             = new ArrayCollection();
-        $this->userProjects        = new ArrayCollection();
+        $this->templates = new ArrayCollection();
+        $this->plugins = new ArrayCollection();
+        $this->userProjects = new ArrayCollection();
     }
 
     /**
@@ -206,9 +218,9 @@ class Project extends Entity
     {
         return $this->cached('upcoming',
                 function () {
-                return static::filterUpcomingDateOnly($this->deployments,
-                    'execute_date', 'end_date');
-            });
+                    return static::filterUpcomingDateOnly($this->deployments,
+                        'execute_date', 'end_date');
+                });
     }
 
     /**
@@ -225,7 +237,7 @@ class Project extends Entity
                                                   $limit = 0): Selectable
     {
         $compare_dates = [];
-        $now           = date_create();
+        $now = date_create();
         if (!empty($end_date_field)) {
             // find out if there is ongoing deployment (the latest one between now and previous $lookback hours)
             $ongoing = $collection->matching(Criteria::create()
@@ -238,7 +250,7 @@ class Project extends Entity
             }
         }
         $compare_dates[] = $now;
-        $upcoming        = [];
+        $upcoming = [];
         foreach ($compare_dates as $compare) {
             $criteria = Criteria::create()
                 ->where(new Comparison($date_field, '>=', $compare))
@@ -262,18 +274,18 @@ class Project extends Entity
     {
         return $this->cached("past.$limit",
                 function () use ($limit) {
-                $criteria = Criteria::create()
-                    ->orderBy(array('execute_date' => 'DESC'));
-                $upcoming = $this->upcoming();
-                if (count($upcoming) > 0) {
-                    $criteria = $criteria->where(new Comparison('execute_date',
-                            '<', $upcoming[0]->execute_date));
-                }
-                if ($limit > 0) {
-                    $criteria = $criteria->setMaxResults($limit);
-                }
-                return $this->deployments->matching($criteria);
-            });
+                    $criteria = Criteria::create()
+                        ->orderBy(array('execute_date' => 'DESC'));
+                    $upcoming = $this->upcoming();
+                    if (count($upcoming) > 0) {
+                        $criteria = $criteria->where(new Comparison('execute_date',
+                                '<', $upcoming[0]->execute_date));
+                    }
+                    if ($limit > 0) {
+                        $criteria = $criteria->setMaxResults($limit);
+                    }
+                    return $this->deployments->matching($criteria);
+                });
     }
 
     public function getDeploymentNumber(Deployment $deployment)
@@ -303,9 +315,9 @@ class Project extends Entity
     {
         return $this->cached('upcomingRequests',
                 function () {
-                return static::filterUpcomingDateOnly($this->deployment_requests,
-                    'execute_date');
-            });
+                    return static::filterUpcomingDateOnly($this->deployment_requests,
+                        'execute_date');
+                });
     }
 
     public function getDeploymentsByDateString($datestring,
@@ -339,13 +351,13 @@ class Project extends Entity
         }
     }
 
-    public function getUserAccess($username)
+    public function getUserAccess($username): ?string
     {
         $up = $this->userProject($username);
         return ($up ? $up->role : null);
     }
 
-    public function userProject($username)
+    public function userProject($username): ?UserProject
     {
         if ($username instanceof User) {
             $username = $username->username;
@@ -354,7 +366,7 @@ class Project extends Entity
             $this->userProjects->get($username) : null);
     }
 
-    public function isUsernameAllowed($username, $attr = 'view')
+    public function isUsernameAllowed($username, $attr = 'view'): bool
     {
         $this->allowedRoles = [];
         if (method_exists($this, '__load')) {
@@ -386,7 +398,7 @@ class Project extends Entity
         return $this->_enabled_templates;
     }
 
-    public function usersWithRole($role)
+    public function usersWithRole($role): array
     {
         return array_filter(
             array_map(function ($a) {
@@ -403,7 +415,7 @@ class Project extends Entity
      * @ORM\PrePersist
      * @ORM\PreUpdate
      */
-    public function defaultIcon()
+    public function defaultIcon(): string
     {
         if (empty($this->icon)) {
             $this->icon = 'cube';

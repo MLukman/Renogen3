@@ -46,7 +46,7 @@ class RunItem extends Actionable
         $this->files = new ArrayCollection();
     }
 
-    public function isUsernameAllowed($username, $attribute)
+    public function isUsernameAllowed($username, $attribute): bool
     {
         return parent::isUsernameAllowed($username, $attribute) ||
             $this->deployment->isUsernameAllowed($username, $attribute);
