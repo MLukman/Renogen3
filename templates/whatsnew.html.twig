@@ -3,10 +3,14 @@
 {% block content %}
     <div class="ui basic huge segment">
 
-{% apply markdown|raw %}
-{% verbatim %}
-
+        {% apply markdown|raw %}
+        {% verbatim %}
 # What's New
+
+## 3.1.10
+
+- Added support for secure MySQL connections
+- Fixed issues that were caused by `==` vs `===` comparison operators in PHP
 
 ## 3.1.9
 
@@ -73,9 +77,8 @@ Upgraded to Symfony 5.3.* with the new authenticator system
 ## 3.0.0
 
 Completely ported Renogen from the EOL Silex framework to Symfony 5 framework.
-
-{% endverbatim %}
-{% endapply %}
+        {% endverbatim %}
+        {% endapply %}
 
     </div>
 {% endblock %}

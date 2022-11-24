@@ -523,9 +523,9 @@ class DataStore
     /**
      *
      * @param string $classId
-     * @return Driver|null
+     * @return AuthDriver|null
      */
-    public function getAuthDriver($classId): ?Driver
+    public function getAuthDriver($classId): ?AuthDriver
     {
         if (empty($this->em->getRepository('\App\Entity\AuthDriver')->find('password'))) {
             $auth_password = new AuthDriver('password');

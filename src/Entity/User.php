@@ -201,4 +201,9 @@ class User extends Entity
             //'admin' => Rules::new()->default(0),
         ];
     }
+
+    public function __toString()
+    {
+        return $this->username;
+    }
 }

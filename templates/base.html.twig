@@ -366,7 +366,7 @@
                         <div class="right menu">
                             {% block menuright %}
                             {% endblock %}
-                            {% if security.isGranted('IS_AUTHENTICATED_FULLY') %}
+                            {% if security.isGranted('IS_AUTHENTICATED_FULLY') and ds.currentUserEntity() %}
                                 <div class="ui dropdown item">
                                     <i class="ui user icon"></i> {{ds.currentUserEntity().getName()}}
                                     <i class="dropdown icon"></i>
